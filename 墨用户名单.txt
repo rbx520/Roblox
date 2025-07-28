@@ -8,7 +8,7 @@ elseif a=="996pt"then
 _G.whitelisted=true
 end
 if _G.whitelisted==true then
-    loadstring(game:HttpGet(('https://raw.githubusercontent.com/linbei521/Roblox/refs/heads/main/%E6%9E%97%E5%8C%97X%E6%80%BB%E9%A1%B5%E9%9D%A2'),true))()
+    loadstring(game:HttpGet(('https://raw.githubusercontent.com/rbx520/Roblox/refs/heads/main/%E5%A2%A8%E4%B8%BB%E9%A1%B5%E9%9D%A2.lua'),true))()
     else
  
 game.Players.LocalPlayer:Kick(a.."你没有被列入白名单，请购买或者找群主反馈")
