@@ -609,13 +609,13 @@ end
             BtnModule.BackgroundTransparency = 1.000
             BtnModule.BorderSizePixel = 0
             BtnModule.Position = UDim2.new(0, 0, 0, 0)
-            BtnModule.Size = UDim2.new(0, 330, 0, 30)  -- 缩小高度
+            BtnModule.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
             
             Btn.Name = "Btn"
             Btn.Parent = BtnModule
             Btn.BackgroundColor3 = zyColor
             Btn.BorderSizePixel = 0
-            Btn.Size = UDim2.new(0, 330, 0, 30)  -- 缩小高度
+            Btn.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
             Btn.AutoButtonColor = false
             Btn.Font = Enum.Font.GothamSemibold
             Btn.Text = "   " .. text
@@ -651,11 +651,11 @@ end
             LabelModule.BackgroundTransparency = 1.000
             LabelModule.BorderSizePixel = 0
             LabelModule.Position = UDim2.new(0, 0, 0, 0)
-            LabelModule.Size = UDim2.new(0, 330, 0, 16)  -- 缩小高度
+            LabelModule.Size = UDim2.new(0, 350, 0, 16)  -- 缩小高度
     
             TextLabel.Parent = LabelModule
             TextLabel.BackgroundColor3 = zyColor
-            TextLabel.Size = UDim2.new(0, 330, 0, 16)  -- 缩小高度
+            TextLabel.Size = UDim2.new(0, 350, 0, 16)  -- 缩小高度
             TextLabel.Font = Enum.Font.GothamSemibold
             TextLabel.Text = text
             TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -679,11 +679,11 @@ end
             LabelModule.BackgroundTransparency = 1.000
             LabelModule.BorderSizePixel = 0
             LabelModule.Position = UDim2.new(0, 0, 0, 0)
-            LabelModule.Size = UDim2.new(0, 330, 0, 150)  -- 调整尺寸
+            LabelModule.Size = UDim2.new(0, 350, 0, 150)  -- 调整尺寸
     
             TextLabel.Parent = LabelModule
             TextLabel.BackgroundColor3 = zyColor
-            TextLabel.Size = UDim2.new(0, 330, 0, 150)  -- 调整尺寸
+            TextLabel.Size = UDim2.new(0, 350, 0, 150)  -- 调整尺寸
             TextLabel.Font = Enum.Font.GothamSemibold
             TextLabel.Text = text
             TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -718,13 +718,13 @@ end
             ToggleModule.BackgroundTransparency = 1.000
             ToggleModule.BorderSizePixel = 0
             ToggleModule.Position = UDim2.new(0, 0, 0, 0)
-            ToggleModule.Size = UDim2.new(0, 330, 0, 30)  -- 缩小高度
+            ToggleModule.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
             
             ToggleBtn.Name = "ToggleBtn"
             ToggleBtn.Parent = ToggleModule
             ToggleBtn.BackgroundColor3 = zyColor
             ToggleBtn.BorderSizePixel = 0
-            ToggleBtn.Size = UDim2.new(0, 330, 0, 30)  -- 缩小高度
+            ToggleBtn.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
             ToggleBtn.AutoButtonColor = false
             ToggleBtn.Font = Enum.Font.GothamSemibold
             ToggleBtn.Text = "   " .. text
@@ -827,13 +827,13 @@ end
             KeybindModule.BackgroundTransparency = 1.000
             KeybindModule.BorderSizePixel = 0
             KeybindModule.Position = UDim2.new(0, 0, 0, 0)
-            KeybindModule.Size = UDim2.new(0, 330, 0, 30)  -- 缩小高度
+            KeybindModule.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
             
             KeybindBtn.Name = "KeybindBtn"
             KeybindBtn.Parent = KeybindModule
             KeybindBtn.BackgroundColor3 = zyColor
             KeybindBtn.BorderSizePixel = 0
-            KeybindBtn.Size = UDim2.new(0, 330, 0, 30)  -- 缩小高度
+            KeybindBtn.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
             KeybindBtn.AutoButtonColor = false
             KeybindBtn.Font = Enum.Font.GothamSemibold
             KeybindBtn.Text = "   " .. text
@@ -926,13 +926,13 @@ end
             TextboxModule.BackgroundTransparency = 1.000
             TextboxModule.BorderSizePixel = 0
             TextboxModule.Position = UDim2.new(0, 0, 0, 0)
-            TextboxModule.Size = UDim2.new(0, 330, 0, 30)  -- 缩小高度
+            TextboxModule.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
             
             TextboxBack.Name = "TextboxBack"
             TextboxBack.Parent = TextboxModule
             TextboxBack.BackgroundColor3 = zyColor
             TextboxBack.BorderSizePixel = 0
-            TextboxBack.Size = UDim2.new(0, 330, 0, 30)  -- 缩小高度
+            TextboxBack.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
             TextboxBack.AutoButtonColor = false
             TextboxBack.Font = Enum.Font.GothamSemibold
             TextboxBack.Text = ""
@@ -1028,13 +1028,13 @@ end
             SliderModule.BackgroundTransparency = 1.000
             SliderModule.BorderSizePixel = 0
             SliderModule.Position = UDim2.new(0, 0, 0, 0)
-            SliderModule.Size = UDim2.new(0, 330, 0, 30)  -- 缩小高度
+            SliderModule.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
             
             SliderBack.Name = "SliderBack"
             SliderBack.Parent = SliderModule
             SliderBack.BackgroundColor3 = zyColor
             SliderBack.BorderSizePixel = 0
-            SliderBack.Size = UDim2.new(0, 330, 0, 30)  -- 缩小高度
+            SliderBack.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
             SliderBack.AutoButtonColor = false
             SliderBack.Font = Enum.Font.GothamSemibold
             SliderBack.Text = "   " .. text
@@ -1257,13 +1257,13 @@ end
             DropdownModule.BorderSizePixel = 0
             DropdownModule.ClipsDescendants = true
             DropdownModule.Position = UDim2.new(0, 0, 0, 0)
-            DropdownModule.Size = UDim2.new(0, 330, 0, 30)  -- 缩小高度
+            DropdownModule.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
             
             DropdownTop.Name = "DropdownTop"
             DropdownTop.Parent = DropdownModule
             DropdownTop.BackgroundColor3 = zyColor
             DropdownTop.BorderSizePixel = 0
-            DropdownTop.Size = UDim2.new(0, 330, 0, 30)  -- 缩小高度
+            DropdownTop.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
             DropdownTop.AutoButtonColor = false
             DropdownTop.Font = Enum.Font.GothamSemibold
             DropdownTop.Text = ""
@@ -1394,7 +1394,7 @@ end
                 local maxHeight = 150 -- 最大高度
                 local actualHeight = math.min(contentHeight, maxHeight)
                 
-                DropdownModule.Size = UDim2.new(0, 330, 0, (open and actualHeight + 30 or 30))
+                DropdownModule.Size = UDim2.new(0, 350, 0, (open and actualHeight + 30 or 30))
                 ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, contentHeight)
                 ScrollFrame.ScrollingEnabled = contentHeight > maxHeight
             end
@@ -1416,7 +1416,7 @@ end
                 local maxHeight = 150 -- 最大高度
                 local actualHeight = math.min(contentHeight, maxHeight)
                 
-                DropdownModule.Size = UDim2.new(0, 330, 0, actualHeight + 30)
+                DropdownModule.Size = UDim2.new(0, 350, 0, actualHeight + 30)
                 ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, contentHeight)
                 ScrollFrame.ScrollingEnabled = contentHeight > maxHeight
             end)
@@ -1431,7 +1431,7 @@ end
                 Option.BackgroundColor3 = zyColor
                 Option.BorderSizePixel = 0
                 Option.Position = UDim2.new(0, 0, 0.328125, 0)
-                Option.Size = UDim2.new(0, 330, 0, 22)  -- 缩小高度
+                Option.Size = UDim2.new(0, 350, 0, 22)  -- 缩小高度
                 Option.AutoButtonColor = false
                 Option.Font = Enum.Font.Gotham
                 Option.Text = option
