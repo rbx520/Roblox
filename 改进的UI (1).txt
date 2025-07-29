@@ -193,7 +193,8 @@ end
       drag(Main)
       
       UICornerMain.Parent = Main
-      UICornerMain.CornerRadius = UDim.new(0,3)
+      -- 增大主窗口圆角半径
+      UICornerMain.CornerRadius = UDim.new(0, 8)  -- 从3改为8
       
       DropShadowHolder.Name = "DropShadowHolder"
       DropShadowHolder.Parent = Main
@@ -242,7 +243,8 @@ end
       TabMain.Position = UDim2.new(0.217000037, 0, 0, 3)
       TabMain.Size = UDim2.new(0, 350, 0, 280)  -- 缩小尺寸
       
-      MainC.CornerRadius = UDim.new(0, 5.5)
+      -- 增大主窗口圆角
+      MainC.CornerRadius = UDim.new(0, 8)  -- 从5.5改为8
       MainC.Name = "MainC"
       MainC.Parent = Main
       
@@ -252,7 +254,8 @@ end
       SB.BorderColor3 = MainColor
       SB.Size = UDim2.new(0, 8, 0, 280)  -- 缩小尺寸
       
-      SBC.CornerRadius = UDim.new(0, 6)
+      -- 增大侧边栏圆角
+      SBC.CornerRadius = UDim.new(0, 10)  -- 从6改为10
       SBC.Name = "SBC"
       SBC.Parent = SB
       
@@ -516,7 +519,8 @@ Open.Name = "Open"
           Section.ClipsDescendants = true
           Section.Size = UDim2.new(0.981000006, 0, 0, 30)  -- 缩小高度
           
-          SectionC.CornerRadius = UDim.new(0, 6)
+          -- 增大部分圆角
+          SectionC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
           SectionC.Name = "SectionC"
           SectionC.Parent = Section
           
@@ -615,7 +619,8 @@ Open.Name = "Open"
             Btn.TextSize = 14.000  -- 缩小字体
             Btn.TextXAlignment = Enum.TextXAlignment.Left
             
-            BtnC.CornerRadius = UDim.new(0, 6)
+            -- 增大按钮圆角
+            BtnC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
             BtnC.Name = "BtnC"
             BtnC.Parent = Btn
     
@@ -652,7 +657,8 @@ Open.Name = "Open"
             TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             TextLabel.TextSize = 12.000  -- 缩小字体
     
-            LabelC.CornerRadius = UDim.new(0, 6)
+            -- 增大标签圆角
+            LabelC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
             LabelC.Name = "LabelC"
             LabelC.Parent = TextLabel
             return TextLabel
@@ -679,7 +685,8 @@ Open.Name = "Open"
             TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             TextLabel.TextSize = 14.000  -- 调整字体大小
     
-            LabelC.CornerRadius = UDim.new(0, 6)
+            -- 增大大标签圆角
+            LabelC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
             LabelC.Name = "LabelC"
             LabelC.Parent = TextLabel
             return TextLabel
@@ -721,7 +728,8 @@ Open.Name = "Open"
             ToggleBtn.TextSize = 14.000  -- 缩小字体
             ToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
             
-            ToggleBtnC.CornerRadius = UDim.new(0, 6)
+            -- 增大开关圆角
+            ToggleBtnC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
             ToggleBtnC.Name = "ToggleBtnC"
             ToggleBtnC.Parent = ToggleBtn
             
@@ -737,11 +745,13 @@ Open.Name = "Open"
             ToggleSwitch.BackgroundColor3 = beijingColor
             ToggleSwitch.Size = UDim2.new(0, 24, 0, 22)
             
-            ToggleSwitchC.CornerRadius = UDim.new(0, 6)
+            -- 增大开关圆角
+            ToggleSwitchC.CornerRadius = UDim.new(0, 6)  -- 从4改为6
             ToggleSwitchC.Name = "ToggleSwitchC"
             ToggleSwitchC.Parent = ToggleSwitch
             
-            ToggleDisableC.CornerRadius = UDim.new(0, 6)
+            -- 增大开关圆角
+            ToggleDisableC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
             ToggleDisableC.Name = "ToggleDisableC"
             ToggleDisableC.Parent = ToggleDisable        
     
@@ -827,7 +837,8 @@ Open.Name = "Open"
             KeybindBtn.TextSize = 14.000  -- 缩小字体
             KeybindBtn.TextXAlignment = Enum.TextXAlignment.Left
             
-            KeybindBtnC.CornerRadius = UDim.new(0, 6)
+            -- 增大按键绑定圆角
+            KeybindBtnC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
             KeybindBtnC.Name = "KeybindBtnC"
             KeybindBtnC.Parent = KeybindBtn
             
@@ -843,7 +854,8 @@ Open.Name = "Open"
             KeybindValue.TextColor3 = Color3.fromRGB(255, 255, 255)
             KeybindValue.TextSize = 12.000  -- 缩小字体
             
-            KeybindValueC.CornerRadius = UDim.new(0, 6)
+            -- 增大按键绑定值圆角
+            KeybindValueC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
             KeybindValueC.Name = "KeybindValueC"
             KeybindValueC.Parent = KeybindValue
             
@@ -924,7 +936,8 @@ Open.Name = "Open"
             TextboxBack.TextSize = 14.000  -- 缩小字体
             TextboxBack.TextXAlignment = Enum.TextXAlignment.Left
             
-            TextboxBackC.CornerRadius = UDim.new(0, 6)
+            -- 增大文本框圆角
+            TextboxBackC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
             TextboxBackC.Name = "TextboxBackC"
             TextboxBackC.Parent = TextboxBack
             
@@ -940,7 +953,8 @@ Open.Name = "Open"
             BoxBG.TextColor3 = Color3.fromRGB(255, 255, 255)
             BoxBG.TextSize = 14.000
             
-            BoxBGC.CornerRadius = UDim.new(0, 6)
+            -- 增大输入框圆角
+            BoxBGC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
             BoxBGC.Name = "BoxBGC"
             BoxBGC.Parent = BoxBG
             
@@ -1024,7 +1038,8 @@ Open.Name = "Open"
             SliderBack.TextSize = 14.000  -- 缩小字体
             SliderBack.TextXAlignment = Enum.TextXAlignment.Left
             
-            SliderBackC.CornerRadius = UDim.new(0, 6)
+            -- 增大滑块圆角
+            SliderBackC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
             SliderBackC.Name = "SliderBackC"
             SliderBackC.Parent = SliderBack
             
@@ -1036,7 +1051,8 @@ Open.Name = "Open"
             SliderBar.Position = UDim2.new(0.369000018, 40, 0.5, 0)
             SliderBar.Size = UDim2.new(0.4, 0, 0, 10)  -- 调整为40%父容器宽度
             
-            SliderBarC.CornerRadius = UDim.new(0, 4)
+            -- 增大滑块轨道圆角
+            SliderBarC.CornerRadius = UDim.new(0, 6)  -- 从4改为6
             SliderBarC.Name = "SliderBarC"
             SliderBarC.Parent = SliderBar
             
@@ -1046,7 +1062,8 @@ Open.Name = "Open"
             SliderPart.BorderSizePixel = 0
             SliderPart.Size = UDim2.new(0, 54, 0, 10)  -- 调整尺寸
             
-            SliderPartC.CornerRadius = UDim.new(0, 4)
+            -- 增大滑块按钮圆角
+            SliderPartC.CornerRadius = UDim.new(0, 6)  -- 从4改为6
             SliderPartC.Name = "SliderPartC"
             SliderPartC.Parent = SliderPart
             
@@ -1062,7 +1079,8 @@ Open.Name = "Open"
             SliderValBG.TextColor3 = Color3.fromRGB(255, 255, 255)
             SliderValBG.TextSize = 14.000
             
-            SliderValBGC.CornerRadius = UDim.new(0, 6)
+            -- 增大滑块值圆角
+            SliderValBGC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
             SliderValBGC.Name = "SliderValBGC"
             SliderValBGC.Parent = SliderValBG
             
@@ -1249,7 +1267,8 @@ Open.Name = "Open"
             DropdownTop.TextSize = 14.000  -- 缩小字体
             DropdownTop.TextXAlignment = Enum.TextXAlignment.Left
             
-            DropdownTopC.CornerRadius = UDim.new(0, 6)
+            -- 增大下拉菜单圆角
+            DropdownTopC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
             DropdownTopC.Name = "DropdownTopC"
             DropdownTopC.Parent = DropdownTop
             
@@ -1415,7 +1434,8 @@ Open.Name = "Open"
                 Option.TextColor3 = Color3.fromRGB(255, 255, 255)
                 Option.TextSize = 12.000  -- 缩小字体
                 
-                OptionC.CornerRadius = UDim.new(0, 6)
+                -- 增大选项圆角
+                OptionC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
                 OptionC.Name = "OptionC"
                 OptionC.Parent = Option
 
