@@ -31,7 +31,7 @@ function Ripple(obj)
 		Ripple.Image = "rbxassetid://2708891598"
 		Ripple.ImageTransparency = 0.800
 		Ripple.ScaleType = Enum.ScaleType.Fit
-		Ripple.ImageColor3 = Color3.fromRGB(255, 255, 255)
+		Ripple.ImageColor3 = Color3.fromRGB(0, 150, 200)  -- 青色涟漪效果
 		Ripple.Position = UDim2.new((mouse.X - Ripple.AbsolutePosition.X) / obj.AbsoluteSize.X, 0, (mouse.Y - Ripple.AbsolutePosition.Y) / obj.AbsoluteSize.Y, 0)
 		Tween(Ripple, {.3, 'Linear', 'InOut'}, {Position = UDim2.new(-5.5, 0, -5.5, 0), Size = UDim2.new(12, 0, 12, 0)})
 		wait(0.15)
@@ -122,15 +122,15 @@ function library.new(library, name, theme)
         end
       end
 if theme == 'dark' then
-    MainColor = Color3.fromRGB(30, 30, 30)  -- 更深的背景色
-    Background = Color3.fromRGB(30, 30, 30)
-    zyColor = Color3.fromRGB(40, 40, 40)    -- 侧边栏颜色
-    beijingColor = Color3.fromRGB(60, 60, 60)
+    MainColor = Color3.fromRGB(25, 30, 40)  -- 深蓝色背景
+    Background = Color3.fromRGB(25, 30, 40)
+    zyColor = Color3.fromRGB(35, 40, 50)    -- 侧边栏颜色
+    beijingColor = Color3.fromRGB(45, 50, 60)
 else
-    MainColor = Color3.fromRGB(52, 62, 72)
-    Background = Color3.fromRGB(58, 65, 75)
-    zyColor = Color3.fromRGB(52, 62, 72)
-    beijingColor = Color3.fromRGB(255, 255, 255)
+    MainColor = Color3.fromRGB(25, 30, 40)
+    Background = Color3.fromRGB(25, 30, 40)
+    zyColor = Color3.fromRGB(35, 40, 50)
+    beijingColor = Color3.fromRGB(45, 50, 60)
 end
       local dogent = Instance.new("ScreenGui")
       local Main = Instance.new("Frame")
@@ -212,12 +212,15 @@ end
       DropShadow.Size = UDim2.new(1, 43, 1, 43)
       DropShadow.ZIndex = 0
       DropShadow.Image = "rbxassetid://6015897843"
-      DropShadow.ImageColor3 = Color3.fromRGB(255,255,255)
+      DropShadow.ImageColor3 = Color3.fromRGB(255, 255, 255)
       DropShadow.ImageTransparency = 0.500
       DropShadow.ScaleType = Enum.ScaleType.Slice
       DropShadow.SliceCenter = Rect.new(49, 49, 450, 450)
 
-      UIGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(208, 27, 28)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(208, 27, 28))}  -- 红色渐变
+      UIGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0.00, Color3.fromRGB(0, 150, 200)),  -- 青色
+        ColorSequenceKeypoint.new(1.00, Color3.fromRGB(0, 100, 180))   -- 深蓝色
+      }
       UIGradient.Parent = DropShadow
 
       local TweenService = game:GetService("TweenService")
@@ -317,10 +320,10 @@ end
         local status = "down" 
         gradient.Offset = startingPos
         local function rainbowColors()
-            local sat, val = 255, 255 
             for i = 1, 10 do 
-                local hue = i * 17 
-                table.insert(list, Color3.fromHSV(hue / 255, sat / 255, val / 255))
+                table.insert(list, Color3.fromHSV(0.55, 0.8, 0.8))  -- 青色
+                table.insert(list, Color3.fromHSV(0.6, 0.8, 0.8))   -- 蓝青色
+                table.insert(list, Color3.fromHSV(0.65, 0.8, 0.8))  -- 深蓝色
             end
         end
         rainbowColors()
@@ -366,7 +369,6 @@ end
             gradient.Rotation = 0 
             if counter == #list - 1 and status == "up" then
                 gradient.Color = s({ 
-     
                     kpt(0, list[1]), 
                     kpt(0.5, list[#list]), 
                     kpt(1, gradient.Color.Keypoints[3].Value)
@@ -408,7 +410,7 @@ end
       
       Open.Name = "Open"
       Open.Parent = dogent
-      Open.BackgroundColor3 = Color3.fromRGB(208, 27, 28)  -- 红色按钮
+      Open.BackgroundColor3 = Color3.fromRGB(0, 150, 200)  -- 青色按钮
       Open.Position = UDim2.new(0.00829315186, 0, 0.31107837, 0)
       Open.Size = UDim2.new(0, 50, 0, 25)  -- 缩小尺寸
       Open.Font = Enum.Font.SourceSans
@@ -534,6 +536,7 @@ end
           SectionOpen.Position = UDim2.new(0, -33, 0, 2)  -- 调整位置
           SectionOpen.Size = UDim2.new(0, 26, 0, 26)
           SectionOpen.Image = "http://www.roblox.com/asset/?id=6031302934"
+          SectionOpen.ImageColor3 = Color3.fromRGB(0, 150, 200)  -- 青色
           
           SectionOpened.Name = "SectionOpened"
           SectionOpened.Parent = SectionOpen
@@ -542,7 +545,8 @@ end
           SectionOpened.Size = UDim2.new(0, 26, 0, 26)
           SectionOpened.Image = "http://www.roblox.com/asset/?id=6031302932"
           SectionOpened.ImageTransparency = 1.000
-    
+          SectionOpened.ImageColor3 = Color3.fromRGB(0, 150, 200)  -- 青色
+
           SectionToggle.Name = "SectionToggle"
           SectionToggle.Parent = SectionOpen
           SectionToggle.BackgroundTransparency = 1
@@ -592,7 +596,7 @@ end
             
             BtnModule.Name = "BtnModule"
             BtnModule.Parent = Objs
-            BtnModule.BackgroundColor3 = Color3.fromRGB(208, 27, 28)  -- 红色按钮
+            BtnModule.BackgroundColor3 = Color3.fromRGB(0, 150, 200)  -- 青色按钮
             BtnModule.BackgroundTransparency = 1.000
             BtnModule.BorderSizePixel = 0
             BtnModule.Position = UDim2.new(0, 0, 0, 0)
@@ -613,7 +617,16 @@ end
             BtnC.CornerRadius = UDim.new(0, 6)
             BtnC.Name = "BtnC"
             BtnC.Parent = Btn
-    
+
+            -- 添加悬停效果
+            Btn.MouseEnter:Connect(function()
+                Tween(Btn, {0.1, 'Linear', 'In'}, {BackgroundColor3 = Color3.fromRGB(45, 50, 60)})
+            end)
+            
+            Btn.MouseLeave:Connect(function()
+                Tween(Btn, {0.1, 'Linear', 'Out'}, {BackgroundColor3 = zyColor})
+            end)
+            
             Btn.MouseButton1Click:Connect(function()
                 local sound = Instance.new("Sound", workspace)
                 sound.SoundId = "rbxassetid://4590662766"
@@ -744,7 +757,7 @@ end
               SetState = function(self, state)
                 if state == nil then state = not library.flags[flag] end
                 if library.flags[flag] == state then return end
-                services.TweenService:Create(ToggleSwitch, TweenInfo.new(0.2), {Position = UDim2.new(0, (state and ToggleSwitch.Size.X.Offset / 2 or 0), 0, 0), BackgroundColor3 = (state and Color3.fromRGB(255, 255, 255) or beijingColor)}):Play()
+                services.TweenService:Create(ToggleSwitch, TweenInfo.new(0.2), {Position = UDim2.new(0, (state and ToggleSwitch.Size.X.Offset / 2 or 0), 0, 0), BackgroundColor3 = (state and Color3.fromRGB(0, 150, 200) or beijingColor)}):Play()
                 library.flags[flag] = state
                 callback(state)
               end,
@@ -754,6 +767,15 @@ end
             if enabled ~= false then
                 funcs:SetState(flag,true)
             end
+
+            -- 添加悬停效果
+            ToggleBtn.MouseEnter:Connect(function()
+                Tween(ToggleBtn, {0.1, 'Linear', 'In'}, {BackgroundColor3 = Color3.fromRGB(45, 50, 60)})
+            end)
+            
+            ToggleBtn.MouseLeave:Connect(function()
+                Tween(ToggleBtn, {0.1, 'Linear', 'Out'}, {BackgroundColor3 = zyColor})
+            end)
     
             ToggleBtn.MouseButton1Click:Connect(function()
               funcs:SetState()
@@ -1037,7 +1059,7 @@ end
             
             SliderPart.Name = "SliderPart"
             SliderPart.Parent = SliderBar
-            SliderPart.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            SliderPart.BackgroundColor3 = Color3.fromRGB(0, 150, 200)  -- 青色
             SliderPart.BorderSizePixel = 0
             SliderPart.Size = UDim2.new(0, 54, 0, 10)  -- 调整尺寸
             
@@ -1107,7 +1129,7 @@ end
                 end
                 percent = math.clamp(percent, 0, 1)
                 if precise then
-                  value = value or tonumber(string.format("%.1f", tostring(min + (max - min) * percent)))
+                  value = value or tonumber(string.format("%.1f", tostring(min + (max - min) * percent))
                 else
                   value = value or math.floor(min + (max - min) * percent)
                 end
@@ -1414,6 +1436,15 @@ end
                 OptionC.Name = "OptionC"
                 OptionC.Parent = Option
 
+                -- 悬停效果
+                Option.MouseEnter:Connect(function()
+                    Tween(Option, {0.1, 'Linear', 'In'}, {BackgroundColor3 = Color3.fromRGB(45, 50, 60)})
+                end)
+                
+                Option.MouseLeave:Connect(function()
+                    Tween(Option, {0.1, 'Linear', 'Out'}, {BackgroundColor3 = zyColor})
+                end)
+
                 Option.MouseButton1Click:Connect(function()
                     -- 清除之前选中的样式
                     for _, btn in pairs(ScrollFrame:GetChildren()) do
@@ -1423,7 +1454,7 @@ end
                     end
                     
                     -- 设置当前选中样式
-                    Option.BackgroundColor3 = Color3.fromRGB(208, 27, 28) -- 红色高亮
+                    Option.BackgroundColor3 = Color3.fromRGB(0, 150, 200) -- 青色高亮
                     
                     ToggleDropVis()
                     callback(Option.Text)
