@@ -31,7 +31,7 @@ function Ripple(obj)
 		Ripple.Image = "rbxassetid://2708891598"
 		Ripple.ImageTransparency = 0.800
 		Ripple.ScaleType = Enum.ScaleType.Fit
-		Ripple.ImageColor3 = Color3.fromRGB(173, 216, 230)  -- 浅蓝色涟漪效果
+		Ripple.ImageColor3 = Color3.fromRGB(0, 150, 200)  -- 青色涟漪效果
 		Ripple.Position = UDim2.new((mouse.X - Ripple.AbsolutePosition.X) / obj.AbsoluteSize.X, 0, (mouse.Y - Ripple.AbsolutePosition.Y) / obj.AbsoluteSize.Y, 0)
 		Tween(Ripple, {.3, 'Linear', 'InOut'}, {Position = UDim2.new(-5.5, 0, -5.5, 0), Size = UDim2.new(12, 0, 12, 0)})
 		wait(0.15)
@@ -122,15 +122,15 @@ function library.new(library, name, theme)
         end
       end
 if theme == 'dark' then
-    MainColor = Color3.fromRGB(25, 30, 45)      -- 深蓝背景
-    Background = Color3.fromRGB(30, 35, 50)     -- 深蓝背景
-    zyColor = Color3.fromRGB(35, 40, 60)        -- 侧边栏深蓝
-    beijingColor = Color3.fromRGB(50, 60, 80)   -- 元素深蓝
+    MainColor = Color3.fromRGB(25, 30, 40)  -- 深蓝色背景
+    Background = Color3.fromRGB(25, 30, 40)
+    zyColor = Color3.fromRGB(35, 40, 50)    -- 侧边栏颜色
+    beijingColor = Color3.fromRGB(45, 50, 60)
 else
-    MainColor = Color3.fromRGB(70, 100, 140)    -- 主蓝
-    Background = Color3.fromRGB(80, 110, 150)   -- 背景蓝
-    zyColor = Color3.fromRGB(70, 100, 140)      -- 侧边栏蓝
-    beijingColor = Color3.fromRGB(200, 220, 255) -- 浅蓝元素
+    MainColor = Color3.fromRGB(25, 30, 40)
+    Background = Color3.fromRGB(25, 30, 40)
+    zyColor = Color3.fromRGB(35, 40, 50)
+    beijingColor = Color3.fromRGB(45, 50, 60)
 end
       local dogent = Instance.new("ScreenGui")
       local Main = Instance.new("Frame")
@@ -193,8 +193,7 @@ end
       drag(Main)
       
       UICornerMain.Parent = Main
-      -- 增大主窗口圆角半径
-      UICornerMain.CornerRadius = UDim.new(0, 8)  -- 从3改为8
+      UICornerMain.CornerRadius = UDim.new(0,3)
       
       DropShadowHolder.Name = "DropShadowHolder"
       DropShadowHolder.Parent = Main
@@ -213,16 +212,14 @@ end
       DropShadow.Size = UDim2.new(1, 43, 1, 43)
       DropShadow.ZIndex = 0
       DropShadow.Image = "rbxassetid://6015897843"
-      DropShadow.ImageColor3 = Color3.fromRGB(255,255,255)
+      DropShadow.ImageColor3 = Color3.fromRGB(255, 255, 255)
       DropShadow.ImageTransparency = 0.500
       DropShadow.ScaleType = Enum.ScaleType.Slice
       DropShadow.SliceCenter = Rect.new(49, 49, 450, 450)
 
-      -- 蓝色渐变
       UIGradient.Color = ColorSequence.new{
-          ColorSequenceKeypoint.new(0.00, Color3.fromRGB(27, 108, 208)), 
-          ColorSequenceKeypoint.new(0.50, Color3.fromRGB(65, 105, 225)),
-          ColorSequenceKeypoint.new(1.00, Color3.fromRGB(100, 149, 237))
+        ColorSequenceKeypoint.new(0.00, Color3.fromRGB(0, 150, 200)),  -- 青色
+        ColorSequenceKeypoint.new(1.00, Color3.fromRGB(0, 100, 180))   -- 深蓝色
       }
       UIGradient.Parent = DropShadow
 
@@ -248,7 +245,7 @@ end
       TabMain.Position = UDim2.new(0.217000037, 0, 0, 3)
       TabMain.Size = UDim2.new(0, 350, 0, 280)  -- 缩小尺寸
       
-      MainC.CornerRadius = UDim.new(0, 8)  -- 从5.5改为8
+      MainC.CornerRadius = UDim.new(0, 5.5)
       MainC.Name = "MainC"
       MainC.Parent = Main
       
@@ -258,8 +255,7 @@ end
       SB.BorderColor3 = MainColor
       SB.Size = UDim2.new(0, 8, 0, 280)  -- 缩小尺寸
       
-      -- 增大侧边栏圆角半径
-      SBC.CornerRadius = UDim.new(0, 10)  -- 从6改为10
+      SBC.CornerRadius = UDim.new(0, 6)
       SBC.Name = "SBC"
       SBC.Parent = SB
       
@@ -324,10 +320,10 @@ end
         local status = "down" 
         gradient.Offset = startingPos
         local function rainbowColors()
-            local sat, val = 255, 255 
             for i = 1, 10 do 
-                local hue = i * 17 
-                table.insert(list, Color3.fromHSV(hue / 255, sat / 255, val / 255))
+                table.insert(list, Color3.fromHSV(0.55, 0.8, 0.8))  -- 青色
+                table.insert(list, Color3.fromHSV(0.6, 0.8, 0.8))   -- 蓝青色
+                table.insert(list, Color3.fromHSV(0.65, 0.8, 0.8))  -- 深蓝色
             end
         end
         rainbowColors()
@@ -373,7 +369,6 @@ end
             gradient.Rotation = 0 
             if counter == #list - 1 and status == "up" then
                 gradient.Color = s({ 
-     
                     kpt(0, list[1]), 
                     kpt(0.5, list[#list]), 
                     kpt(1, gradient.Color.Keypoints[3].Value)
@@ -415,23 +410,18 @@ end
       
       Open.Name = "Open"
       Open.Parent = dogent
-      Open.BackgroundColor3 = Color3.fromRGB(27, 108, 208)  -- 蓝色按钮
+      Open.BackgroundColor3 = Color3.fromRGB(0, 150, 200)  -- 青色按钮
       Open.Position = UDim2.new(0.00829315186, 0, 0.31107837, 0)
-      Open.Size = UDim2.new(0, 30, 0, 30)  -- 缩小尺寸
+      Open.Size = UDim2.new(0, 50, 0, 25)  -- 缩小尺寸
       Open.Font = Enum.Font.SourceSans
-      Open.Text = "≡"
+      Open.Text = "隐藏/打开"
       Open.TextColor3 = Color3.fromRGB(255, 255, 255)
-      Open.TextSize = 18.000  -- 缩小字体
+      Open.TextSize = 12.000  -- 缩小字体
       Open.Active = true
       Open.Draggable = true
       Open.MouseButton1Click:Connect(function()
           Main.Visible = not Main.Visible
       end)
-      -- 添加圆形效果
-      local OpenCorner = Instance.new("UICorner")
-      OpenCorner.CornerRadius = UDim.new(1, 0)  -- 完全圆形
-      OpenCorner.Parent = Open
-      
       UIG.Parent = Open
       
       local window = {}
@@ -523,8 +513,7 @@ end
           Section.ClipsDescendants = true
           Section.Size = UDim2.new(0.981000006, 0, 0, 30)  -- 缩小高度
           
-          -- 增大部分圆角半径
-          SectionC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
+          SectionC.CornerRadius = UDim.new(0, 6)
           SectionC.Name = "SectionC"
           SectionC.Parent = Section
           
@@ -547,6 +536,7 @@ end
           SectionOpen.Position = UDim2.new(0, -33, 0, 2)  -- 调整位置
           SectionOpen.Size = UDim2.new(0, 26, 0, 26)
           SectionOpen.Image = "http://www.roblox.com/asset/?id=6031302934"
+          SectionOpen.ImageColor3 = Color3.fromRGB(0, 150, 200)  -- 青色
           
           SectionOpened.Name = "SectionOpened"
           SectionOpened.Parent = SectionOpen
@@ -555,7 +545,8 @@ end
           SectionOpened.Size = UDim2.new(0, 26, 0, 26)
           SectionOpened.Image = "http://www.roblox.com/asset/?id=6031302932"
           SectionOpened.ImageTransparency = 1.000
-    
+          SectionOpened.ImageColor3 = Color3.fromRGB(0, 150, 200)  -- 青色
+
           SectionToggle.Name = "SectionToggle"
           SectionToggle.Parent = SectionOpen
           SectionToggle.BackgroundTransparency = 1
@@ -605,7 +596,7 @@ end
             
             BtnModule.Name = "BtnModule"
             BtnModule.Parent = Objs
-            BtnModule.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            BtnModule.BackgroundColor3 = Color3.fromRGB(0, 150, 200)  -- 青色按钮
             BtnModule.BackgroundTransparency = 1.000
             BtnModule.BorderSizePixel = 0
             BtnModule.Position = UDim2.new(0, 0, 0, 0)
@@ -623,11 +614,19 @@ end
             Btn.TextSize = 14.000  -- 缩小字体
             Btn.TextXAlignment = Enum.TextXAlignment.Left
             
-            -- 增大按钮圆角半径
-            BtnC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
+            BtnC.CornerRadius = UDim.new(0, 6)
             BtnC.Name = "BtnC"
             BtnC.Parent = Btn
-    
+
+            -- 添加悬停效果
+            Btn.MouseEnter:Connect(function()
+                Tween(Btn, {0.1, 'Linear', 'In'}, {BackgroundColor3 = Color3.fromRGB(45, 50, 60)})
+            end)
+            
+            Btn.MouseLeave:Connect(function()
+                Tween(Btn, {0.1, 'Linear', 'Out'}, {BackgroundColor3 = zyColor})
+            end)
+            
             Btn.MouseButton1Click:Connect(function()
                 local sound = Instance.new("Sound", workspace)
                 sound.SoundId = "rbxassetid://4590662766"
@@ -661,8 +660,7 @@ end
             TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             TextLabel.TextSize = 12.000  -- 缩小字体
     
-            -- 增大标签圆角半径
-            LabelC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
+            LabelC.CornerRadius = UDim.new(0, 6)
             LabelC.Name = "LabelC"
             LabelC.Parent = TextLabel
             return TextLabel
@@ -689,8 +687,7 @@ end
             TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             TextLabel.TextSize = 14.000  -- 调整字体大小
     
-            -- 增大大标签圆角半径
-            LabelC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
+            LabelC.CornerRadius = UDim.new(0, 6)
             LabelC.Name = "LabelC"
             LabelC.Parent = TextLabel
             return TextLabel
@@ -732,8 +729,7 @@ end
             ToggleBtn.TextSize = 14.000  -- 缩小字体
             ToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
             
-            -- 增大切换按钮圆角半径
-            ToggleBtnC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
+            ToggleBtnC.CornerRadius = UDim.new(0, 6)
             ToggleBtnC.Name = "ToggleBtnC"
             ToggleBtnC.Parent = ToggleBtn
             
@@ -749,13 +745,11 @@ end
             ToggleSwitch.BackgroundColor3 = beijingColor
             ToggleSwitch.Size = UDim2.new(0, 24, 0, 22)
             
-            -- 增大切换开关圆角半径
-            ToggleSwitchC.CornerRadius = UDim.new(0, 6)  -- 从4改为6
+            ToggleSwitchC.CornerRadius = UDim.new(0, 6)
             ToggleSwitchC.Name = "ToggleSwitchC"
             ToggleSwitchC.Parent = ToggleSwitch
             
-            -- 增大禁用状态圆角半径
-            ToggleDisableC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
+            ToggleDisableC.CornerRadius = UDim.new(0, 6)
             ToggleDisableC.Name = "ToggleDisableC"
             ToggleDisableC.Parent = ToggleDisable        
     
@@ -763,7 +757,7 @@ end
               SetState = function(self, state)
                 if state == nil then state = not library.flags[flag] end
                 if library.flags[flag] == state then return end
-                services.TweenService:Create(ToggleSwitch, TweenInfo.new(0.2), {Position = UDim2.new(0, (state and ToggleSwitch.Size.X.Offset / 2 or 0), 0, 0), BackgroundColor3 = (state and Color3.fromRGB(27, 108, 208) or beijingColor)}):Play()
+                services.TweenService:Create(ToggleSwitch, TweenInfo.new(0.2), {Position = UDim2.new(0, (state and ToggleSwitch.Size.X.Offset / 2 or 0), 0, 0), BackgroundColor3 = (state and Color3.fromRGB(0, 150, 200) or beijingColor)}):Play()
                 library.flags[flag] = state
                 callback(state)
               end,
@@ -773,6 +767,15 @@ end
             if enabled ~= false then
                 funcs:SetState(flag,true)
             end
+
+            -- 添加悬停效果
+            ToggleBtn.MouseEnter:Connect(function()
+                Tween(ToggleBtn, {0.1, 'Linear', 'In'}, {BackgroundColor3 = Color3.fromRGB(45, 50, 60)})
+            end)
+            
+            ToggleBtn.MouseLeave:Connect(function()
+                Tween(ToggleBtn, {0.1, 'Linear', 'Out'}, {BackgroundColor3 = zyColor})
+            end)
     
             ToggleBtn.MouseButton1Click:Connect(function()
               funcs:SetState()
@@ -841,8 +844,7 @@ end
             KeybindBtn.TextSize = 14.000  -- 缩小字体
             KeybindBtn.TextXAlignment = Enum.TextXAlignment.Left
             
-            -- 增大按键绑定按钮圆角半径
-            KeybindBtnC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
+            KeybindBtnC.CornerRadius = UDim.new(0, 6)
             KeybindBtnC.Name = "KeybindBtnC"
             KeybindBtnC.Parent = KeybindBtn
             
@@ -858,8 +860,7 @@ end
             KeybindValue.TextColor3 = Color3.fromRGB(255, 255, 255)
             KeybindValue.TextSize = 12.000  -- 缩小字体
             
-            -- 增大按键值圆角半径
-            KeybindValueC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
+            KeybindValueC.CornerRadius = UDim.new(0, 6)
             KeybindValueC.Name = "KeybindValueC"
             KeybindValueC.Parent = KeybindValue
             
@@ -935,13 +936,12 @@ end
             TextboxBack.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
             TextboxBack.AutoButtonColor = false
             TextboxBack.Font = Enum.Font.GothamSemibold
-            TextboxBack.Text = ""
+            TextboxBack.Text = "   " .. text
             TextboxBack.TextColor3 = Color3.fromRGB(255, 255, 255)
             TextboxBack.TextSize = 14.000  -- 缩小字体
             TextboxBack.TextXAlignment = Enum.TextXAlignment.Left
             
-            -- 增大文本框背景圆角半径
-            TextboxBackC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
+            TextboxBackC.CornerRadius = UDim.new(0, 6)
             TextboxBackC.Name = "TextboxBackC"
             TextboxBackC.Parent = TextboxBack
             
@@ -957,8 +957,7 @@ end
             BoxBG.TextColor3 = Color3.fromRGB(255, 255, 255)
             BoxBG.TextSize = 14.000
             
-            -- 增大输入框圆角半径
-            BoxBGC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
+            BoxBGC.CornerRadius = UDim.new(0, 6)
             BoxBGC.Name = "BoxBGC"
             BoxBGC.Parent = BoxBG
             
@@ -1042,8 +1041,7 @@ end
             SliderBack.TextSize = 14.000  -- 缩小字体
             SliderBack.TextXAlignment = Enum.TextXAlignment.Left
             
-            -- 增大滑块背景圆角半径
-            SliderBackC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
+            SliderBackC.CornerRadius = UDim.new(0, 6)
             SliderBackC.Name = "SliderBackC"
             SliderBackC.Parent = SliderBack
             
@@ -1055,19 +1053,17 @@ end
             SliderBar.Position = UDim2.new(0.369000018, 40, 0.5, 0)
             SliderBar.Size = UDim2.new(0, 120, 0, 10)  -- 调整尺寸
             
-            -- 增大滑块条圆角半径
-            SliderBarC.CornerRadius = UDim.new(0, 5)  -- 从4改为5
+            SliderBarC.CornerRadius = UDim.new(0, 4)
             SliderBarC.Name = "SliderBarC"
             SliderBarC.Parent = SliderBar
             
             SliderPart.Name = "SliderPart"
             SliderPart.Parent = SliderBar
-            SliderPart.BackgroundColor3 = Color3.fromRGB(27, 108, 208)  -- 蓝色滑块
+            SliderPart.BackgroundColor3 = Color3.fromRGB(0, 150, 200)  -- 青色
             SliderPart.BorderSizePixel = 0
             SliderPart.Size = UDim2.new(0, 54, 0, 10)  -- 调整尺寸
             
-            -- 增大滑块部分圆角半径
-            SliderPartC.CornerRadius = UDim.new(0, 5)  -- 从4改为5
+            SliderPartC.CornerRadius = UDim.new(0, 4)
             SliderPartC.Name = "SliderPartC"
             SliderPartC.Parent = SliderPart
             
@@ -1083,8 +1079,7 @@ end
             SliderValBG.TextColor3 = Color3.fromRGB(255, 255, 255)
             SliderValBG.TextSize = 14.000
             
-            -- 增大滑块值背景圆角半径
-            SliderValBGC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
+            SliderValBGC.CornerRadius = UDim.new(0, 6)
             SliderValBGC.Name = "SliderValBGC"
             SliderValBGC.Parent = SliderValBG
             
@@ -1134,7 +1129,7 @@ end
                 end
                 percent = math.clamp(percent, 0, 1)
                 if precise then
-                  value = value or tonumber(string.format("%.1f", tostring(min + (max - min) * percent)))
+                  value = value or tonumber(string.format("%.1f", tostring(min + (max - min) * percent))
                 else
                   value = value or math.floor(min + (max - min) * percent)
                 end
@@ -1271,8 +1266,7 @@ end
             DropdownTop.TextSize = 14.000  -- 缩小字体
             DropdownTop.TextXAlignment = Enum.TextXAlignment.Left
             
-            -- 增大下拉菜单顶部圆角半径
-            DropdownTopC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
+            DropdownTopC.CornerRadius = UDim.new(0, 6)
             DropdownTopC.Name = "DropdownTopC"
             DropdownTopC.Parent = DropdownTop
             
@@ -1438,10 +1432,18 @@ end
                 Option.TextColor3 = Color3.fromRGB(255, 255, 255)
                 Option.TextSize = 12.000  -- 缩小字体
                 
-                -- 增大选项圆角半径
-                OptionC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
+                OptionC.CornerRadius = UDim.new(0, 6)
                 OptionC.Name = "OptionC"
                 OptionC.Parent = Option
+
+                -- 悬停效果
+                Option.MouseEnter:Connect(function()
+                    Tween(Option, {0.1, 'Linear', 'In'}, {BackgroundColor3 = Color3.fromRGB(45, 50, 60)})
+                end)
+                
+                Option.MouseLeave:Connect(function()
+                    Tween(Option, {0.1, 'Linear', 'Out'}, {BackgroundColor3 = zyColor})
+                end)
 
                 Option.MouseButton1Click:Connect(function()
                     -- 清除之前选中的样式
@@ -1452,7 +1454,7 @@ end
                     end
                     
                     -- 设置当前选中样式
-                    Option.BackgroundColor3 = Color3.fromRGB(27, 108, 208) -- 蓝色高亮
+                    Option.BackgroundColor3 = Color3.fromRGB(0, 150, 200) -- 青色高亮
                     
                     ToggleDropVis()
                     callback(Option.Text)
