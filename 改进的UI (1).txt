@@ -121,18 +121,16 @@ function library.new(library, name, theme)
           v:Destroy()
         end
       end
--- ====== 新的深蓝/紫色主题 ======
 if theme == 'dark' then
-    MainColor = Color3.fromRGB(40, 45, 55)
-    Background = Color3.fromRGB(30, 35, 45)
-    zyColor = Color3.fromRGB(60, 65, 80)
-    beijingColor = Color3.fromRGB(50, 255, 130)
+    MainColor = Color3.fromRGB(40, 45, 55)         -- 主边框色
+    Background = Color3.fromRGB(30, 35, 45)        -- 主背景色
+    zyColor = Color3.fromRGB(60, 65, 80)           -- 按钮区域色
+    beijingColor = Color3.fromRGB(50, 255, 130)    -- 输入框/亮点颜色
 else
-    -- 新的主题颜色方案
-    MainColor = Color3.fromRGB(45, 35, 65)        -- 深紫色边框
-    Background = Color3.fromRGB(30, 25, 45)       -- 深紫色背景
-    zyColor = Color3.fromRGB(50, 40, 70)          -- 按钮区域
-    beijingColor = Color3.fromRGB(100, 80, 255)   -- 高亮/交互元素
+    MainColor = Color3.fromRGB(52, 62, 72)
+    Background = Color3.fromRGB(58, 65, 75)
+    zyColor = Color3.fromRGB(52, 62, 72)
+    beijingColor = Color3.fromRGB(255, 255, 255)
 end
       local dogent = Instance.new("ScreenGui")
       local Main = Instance.new("Frame")
@@ -219,7 +217,7 @@ end
       DropShadow.ScaleType = Enum.ScaleType.Slice
       DropShadow.SliceCenter = Rect.new(49, 49, 450, 450)
 
-      UIGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(80, 60, 120)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(80, 60, 120))}  -- 紫色渐变
+      UIGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(208, 27, 28)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(208, 27, 28))}  -- 红色渐变
       UIGradient.Parent = DropShadow
 
       local TweenService = game:GetService("TweenService")
@@ -296,7 +294,7 @@ end
       ScriptTitle.Size = UDim2.new(0, 90, 0, 16)  -- 缩小高度
       ScriptTitle.Font = Enum.Font.GothamSemibold
       ScriptTitle.Text = name
-      ScriptTitle.TextColor3 = Color3.fromRGB(180, 160, 255)  -- 淡紫色文本
+      ScriptTitle.TextColor3 = Color3.fromRGB(0, 255, 0)
       ScriptTitle.TextSize = 12.000  -- 缩小字体
       ScriptTitle.TextScaled = true
       ScriptTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -320,16 +318,10 @@ end
         gradient.Offset = startingPos
         local function rainbowColors()
             local sat, val = 255, 255 
-            -- 紫色系渐变颜色
-            table.insert(list, Color3.fromRGB(70, 50, 100))
-            table.insert(list, Color3.fromRGB(90, 70, 140))
-            table.insert(list, Color3.fromRGB(110, 90, 180))
-            table.insert(list, Color3.fromRGB(130, 110, 220))
-            table.insert(list, Color3.fromRGB(150, 130, 255))
-            table.insert(list, Color3.fromRGB(130, 110, 220))
-            table.insert(list, Color3.fromRGB(110, 90, 180))
-            table.insert(list, Color3.fromRGB(90, 70, 140))
-            table.insert(list, Color3.fromRGB(70, 50, 100))
+            for i = 1, 10 do 
+                local hue = i * 17 
+                table.insert(list, Color3.fromHSV(hue / 255, sat / 255, val / 255))
+            end
         end
         rainbowColors()
         gradient.Color = s({
@@ -414,21 +406,26 @@ end
         TabBtns.CanvasSize = UDim2.new(0, 0, 0, TabBtnsL.AbsoluteContentSize.Y + 18)
       end)
       
-      Open.Name = "Open"
+Open.Name = "Open"
       Open.Parent = dogent
-      Open.BackgroundColor3 = beijingColor  -- 使用主题高亮色
+      Open.BackgroundColor3 = Color3.fromRGB(208, 27, 28)  -- 红色按钮
       Open.Position = UDim2.new(0.00829315186, 0, 0.31107837, 0)
-      Open.Size = UDim2.new(0, 50, 0, 25)  -- 缩小尺寸
+      Open.Size = UDim2.new(0, 25, 0, 25)  -- 改为正方形尺寸
       Open.Font = Enum.Font.SourceSans
-      Open.Text = "隐藏/打开"
+      Open.Text = "≡"  -- 改为简洁的符号
       Open.TextColor3 = Color3.fromRGB(255, 255, 255)
-      Open.TextSize = 12.000  -- 缩小字体
+      Open.TextSize = 18.000  -- 增大字体大小
       Open.Active = true
       Open.Draggable = true
       Open.MouseButton1Click:Connect(function()
           Main.Visible = not Main.Visible
       end)
-      UIG.Parent = Open
+      
+      local OpenCorner = Instance.new("UICorner")
+      OpenCorner.CornerRadius = UDim.new(0.5, 0)  -- 完全圆形
+      OpenCorner.Parent = Open
+      
+      
       
       local window = {}
       
@@ -464,7 +461,7 @@ end
         TabText.Size = UDim2.new(0, 60, 0, 20)  -- 调整尺寸
         TabText.Font = Enum.Font.GothamSemibold
         TabText.Text = name
-        TabText.TextColor3 = Color3.fromRGB(200, 180, 255)  -- 淡紫色文本
+        TabText.TextColor3 = Color3.fromRGB(255, 255, 255)
         TabText.TextSize = 12.000  -- 缩小字体
         TabText.TextXAlignment = Enum.TextXAlignment.Left
         TabText.TextTransparency = 0.2
@@ -531,7 +528,7 @@ end
           SectionText.Size = UDim2.new(0, 350, 0, 30)  -- 调整尺寸
           SectionText.Font = Enum.Font.GothamSemibold
           SectionText.Text = name
-          SectionText.TextColor3 = Color3.fromRGB(220, 200, 255)  -- 淡紫色文本
+          SectionText.TextColor3 = Color3.fromRGB(255, 255, 255)
           SectionText.TextSize = 14.000  -- 缩小字体
           SectionText.TextXAlignment = Enum.TextXAlignment.Left
           
@@ -542,7 +539,6 @@ end
           SectionOpen.Position = UDim2.new(0, -33, 0, 2)  -- 调整位置
           SectionOpen.Size = UDim2.new(0, 26, 0, 26)
           SectionOpen.Image = "http://www.roblox.com/asset/?id=6031302934"
-          SectionOpen.ImageColor3 = Color3.fromRGB(200, 180, 255)  -- 淡紫色图标
           
           SectionOpened.Name = "SectionOpened"
           SectionOpened.Parent = SectionOpen
@@ -551,7 +547,6 @@ end
           SectionOpened.Size = UDim2.new(0, 26, 0, 26)
           SectionOpened.Image = "http://www.roblox.com/asset/?id=6031302932"
           SectionOpened.ImageTransparency = 1.000
-          SectionOpened.ImageColor3 = Color3.fromRGB(200, 180, 255)  -- 淡紫色图标
     
           SectionToggle.Name = "SectionToggle"
           SectionToggle.Parent = SectionOpen
@@ -616,7 +611,7 @@ end
             Btn.AutoButtonColor = false
             Btn.Font = Enum.Font.GothamSemibold
             Btn.Text = "   " .. text
-            Btn.TextColor3 = Color3.fromRGB(220, 200, 255)  -- 淡紫色文本
+            Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
             Btn.TextSize = 14.000  -- 缩小字体
             Btn.TextXAlignment = Enum.TextXAlignment.Left
             
@@ -654,7 +649,7 @@ end
             TextLabel.Size = UDim2.new(1, 0, 1, 0)  -- 宽度100%父容器
             TextLabel.Font = Enum.Font.GothamSemibold
             TextLabel.Text = text
-            TextLabel.TextColor3 = Color3.fromRGB(220, 200, 255)  -- 淡紫色文本
+            TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             TextLabel.TextSize = 12.000  -- 缩小字体
     
             LabelC.CornerRadius = UDim.new(0, 6)
@@ -681,7 +676,7 @@ end
             TextLabel.Size = UDim2.new(1, 0, 1, 0)  -- 宽度100%父容器
             TextLabel.Font = Enum.Font.GothamSemibold
             TextLabel.Text = text
-            TextLabel.TextColor3 = Color3.fromRGB(220, 200, 255)  -- 淡紫色文本
+            TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             TextLabel.TextSize = 14.000  -- 调整字体大小
     
             LabelC.CornerRadius = UDim.new(0, 6)
@@ -722,7 +717,7 @@ end
             ToggleBtn.AutoButtonColor = false
             ToggleBtn.Font = Enum.Font.GothamSemibold
             ToggleBtn.Text = "   " .. text
-            ToggleBtn.TextColor3 = Color3.fromRGB(220, 200, 255)  -- 淡紫色文本
+            ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
             ToggleBtn.TextSize = 14.000  -- 缩小字体
             ToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
             
@@ -754,7 +749,7 @@ end
               SetState = function(self, state)
                 if state == nil then state = not library.flags[flag] end
                 if library.flags[flag] == state then return end
-                services.TweenService:Create(ToggleSwitch, TweenInfo.new(0.2), {Position = UDim2.new(0, (state and ToggleSwitch.Size.X.Offset / 2 or 0), 0, 0), BackgroundColor3 = (state and beijingColor or Color3.fromRGB(150, 130, 220))}):Play()
+                services.TweenService:Create(ToggleSwitch, TweenInfo.new(0.2), {Position = UDim2.new(0, (state and ToggleSwitch.Size.X.Offset / 2 or 0), 0, 0), BackgroundColor3 = (state and Color3.fromRGB(255, 255, 255) or beijingColor)}):Play()
                 library.flags[flag] = state
                 callback(state)
               end,
@@ -828,7 +823,7 @@ end
             KeybindBtn.AutoButtonColor = false
             KeybindBtn.Font = Enum.Font.GothamSemibold
             KeybindBtn.Text = "   " .. text
-            KeybindBtn.TextColor3 = Color3.fromRGB(220, 200, 255)  -- 淡紫色文本
+            KeybindBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
             KeybindBtn.TextSize = 14.000  -- 缩小字体
             KeybindBtn.TextXAlignment = Enum.TextXAlignment.Left
             
@@ -845,7 +840,7 @@ end
             KeybindValue.AutoButtonColor = false
             KeybindValue.Font = Enum.Font.Gotham
             KeybindValue.Text = keyTxt
-            KeybindValue.TextColor3 = Color3.fromRGB(200, 180, 255)  -- 淡紫色文本
+            KeybindValue.TextColor3 = Color3.fromRGB(255, 255, 255)
             KeybindValue.TextSize = 12.000  -- 缩小字体
             
             KeybindValueC.CornerRadius = UDim.new(0, 6)
@@ -925,7 +920,7 @@ end
             TextboxBack.AutoButtonColor = false
             TextboxBack.Font = Enum.Font.GothamSemibold
             TextboxBack.Text = "   " .. text
-            TextboxBack.TextColor3 = Color3.fromRGB(220, 200, 255)  -- 淡紫色文本
+            TextboxBack.TextColor3 = Color3.fromRGB(255, 255, 255)
             TextboxBack.TextSize = 14.000  -- 缩小字体
             TextboxBack.TextXAlignment = Enum.TextXAlignment.Left
             
@@ -956,7 +951,7 @@ end
             TextBox.Size = UDim2.new(1, 0, 1, 0)
             TextBox.Font = Enum.Font.Gotham
             TextBox.Text = default
-            TextBox.TextColor3 = Color3.fromRGB(220, 200, 255)  -- 淡紫色文本
+            TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
             TextBox.TextSize = 12.000  -- 缩小字体
             
             TextboxBackL.Name = "TextboxBackL"
@@ -1025,7 +1020,7 @@ end
             SliderBack.AutoButtonColor = false
             SliderBack.Font = Enum.Font.GothamSemibold
             SliderBack.Text = "   " .. text
-            SliderBack.TextColor3 = Color3.fromRGB(220, 200, 255)  -- 淡紫色文本
+            SliderBack.TextColor3 = Color3.fromRGB(255, 255, 255)
             SliderBack.TextSize = 14.000  -- 缩小字体
             SliderBack.TextXAlignment = Enum.TextXAlignment.Left
             
@@ -1047,7 +1042,7 @@ end
             
             SliderPart.Name = "SliderPart"
             SliderPart.Parent = SliderBar
-            SliderPart.BackgroundColor3 = beijingColor  -- 使用主题高亮色
+            SliderPart.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             SliderPart.BorderSizePixel = 0
             SliderPart.Size = UDim2.new(0, 54, 0, 10)  -- 调整尺寸
             
@@ -1079,7 +1074,7 @@ end
             SliderValue.Size = UDim2.new(1, 0, 1, 0)
             SliderValue.Font = Enum.Font.Gotham
             SliderValue.Text = "1000"
-            SliderValue.TextColor3 = Color3.fromRGB(220, 200, 255)  -- 淡紫色文本
+            SliderValue.TextColor3 = Color3.fromRGB(255, 255, 255)
             SliderValue.TextSize = 12.000  -- 缩小字体
             
             MinSlider.Name = "MinSlider"
@@ -1091,7 +1086,7 @@ end
             MinSlider.Size = UDim2.new(0, 16, 0, 16)  -- 缩小尺寸
             MinSlider.Font = Enum.Font.Gotham
             MinSlider.Text = "-"
-            MinSlider.TextColor3 = Color3.fromRGB(220, 200, 255)  -- 淡紫色文本
+            MinSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
             MinSlider.TextSize = 20.000  -- 调整字体大小
             MinSlider.TextWrapped = true
             
@@ -1105,7 +1100,7 @@ end
             AddSlider.Size = UDim2.new(0, 16, 0, 16)  -- 缩小尺寸
             AddSlider.Font = Enum.Font.Gotham
             AddSlider.Text = "+"
-            AddSlider.TextColor3 = Color3.fromRGB(220, 200, 255)  -- 淡紫色文本
+            AddSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
             AddSlider.TextSize = 20.000  -- 调整字体大小
             AddSlider.TextWrapped = true
             
@@ -1117,7 +1112,7 @@ end
                 end
                 percent = math.clamp(percent, 0, 1)
                 if precise then
-                  value = value or tonumber(string.format("%.1f", tostring(min + (max - min) * percent))
+                  value = value or tonumber(string.format("%.1f", tostring(min + (max - min) * percent)))
                 else
                   value = value or math.floor(min + (max - min) * percent)
                 end
@@ -1268,7 +1263,7 @@ end
             DropdownOpen.Size = UDim2.new(0, 16, 0, 16)  -- 缩小尺寸
             DropdownOpen.Font = Enum.Font.Gotham
             DropdownOpen.Text = "+"
-            DropdownOpen.TextColor3 = Color3.fromRGB(220, 200, 255)  -- 淡紫色文本
+            DropdownOpen.TextColor3 = Color3.fromRGB(255, 255, 255)
             DropdownOpen.TextSize = 20.000  -- 调整字体大小
             DropdownOpen.TextWrapped = true
             
@@ -1280,10 +1275,10 @@ end
             DropdownText.Position = UDim2.new(0.0373831764, 0, 0, 0)
             DropdownText.Size = UDim2.new(0.9, 0, 1, 0)  -- 调整为90%父容器宽度
             DropdownText.Font = Enum.Font.GothamSemibold
-            DropdownText.PlaceholderColor3 = Color3.fromRGB(200, 180, 255)  -- 淡紫色占位符
+            DropdownText.PlaceholderColor3 = Color3.fromRGB(255, 255, 255)
             DropdownText.PlaceholderText = text
             DropdownText.Text = ""
-            DropdownText.TextColor3 = Color3.fromRGB(220, 200, 255)  -- 淡紫色文本
+            DropdownText.TextColor3 = Color3.fromRGB(255, 255, 255)
             DropdownText.TextSize = 14.000  -- 缩小字体
             DropdownText.TextXAlignment = Enum.TextXAlignment.Left
             
@@ -1417,7 +1412,7 @@ end
                 Option.AutoButtonColor = false
                 Option.Font = Enum.Font.Gotham
                 Option.Text = option
-                Option.TextColor3 = Color3.fromRGB(220, 200, 255)  -- 淡紫色文本
+                Option.TextColor3 = Color3.fromRGB(255, 255, 255)
                 Option.TextSize = 12.000  -- 缩小字体
                 
                 OptionC.CornerRadius = UDim.new(0, 6)
@@ -1433,7 +1428,7 @@ end
                     end
                     
                     -- 设置当前选中样式
-                    Option.BackgroundColor3 = beijingColor -- 使用主题高亮色
+                    Option.BackgroundColor3 = Color3.fromRGB(208, 27, 28) -- 红色高亮
                     
                     ToggleDropVis()
                     callback(Option.Text)
