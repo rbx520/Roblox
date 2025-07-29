@@ -181,6 +181,9 @@ end
       Main.ZIndex = 1
       Main.Active = true
       Main.Draggable = true
+      local MainCorner = Instance.new("UICorner")
+      MainCorner.CornerRadius = UDim.new(0, 8)
+      MainCorner.Parent = Main
       services.UserInputService.InputEnded:Connect(function(input)
           if input.KeyCode == Enum.KeyCode.LeftControl then
               if Main.Visible == true then
@@ -255,7 +258,7 @@ end
       SB.Size = UDim2.new(0, 8, 0, 280)  -- 缩小尺寸
       
       -- 增大侧边栏圆角
-      SBC.CornerRadius = UDim.new(0, 10)  -- 从6改为10
+      SBC.CornerRadius = UDim.new(0, 8)  -- 从6改为10
       SBC.Name = "SBC"
       SBC.Parent = SB
       
@@ -267,6 +270,9 @@ end
       Side.ClipsDescendants = true
       Side.Position = UDim2.new(1, 0, 0, 0)
       Side.Size = UDim2.new(0, 90, 0, 280)  -- 缩小尺寸
+      local SideCorner = Instance.new("UICorner")
+      SideCorner.CornerRadius = UDim.new(0, 8)
+      SideCorner.Parent = Side
       
       SideG.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, zyColor), ColorSequenceKeypoint.new(1.00, zyColor)}
       SideG.Rotation = 90
