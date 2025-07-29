@@ -291,7 +291,7 @@ end
       TabBtnsL.Name = "TabBtnsL"
       TabBtnsL.Parent = TabBtns
       TabBtnsL.SortOrder = Enum.SortOrder.LayoutOrder
-      TabBtnsL.Padding = UDim.new(0, 8)  -- 减小间距
+      TabBtnsL.Padding = UDim.new(0, 4)  -- 减小间距
       
       ScriptTitle.Name = "ScriptTitle"
       ScriptTitle.Parent = Side
@@ -521,7 +521,7 @@ end
           Section.BackgroundTransparency = 1.000
           Section.BorderSizePixel = 0
           Section.ClipsDescendants = true
-          Section.Size = UDim2.new(0.981000006, 0, 0, 30)  -- 缩小高度
+          Section.Size = UDim2.new(0.981000006, 0, 0, 26)  -- 缩小高度
           
           -- 增大部分圆角半径
           SectionC.CornerRadius = UDim.new(0, 8)  -- 从6改为8
@@ -533,7 +533,7 @@ end
           SectionText.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
           SectionText.BackgroundTransparency = 1.000
           SectionText.Position = UDim2.new(0.0887396261, 0, 0, 0)
-          SectionText.Size = UDim2.new(0, 350, 0, 30)  -- 调整尺寸
+          SectionText.Size = UDim2.new(0, 350, 0, 26)  -- 调整尺寸
           SectionText.Font = Enum.Font.GothamSemibold
           SectionText.Text = name
           SectionText.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -544,7 +544,7 @@ end
           SectionOpen.Parent = SectionText
           SectionOpen.BackgroundTransparency = 1
           SectionOpen.BorderSizePixel = 0
-          SectionOpen.Position = UDim2.new(0, -33, 0, 2)  -- 调整位置
+          SectionOpen.Position = UDim2.new(0, -33, 0, 0)  -- 调整位置
           SectionOpen.Size = UDim2.new(0, 26, 0, 26)
           SectionOpen.Image = "http://www.roblox.com/asset/?id=6031302934"
           
@@ -567,13 +567,13 @@ end
           Objs.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
           Objs.BackgroundTransparency = 1
           Objs.BorderSizePixel = 0
-          Objs.Position = UDim2.new(0, 6, 0, 30)  -- 调整位置
+          Objs.Position = UDim2.new(0, 6, 0, 26)  -- 调整位置
           Objs.Size = UDim2.new(0.986347735, 0, 0, 0)
     
           ObjsL.Name = "ObjsL"
           ObjsL.Parent = Objs
           ObjsL.SortOrder = Enum.SortOrder.LayoutOrder
-          ObjsL.Padding = UDim.new(0, 6)  -- 减小间距
+          ObjsL.Padding = UDim.new(0, 4)  -- 减小间距
           
           local open = TabVal
           if TabVal ~= false then
@@ -609,18 +609,18 @@ end
             BtnModule.BackgroundTransparency = 1.000
             BtnModule.BorderSizePixel = 0
             BtnModule.Position = UDim2.new(0, 0, 0, 0)
-            BtnModule.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
+            BtnModule.Size = UDim2.new(0, 350, 0, 26)  -- 缩小高度
             
             Btn.Name = "Btn"
             Btn.Parent = BtnModule
             Btn.BackgroundColor3 = zyColor
             Btn.BorderSizePixel = 0
-            Btn.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
+            Btn.Size = UDim2.new(0, 350, 0, 26)  -- 缩小高度
             Btn.AutoButtonColor = false
             Btn.Font = Enum.Font.GothamSemibold
             Btn.Text = "   " .. text
             Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Btn.TextSize = 14.000  -- 缩小字体
+            Btn.TextSize = 13.000  -- 缩小字体
             Btn.TextXAlignment = Enum.TextXAlignment.Left
             
             -- 增大按钮圆角半径
@@ -718,18 +718,18 @@ end
             ToggleModule.BackgroundTransparency = 1.000
             ToggleModule.BorderSizePixel = 0
             ToggleModule.Position = UDim2.new(0, 0, 0, 0)
-            ToggleModule.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
+            ToggleModule.Size = UDim2.new(0, 350, 0, 26)  -- 缩小高度
             
             ToggleBtn.Name = "ToggleBtn"
             ToggleBtn.Parent = ToggleModule
             ToggleBtn.BackgroundColor3 = zyColor
             ToggleBtn.BorderSizePixel = 0
-            ToggleBtn.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
+            ToggleBtn.Size = UDim2.new(0, 350, 0, 26)  -- 缩小高度
             ToggleBtn.AutoButtonColor = false
             ToggleBtn.Font = Enum.Font.GothamSemibold
             ToggleBtn.Text = "   " .. text
             ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            ToggleBtn.TextSize = 14.000  -- 缩小字体
+            ToggleBtn.TextSize = 13.000  -- 缩小字体
             ToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
             
             -- 增大切换按钮圆角半径
@@ -741,7 +741,7 @@ end
             ToggleDisable.Parent = ToggleBtn
             ToggleDisable.BackgroundColor3 = Background
             ToggleDisable.BorderSizePixel = 0
-            ToggleDisable.Position = UDim2.new(0.901869178, 0, 0.208881587, 0)
+            ToggleDisable.Position = UDim2.new(0.901869178, 0, 0.2, 0)
             ToggleDisable.Size = UDim2.new(0, 36, 0, 22)
             
             ToggleSwitch.Name = "ToggleSwitch"
@@ -827,18 +827,18 @@ end
             KeybindModule.BackgroundTransparency = 1.000
             KeybindModule.BorderSizePixel = 0
             KeybindModule.Position = UDim2.new(0, 0, 0, 0)
-            KeybindModule.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
+            KeybindModule.Size = UDim2.new(0, 350, 0, 26)  -- 缩小高度
             
             KeybindBtn.Name = "KeybindBtn"
             KeybindBtn.Parent = KeybindModule
             KeybindBtn.BackgroundColor3 = zyColor
             KeybindBtn.BorderSizePixel = 0
-            KeybindBtn.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
+            KeybindBtn.Size = UDim2.new(0, 350, 0, 26)  -- 缩小高度
             KeybindBtn.AutoButtonColor = false
             KeybindBtn.Font = Enum.Font.GothamSemibold
             KeybindBtn.Text = "   " .. text
             KeybindBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            KeybindBtn.TextSize = 14.000  -- 缩小字体
+            KeybindBtn.TextSize = 13.000  -- 缩小字体
             KeybindBtn.TextXAlignment = Enum.TextXAlignment.Left
             
             -- 增大按键绑定按钮圆角半径
@@ -850,7 +850,7 @@ end
             KeybindValue.Parent = KeybindBtn
             KeybindValue.BackgroundColor3 = Background
             KeybindValue.BorderSizePixel = 0
-            KeybindValue.Position = UDim2.new(0.763033211, 0, 0.289473683, 0)
+            KeybindValue.Position = UDim2.new(0.763033211, 0, 0.2, 0)
             KeybindValue.Size = UDim2.new(0, 80, 0, 22)  -- 缩小尺寸
             KeybindValue.AutoButtonColor = false
             KeybindValue.Font = Enum.Font.Gotham
@@ -926,18 +926,18 @@ end
             TextboxModule.BackgroundTransparency = 1.000
             TextboxModule.BorderSizePixel = 0
             TextboxModule.Position = UDim2.new(0, 0, 0, 0)
-            TextboxModule.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
+            TextboxModule.Size = UDim2.new(0, 350, 0, 26)  -- 缩小高度
             
             TextboxBack.Name = "TextboxBack"
             TextboxBack.Parent = TextboxModule
             TextboxBack.BackgroundColor3 = zyColor
             TextboxBack.BorderSizePixel = 0
-            TextboxBack.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
+            TextboxBack.Size = UDim2.new(0, 350, 0, 26)  -- 缩小高度
             TextboxBack.AutoButtonColor = false
             TextboxBack.Font = Enum.Font.GothamSemibold
             TextboxBack.Text = ""
             TextboxBack.TextColor3 = Color3.fromRGB(255, 255, 255)
-            TextboxBack.TextSize = 14.000  -- 缩小字体
+            TextboxBack.TextSize = 13.000  -- 缩小字体
             TextboxBack.TextXAlignment = Enum.TextXAlignment.Left
             
             -- 增大文本框背景圆角半径
@@ -949,7 +949,7 @@ end
             BoxBG.Parent = TextboxBack
             BoxBG.BackgroundColor3 = Background
             BoxBG.BorderSizePixel = 0
-            BoxBG.Position = UDim2.new(0.763033211, 0, 0.289473683, 0)
+            BoxBG.Position = UDim2.new(0.763033211, 0, 0.2, 0)
             BoxBG.Size = UDim2.new(0, 80, 0, 22)  -- 缩小尺寸
             BoxBG.AutoButtonColor = false
             BoxBG.Font = Enum.Font.Gotham
@@ -1028,18 +1028,18 @@ end
             SliderModule.BackgroundTransparency = 1.000
             SliderModule.BorderSizePixel = 0
             SliderModule.Position = UDim2.new(0, 0, 0, 0)
-            SliderModule.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
+            SliderModule.Size = UDim2.new(0, 350, 0, 26)  -- 缩小高度
             
             SliderBack.Name = "SliderBack"
             SliderBack.Parent = SliderModule
             SliderBack.BackgroundColor3 = zyColor
             SliderBack.BorderSizePixel = 0
-            SliderBack.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
+            SliderBack.Size = UDim2.new(0, 350, 0, 26)  -- 缩小高度
             SliderBack.AutoButtonColor = false
             SliderBack.Font = Enum.Font.GothamSemibold
             SliderBack.Text = "   " .. text
             SliderBack.TextColor3 = Color3.fromRGB(255, 255, 255)
-            SliderBack.TextSize = 14.000  -- 缩小字体
+            SliderBack.TextSize = 13.000  -- 缩小字体
             SliderBack.TextXAlignment = Enum.TextXAlignment.Left
             
             -- 增大滑块背景圆角半径
@@ -1075,7 +1075,7 @@ end
             SliderValBG.Parent = SliderBack
             SliderValBG.BackgroundColor3 = Background
             SliderValBG.BorderSizePixel = 0
-            SliderValBG.Position = UDim2.new(0.883177578, 0, 0.131578952, 0)
+            SliderValBG.Position = UDim2.new(0.883177578, 0, 0.15, 0)
             SliderValBG.Size = UDim2.new(0, 40, 0, 22)  -- 缩小尺寸
             SliderValBG.AutoButtonColor = false
             SliderValBG.Font = Enum.Font.Gotham
@@ -1257,18 +1257,18 @@ end
             DropdownModule.BorderSizePixel = 0
             DropdownModule.ClipsDescendants = true
             DropdownModule.Position = UDim2.new(0, 0, 0, 0)
-            DropdownModule.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
+            DropdownModule.Size = UDim2.new(0, 350, 0, 26)  -- 缩小高度
             
             DropdownTop.Name = "DropdownTop"
             DropdownTop.Parent = DropdownModule
             DropdownTop.BackgroundColor3 = zyColor
             DropdownTop.BorderSizePixel = 0
-            DropdownTop.Size = UDim2.new(0, 350, 0, 30)  -- 缩小高度
+            DropdownTop.Size = UDim2.new(0, 350, 0, 26)  -- 缩小高度
             DropdownTop.AutoButtonColor = false
             DropdownTop.Font = Enum.Font.GothamSemibold
             DropdownTop.Text = ""
             DropdownTop.TextColor3 = Color3.fromRGB(255, 255, 255)
-            DropdownTop.TextSize = 14.000  -- 缩小字体
+            DropdownTop.TextSize = 13.000  -- 缩小字体
             DropdownTop.TextXAlignment = Enum.TextXAlignment.Left
             
             -- 增大下拉菜单顶部圆角半径
@@ -1309,7 +1309,7 @@ end
             ScrollFrame.Name = "ScrollFrame"
             ScrollFrame.Parent = DropdownModule
             ScrollFrame.Size = UDim2.new(1, 0, 1, -30)
-            ScrollFrame.Position = UDim2.new(0, 0, 0, 30)
+            ScrollFrame.Position = UDim2.new(0, 0, 0, 26)
             ScrollFrame.BackgroundTransparency = 1
             ScrollFrame.ScrollBarThickness = 5
             ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -1431,7 +1431,7 @@ end
                 Option.BackgroundColor3 = zyColor
                 Option.BorderSizePixel = 0
                 Option.Position = UDim2.new(0, 0, 0.328125, 0)
-                Option.Size = UDim2.new(0, 350, 0, 22)  -- 缩小高度
+                Option.Size = UDim2.new(0, 350, 0, 20)  -- 缩小高度
                 Option.AutoButtonColor = false
                 Option.Font = Enum.Font.Gotham
                 Option.Text = option
