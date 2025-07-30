@@ -121,17 +121,21 @@ function library.new(library, name, theme)
           v:Destroy()
         end
       end
--- 替换原有颜色定义
 if theme == 'dark' then
-    MainColor = Color3.fromRGB(30, 30, 40)         -- 更深的背景色
-    Background = Color3.fromRGB(20, 20, 30)
-    zyColor = Color3.fromRGB(45, 45, 60)
-    beijingColor = Color3.fromRGB(0, 180, 255)     -- 蓝色替代绿色更现代化
+    MainColor = Color3.fromRGB(30, 30, 46)         -- 深蓝灰边框
+    Background = Color3.fromRGB(24, 24, 37)        -- 深蓝黑背景
+    zyColor = Color3.fromRGB(36, 36, 56)           -- 暗蓝灰按钮
+    beijingColor = Color3.fromRGB(137, 180, 250)   -- 柔和的现代蓝
+elseif theme == 'modern' then  -- 新增现代化主题
+    MainColor = Color3.fromRGB(40, 42, 54)         -- 深蓝灰边框
+    Background = Color3.fromRGB(30, 32, 44)        -- 深蓝黑背景
+    zyColor = Color3.fromRGB(50, 52, 68)           -- 中蓝灰按钮
+    beijingColor = Color3.fromRGB(139, 233, 253)   -- 现代青色
 else
-    MainColor = Color3.fromRGB(240, 240, 245)      -- 浅色模式
-    Background = Color3.fromRGB(250, 250, 255)
-    zyColor = Color3.fromRGB(230, 230, 240)
-    beijingColor = Color3.fromRGB(0, 120, 215)
+    MainColor = Color3.fromRGB(44, 46, 58)
+    Background = Color3.fromRGB(30, 32, 44)
+    zyColor = Color3.fromRGB(50, 52, 68)
+    beijingColor = Color3.fromRGB(189, 147, 249)   -- 柔和的紫色
 end
       local dogent = Instance.new("ScreenGui")
       local Main = Instance.new("Frame")
@@ -222,7 +226,10 @@ end
       DropShadow.ScaleType = Enum.ScaleType.Slice
       DropShadow.SliceCenter = Rect.new(49, 49, 450, 450)
 
-      UIGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(208, 27, 28)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(208, 27, 28))}  -- 红色渐变
+      UIGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0.00, Color3.fromRGB(98, 114, 164)),  -- 柔和的蓝紫色
+    ColorSequenceKeypoint.new(1.00, Color3.fromRGB(139, 233, 253))  -- 现代青色
+}
       UIGradient.Parent = DropShadow
 
       local TweenService = game:GetService("TweenService")
