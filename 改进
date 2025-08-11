@@ -666,7 +666,7 @@ function library:CreateTab(tabName)
     
     tabGlow.Name = "Glow"
     tabGlow.Parent = tabButton
-    tabGlow.BackgroundColor3 = Theme.Accent
+    tabGlow.BackgroundColor3 = Theme.SliderFill -- [修改] 使用滑块填充色以保持统一
     tabGlow.BorderSizePixel = 0
     tabGlow.Position = dn(0, 0, 1, -2)
     tabGlow.Size = dn(1, 0, 0, 2)
@@ -714,7 +714,7 @@ function library:CreateTab(tabName)
     local tabElements = {
         {tabButton, "BackgroundColor3", "Tertiary"},
         {tabButton, "TextColor3", "Text"},
-        {tabGlow, "BackgroundColor3", "Accent"},
+        {tabGlow, "BackgroundColor3", "SliderFill"}, -- [修改] 确保主题切换时更新为正确的颜色
         {tabContent, "ScrollBarImageColor3", "ScrollBar"}
     }
     
@@ -1106,7 +1106,7 @@ function library:CreateTab(tabName)
         value.Size = dn(0, 48, 0, 18)
         value.Font = Enum.Font.SourceSansBold
         value.Text = tostring(default)
-        value.TextColor3 = Theme.Accent
+        value.TextColor3 = Theme.SliderFill -- [修改] 使用滑块填充色以保持统一
         value.TextSize = 13
         value.ClearTextOnFocus = false
         
@@ -1221,7 +1221,7 @@ function library:CreateTab(tabName)
         table.insert(tabElements, {slider, "BackgroundColor3", "Tertiary"})
         table.insert(tabElements, {title, "TextColor3", "Text"})
         table.insert(tabElements, {value, "BackgroundColor3", "Secondary"})
-        table.insert(tabElements, {value, "TextColor3", "Accent"})
+        table.insert(tabElements, {value, "TextColor3", "SliderFill"}) -- [修改] 确保主题切换时更新为正确的颜色
         table.insert(tabElements, {sliderBar, "BackgroundColor3", "Border"})
         table.insert(tabElements, {sliderFill, "BackgroundColor3", "SliderFill"})
         table.insert(tabElements, {sliderButton, "BackgroundColor3", "SliderHandle"})
