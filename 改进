@@ -42,7 +42,7 @@ local Themes = {
         MinimizeBtn = dp(35, 35, 42),    -- 最小化按钮背景
         MinimizeBorder = dp(50, 50, 58), -- 最小化按钮边框
         SliderFill = dp(100, 120, 255),  -- 滑块填充色
-        SliderHandle = dp(255, 255, 255),-- [修改] 滑块按钮颜色 (白色，高对比度)
+        SliderHandle = dp(255, 255, 255),-- 滑块按钮颜色 (白色，高对比度)
         ToggleOn = dp(100, 255, 100),    -- 开关开启色
         ToggleOff = dp(50, 50, 58),      -- 开关关闭色
         MainBorder = dp(50, 50, 58),     -- 主窗口边框
@@ -62,8 +62,8 @@ local Themes = {
         Border = dp(229, 231, 235),       -- 浅色边框
         MinimizeBtn = dp(255, 255, 255),  -- 最小化按钮白色背景
         MinimizeBorder = dp(229, 231, 235), -- 最小化按钮边框
-        SliderFill = dp(88, 101, 242),    -- 滑块填充色 (使用强调色)
-        SliderHandle = dp(255, 255, 255),-- [修改] 滑块按钮颜色 (白色，高对比度)
+        SliderFill = dp(34, 197, 94),     -- [修改] 使用主题的绿色，与暗色主题的蓝色区分开
+        SliderHandle = dp(255, 255, 255), -- 滑块按钮颜色 (白色，高对比度)
         ToggleOn = dp(34, 197, 94),       -- 开关开启色
         ToggleOff = dp(229, 231, 235),    -- 开关关闭色
         MainBorder = dp(220, 220, 220),   -- 主窗口边框
@@ -1129,7 +1129,7 @@ function library:CreateTab(tabName)
         fillCorner.Parent = sliderFill
         
         sliderButton.Parent = sliderBar
-        sliderButton.BackgroundColor3 = Theme.SliderHandle -- [修改] 使用新的主题颜色
+        sliderButton.BackgroundColor3 = Theme.SliderHandle
         sliderButton.Size = dn(0, 12, 0, 12)
         sliderButton.Position = dn(0, -6, 0.5, -6)
         sliderButton.ZIndex = 2
@@ -1224,7 +1224,7 @@ function library:CreateTab(tabName)
         table.insert(tabElements, {value, "TextColor3", "Accent"})
         table.insert(tabElements, {sliderBar, "BackgroundColor3", "Border"})
         table.insert(tabElements, {sliderFill, "BackgroundColor3", "SliderFill"})
-        table.insert(tabElements, {sliderButton, "BackgroundColor3", "SliderHandle"}) -- [修改] 添加此行以支持主题切换
+        table.insert(tabElements, {sliderButton, "BackgroundColor3", "SliderHandle"})
         table.insert(tabElements, {decrease, "TextColor3", "TextDim"})
         table.insert(tabElements, {increase, "TextColor3", "TextDim"})
     end
