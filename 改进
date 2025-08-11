@@ -1478,4 +1478,187 @@ setmetatable(getgenv().library, {
     end
 })
 
+-- =================================================================
+-- [新功能] 创建个人主页标签页
+-- 将此代码块粘贴到您脚本的末尾，'return library' 之前
+-- =================================================================
+
+task.spawn(function()
+    -- 确保UI已经完全加载
+    task.wait(0.1)
+
+    local player = b.Players.LocalPlayer
+    
+    -- 创建一个名为 "🏠 主页" 的新标签页，并获取其功能表
+    local profileTab = library:CreateTab("🏠 主页")
+    local tabElements = library.modules[#library.modules].elements
+    
+    -- 主容器，用于放置头像和信息
+    local profileFrame = dq("Frame")
+    profileFrame.Name = "ProfileFrame"
+    profileFrame.Parent = profileTab.Parent -- Parent to the tab's ScrollingFrame directly
+    profileFrame.BackgroundColor3 = Theme.Primary
+    profileFrame.Size = dn(1, -12, 0, 80)
+    profileFrame.BorderSizePixel = 0
+    table.insert(tabElements, {profileFrame, "BackgroundColor3", "Primary"})
+    
+    local profileCorner = dq("UICorner")
+    profileCorner.CornerRadius = dm(0, 6)
+    profileCorner.Parent = profileFrame
+    
+    local profileLayout = dq("UIListLayout")
+    profileLayout.FillDirection = Enum.FillDirection.Horizontal
+    profileLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    profileLayout.Padding = dm(0, 10)
+    profileLayout.Parent = profileFrame
+
+    local profilePadding = dq("UIPadding")
+    profilePadding.PaddingLeft = dm(0, 10)
+    profilePadding.Parent = profileFrame
+
+    -- 头像
+    local avatarImage = dq("ImageLabel")
+    avatarImage.Name = "Avatar"
+    avatarImage.Parent = profileFrame
+    avatarImage.Size = dn(0, 64, 0, 64)
+    avatarImage.BackgroundTransparency = 1
+    
+    local imageCorner = dq("UICorner")
+    imageCorner.CornerRadius = UDim.new(1, 0) -- 使其变为圆形
+    imageCorner.Parent = avatarImage
+    
+    -- 异步加载玩家头像
+    local success, content, isReady = pcall(function()
+        return b.Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+    end)
+    if success and isReady then
+        avatarImage.Image = content
+    end
+
+    -- 玩家名称容器
+    local nameContainer = dq("Frame")
+    nameContainer.Name = "NameContainer"
+    nameContainer.Parent = profileFrame
+    nameContainer.BackgroundTransparency = 1
+    nameContainer.Size = dn(1, -90, 1, 0)
+    
+    local nameLayout = dq("UIListLayout")
+    nameLayout.FillDirection = Enum.FillDirection.Vertical
+    nameLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    nameLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    nameLayout.Parent = nameContainer
+    
+    -- 显示名称
+    local displayNameLabel = dq("TextLabel")
+    displayNameLabel.Name = "DisplayName"
+    displayNameLabel.Parent = nameContainer
+    displayNameLabel.BackgroundTransparency = 1
+    displayNameLabel.Size = dn(1, 0, 0, 20)
+    displayNameLabel.Font = Enum.Font.SourceSansBold
+    displayNameLabel.Text = player.DisplayName
+    displayNameLabel.TextColor3 = Theme.Text
+    displayNameLabel.TextSize = 18
+    displayNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    table.insert(tabElements, {displayNameLabel, "TextColor3", "Text"})
+
+    -- 用户名
+    local usernameLabel = dq("TextLabel")
+    usernameLabel.Name = "Username"
+    usernameLabel.Parent = nameContainer
+    usernameLabel.BackgroundTransparency = 1
+    usernameLabel.Size = dn(1, 0, 0, 16)
+    usernameLabel.Font = Enum.Font.SourceSans
+    usernameLabel.Text = "@" .. player.Name
+    usernameLabel.TextColor3 = Theme.TextDim
+    usernameLabel.TextSize = 14
+    usernameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    table.insert(tabElements, {usernameLabel, "TextColor3", "TextDim"})
+
+    -- 分隔符
+    profileTab:NewSeparator()
+
+    -- 信息行创建函数
+    local function createInfoLine(label, initialValue)
+        local frame = dq("Frame")
+        frame.Parent = profileTab.Parent
+        frame.BackgroundTransparency = 1
+        frame.Size = dn(1, -12, 0, 20)
+
+        local labelText = dq("TextLabel")
+        labelText.Parent = frame
+        labelText.BackgroundTransparency = 1
+        labelText.Size = dn(0.5, 0, 1, 0)
+        labelText.Font = Enum.Font.SourceSans
+        labelText.Text = label
+        labelText.TextColor3 = Theme.TextDim
+        labelText.TextSize = 14
+        labelText.TextXAlignment = Enum.TextXAlignment.Left
+        table.insert(tabElements, {labelText, "TextColor3", "TextDim"})
+
+        local valueText = dq("TextLabel")
+        valueText.Parent = frame
+        valueText.BackgroundTransparency = 1
+        valueText.Size = dn(0.5, 0, 1, 0)
+        valueText.Position = dn(0.5, 0, 0, 0)
+        valueText.Font = Enum.Font.SourceSansSemibold
+        valueText.Text = initialValue
+        valueText.TextColor3 = Theme.Text
+        valueText.TextSize = 14
+        valueText.TextXAlignment = Enum.TextXAlignment.Right
+        table.insert(tabElements, {valueText, "TextColor3", "Text"})
+
+        return valueText
+    end
+
+    -- 服务器信息
+    local serverTitle = dq("TextLabel")
+    serverTitle.Parent = profileTab.Parent
+    serverTitle.Size = dn(1, -12, 0, 22)
+    serverTitle.BackgroundTransparency = 1
+    serverTitle.Font = Enum.Font.SourceSansBold
+    serverTitle.Text = "服务器信息"
+    serverTitle.TextColor3 = Theme.Text
+    serverTitle.TextSize = 15
+    serverTitle.TextXAlignment = Enum.TextXAlignment.Left
+    table.insert(tabElements, {serverTitle, "TextColor3", "Text"})
+    
+    createInfoLine("游戏 ID (Place ID):", game.PlaceId)
+    createInfoLine("服务器 ID (Job ID):", game.JobId:sub(1, 18) .. "...")
+    local playersLabel = createInfoLine("玩家数量:", #b.Players:GetPlayers() .. " / " .. b.Players.MaxPlayers)
+
+    -- 客户端信息
+    local clientTitle = dq("TextLabel")
+    clientTitle.Parent = profileTab.Parent
+    clientTitle.Size = dn(1, -12, 0, 22)
+    clientTitle.LayoutOrder = 10 -- Ensure it's after the server info
+    clientTitle.BackgroundTransparency = 1
+    clientTitle.Font = Enum.Font.SourceSansBold
+    clientTitle.Text = "客户端信息"
+    clientTitle.TextColor3 = Theme.Text
+    clientTitle.TextSize = 15
+    clientTitle.TextXAlignment = Enum.TextXAlignment.Left
+    table.insert(tabElements, {clientTitle, "TextColor3", "Text"})
+    
+    local pingLabel = createInfoLine("延迟 (Ping):", "...")
+    local fpsLabel = createInfoLine("帧率 (FPS):", "...")
+    
+    -- 实时更新循环
+    local fps = 0
+    b.RunService.RenderStepped:Connect(function(dt)
+        fps = 1/dt
+    end)
+    
+    task.spawn(function()
+        while task.wait(1) do
+            if not profileFrame.Parent then break end -- 如果UI关闭则停止循环
+            
+            pcall(function()
+                playersLabel.Text = #b.Players:GetPlayers() .. " / " .. b.Players.MaxPlayers
+                pingLabel.Text = math.floor(player:GetNetworkPing() * 1000) .. " ms"
+                fpsLabel.Text = math.floor(fps)
+            end)
+        end
+    end)
+end)
+
 return library
