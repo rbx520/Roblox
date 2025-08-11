@@ -428,10 +428,11 @@ local function createInfoLabel(parent, labelText, valueText, isAccent)
     return value
 end
 
-createInfoLabel(InfoContainer, "Username", player.Name)
-createInfoLabel(InfoContainer, "Display Name", player.DisplayName)
-createInfoLabel(InfoContainer, "User ID", player.UserId)
-createInfoLabel(InfoContainer, "Account Age", player.AccountAge)
+-- [修改] 汉化标签并增加新内容
+createInfoLabel(InfoContainer, "用户名", player.Name, false).Parent.Parent.LayoutOrder = 1
+createInfoLabel(InfoContainer, "显示名称", player.DisplayName, false).Parent.Parent.LayoutOrder = 2
+createInfoLabel(InfoContainer, "用户 ID", player.UserId, false).Parent.Parent.LayoutOrder = 3
+createInfoLabel(InfoContainer, "账号年龄", player.AccountAge, false).Parent.Parent.LayoutOrder = 4
 
 local separator = dq("Frame")
 separator.Parent = InfoContainer
@@ -440,14 +441,29 @@ separator.Size = dn(1, 0, 0, 1)
 separator.LayoutOrder = 5
 table.insert(library.modules, { update = function() separator.BackgroundColor3 = Theme.Border end })
 
-local pingLabel = createInfoLabel(InfoContainer, "Ping", "N/A", true)
-pingLabel.Parent.Parent.LayoutOrder = 6
-local fpsLabel = createInfoLabel(InfoContainer, "FPS", "N/A", true)
-fpsLabel.Parent.Parent.LayoutOrder = 7
-createInfoLabel(InfoContainer, "Job ID", game.JobId:sub(1, 18) .. "...", false).Parent.Parent.LayoutOrder = 8
-createInfoLabel(InfoContainer, "Place ID", game.PlaceId, false).Parent.Parent.LayoutOrder = 9
+-- [新增] 服务器名称
+createInfoLabel(InfoContainer, "服务器名称", game.Name, false).Parent.Parent.LayoutOrder = 6
 
--- [新增] Ping 和 FPS 的实时更新
+-- [新增] 实时服务器人数
+local playerCountLabel = createInfoLabel(InfoContainer, "服务器人数", "", false)
+playerCountLabel.Parent.Parent.LayoutOrder = 7
+local function updatePlayerCount()
+    local currentPlayers = #b.Players:GetPlayers()
+    local maxPlayers = b.Players.MaxPlayers
+    playerCountLabel.Text = string.format("%d / %d", currentPlayers, maxPlayers)
+end
+updatePlayerCount() -- 初始化
+b.Players.PlayerAdded:Connect(updatePlayerCount)
+b.Players.PlayerRemoving:Connect(updatePlayerCount)
+
+local pingLabel = createInfoLabel(InfoContainer, "延迟", "N/A", true)
+pingLabel.Parent.Parent.LayoutOrder = 8
+local fpsLabel = createInfoLabel(InfoContainer, "帧率", "N/A", true)
+fpsLabel.Parent.Parent.LayoutOrder = 9
+createInfoLabel(InfoContainer, "服务器 ID", game.JobId:sub(1, 18) .. "...", false).Parent.Parent.LayoutOrder = 10
+createInfoLabel(InfoContainer, "地图 ID", game.PlaceId, false).Parent.Parent.LayoutOrder = 11
+
+-- [修改] Ping 和 FPS 的实时更新（保持不变）
 task.spawn(function()
     local lastUpdate = 0
     b.RunService.RenderStepped:Connect(function(dt)
