@@ -1,4 +1,4 @@
--- 完整的现代化UI系统（带白色主题）
+-- 完整的现代化UI系统（修复黑色主题配色）
 local a = {
     Plrs = "Players",
     LP = "LocalPlayer", 
@@ -25,21 +25,23 @@ local dq = Instance.new
 local dr = function() end
 local ds = b.Players.LocalPlayer:GetMouse()
 
--- 主题系统
+-- 主题系统（恢复原始黑色配色）
 local Themes = {
     Dark = {
-        Primary = dp(30, 30, 36),
-        Secondary = dp(35, 35, 42),
-        Tertiary = dp(40, 40, 48),
-        Accent = dp(100, 120, 255),
-        Success = dp(100, 255, 100),
-        Danger = dp(255, 100, 100),
-        Warning = dp(255, 200, 100),
-        Text = dp(255, 255, 255),
-        TextDim = dp(180, 180, 180),
-        TextMuted = dp(120, 120, 120),
-        Border = dp(50, 50, 58),
-        Shadow = dp(0, 0, 0)
+        Primary = dp(52, 62, 72),      -- 原始深色背景
+        Secondary = dp(58, 69, 80),     -- 原始次要背景
+        Tertiary = dp(52, 62, 72),      -- 原始第三背景
+        Accent = dp(100, 120, 255),     -- 蓝色强调色
+        Success = dp(53, 255, 134),     -- 绿色成功色
+        Danger = dp(255, 83, 83),       -- 红色危险色
+        Warning = dp(255, 179, 71),     -- 橙色警告色
+        Text = dp(255, 255, 255),       -- 白色文本
+        TextDim = dp(180, 180, 180),    -- 次要文本
+        TextMuted = dp(120, 120, 120),  -- 静音文本
+        Border = dp(58, 69, 80),        -- 边框色（与Secondary相同）
+        Shadow = dp(0, 0, 0),           -- 阴影色
+        MinimizeBtn = dp(58, 69, 80),   -- 最小化按钮背景
+        MinimizeBorder = dp(58, 69, 80) -- 最小化按钮边框
     },
     Light = {
         Primary = dp(255, 255, 255),
@@ -53,12 +55,14 @@ local Themes = {
         TextDim = dp(75, 85, 99),
         TextMuted = dp(156, 163, 175),
         Border = dp(229, 231, 235),
-        Shadow = dp(0, 0, 0)
+        Shadow = dp(0, 0, 0),
+        MinimizeBtn = dp(255, 255, 255),    -- 最小化按钮白色背景
+        MinimizeBorder = dp(229, 231, 235)  -- 最小化按钮边框
     }
 }
 
--- 默认使用白色主题
-local CurrentTheme = "Light"
+-- 默认使用黑色主题
+local CurrentTheme = "Dark"
 local Theme = Themes[CurrentTheme]
 
 getgenv().library = {
@@ -101,9 +105,9 @@ function dv:Tween(props, object, duration, style, direction)
     local tween = b.TweenService:Create(
         object,
         TweenInfo.new(
-            duration or 0.2,
-            style or Enum.EasingStyle.Quad,
-            direction or Enum.EasingDirection.Out
+            duration or 0.25,
+            style or Enum.EasingStyle.Linear,
+            direction or Enum.EasingDirection.InOut
         ),
         props
     )
@@ -111,7 +115,7 @@ function dv:Tween(props, object, duration, style, direction)
     return tween
 end
 
--- 切换标签
+-- 切换标签（恢复原始动画）
 function dv:SwitchTab(newTab)
     local oldTab = library.currentTab
     if oldTab == newTab then return end
@@ -119,17 +123,19 @@ function dv:SwitchTab(newTab)
     library.currentTab = newTab
     
     if oldTab then
-        dv:Tween({BackgroundTransparency = 1}, oldTab[2].Glow, 0.15)
+        dv:Tween({Transparency = 1}, oldTab[2].Glow, 0.25)
         oldTab[1].Visible = false
     end
     
-    dv:Tween({BackgroundTransparency = 0}, newTab[2].Glow, 0.15)
+    dv:Tween({Transparency = 0}, newTab[2].Glow, 0.25)
     newTab[1].Visible = true
 end
 
 -- 创建主界面
 local dD = dq("ScreenGui")
 local Open = dq("TextButton")
+local OpenCorner = dq("UICorner")
+local OpenBorder = dq("UIStroke")
 local dE = dq("Frame")
 local dF = dq("UICorner")
 local dG = dq("TextLabel")
@@ -161,36 +167,34 @@ MainShadow.BackgroundColor3 = dp(0, 0, 0)
 MainShadow.BackgroundTransparency = 0.85
 MainShadow.BorderSizePixel = 0
 MainShadow.Position = dn(0.5, 2, 0.5, 2)
-MainShadow.Size = dn(0, 460, 0, 300)
+MainShadow.Size = dn(0, 448, 0, 280)
 MainShadow.AnchorPoint = Vector2.new(0.5, 0.5)
 MainShadow.ZIndex = 0
 MainShadow.Visible = CurrentTheme == "Light"
 
-ShadowCorner.CornerRadius = dm(0, 10)
+ShadowCorner.CornerRadius = dm(0, 8)
 ShadowCorner.Parent = MainShadow
 
--- 主窗口
+-- 主窗口（恢复原始尺寸）
 dE.Name = "Main"
 dE.Parent = dD
 dE.BackgroundColor3 = Theme.Primary
 dE.BorderSizePixel = 0
 dE.Position = dn(0.5, 0, 0.5, 0)
-dE.Size = dn(0, 460, 0, 300)
+dE.Size = dn(0, 448, 0, 280)
 dE.AnchorPoint = Vector2.new(0.5, 0.5)
 dE.Active = true
 dE.Draggable = true
 dE.ZIndex = 1
 
 -- 添加边框（白色主题）
-if CurrentTheme == "Light" then
-    local BorderStroke = dq("UIStroke")
-    BorderStroke.Parent = dE
-    BorderStroke.Color = Theme.Border
-    BorderStroke.Thickness = 1
-    BorderStroke.Transparency = 0
-end
+local MainBorder = dq("UIStroke")
+MainBorder.Parent = dE
+MainBorder.Color = Theme.Border
+MainBorder.Thickness = 1
+MainBorder.Transparency = CurrentTheme == "Dark" and 1 or 0
 
-dF.CornerRadius = dm(0, 8)
+dF.CornerRadius = dm(0, 6)
 dF.Name = "MainCorner"
 dF.Parent = dE
 
@@ -199,11 +203,11 @@ dG.Parent = dE
 dG.BackgroundColor3 = Theme.Secondary
 dG.BorderSizePixel = 0
 dG.Position = dn(0, 6, 0, 6)
-dG.Size = dn(1, -12, 0, 28)
-dG.Font = Enum.Font.SourceSansBold
+dG.Size = dn(0, 436, 0, 24)
+dG.Font = Enum.Font.GothamBold
 dG.Text = "  " .. _CONFIGS.UI_NAME
 dG.TextColor3 = Theme.Text
-dG.TextSize = 15
+dG.TextSize = 14
 dG.TextXAlignment = Enum.TextXAlignment.Left
 
 dH.CornerRadius = dm(0, 6)
@@ -214,41 +218,47 @@ dH.Parent = dG
 ThemeToggle.Name = "ThemeToggle"
 ThemeToggle.Parent = dG
 ThemeToggle.BackgroundColor3 = Theme.Tertiary
-ThemeToggle.Position = dn(1, -30, 0.5, -10)
-ThemeToggle.Size = dn(0, 20, 0, 20)
+ThemeToggle.Position = dn(1, -28, 0.5, -9)
+ThemeToggle.Size = dn(0, 18, 0, 18)
 ThemeToggle.Text = CurrentTheme == "Dark" and "☀" or "🌙"
 ThemeToggle.TextColor3 = Theme.Text
-ThemeToggle.TextSize = 12
+ThemeToggle.TextSize = 10
 ThemeToggle.BorderSizePixel = 0
+ThemeToggle.Font = Enum.Font.SourceSans
 
 ThemeCorner.CornerRadius = dm(0, 4)
 ThemeCorner.Parent = ThemeToggle
 
--- 隐藏/显示按钮
+-- 隐藏/显示按钮（添加主题区分）
 Open.Name = "Open"
 Open.Parent = dD
-Open.BackgroundColor3 = Theme.Accent
+Open.BackgroundColor3 = Theme.MinimizeBtn
 Open.Position = dn(0.84, 0, 0, 10)
 Open.BorderSizePixel = 0
-Open.Size = dn(0, 60, 0, 28)
-Open.Font = Enum.Font.SourceSansBold
+Open.Size = dn(0, 55, 0, 25)
+Open.Font = Enum.Font.SourceSans
 Open.Text = "隐藏"
-Open.TextColor3 = dp(255, 255, 255)
+Open.TextColor3 = Theme.Text
 Open.TextSize = 14
 Open.Active = true
 Open.Draggable = true
 Open.ZIndex = 2
 
-local OpenCorner = dq("UICorner")
-OpenCorner.CornerRadius = dm(0, 6)
+OpenCorner.CornerRadius = dm(0, 4)
 OpenCorner.Parent = Open
+
+-- 最小化按钮边框
+OpenBorder.Parent = Open
+OpenBorder.Color = Theme.MinimizeBorder
+OpenBorder.Thickness = CurrentTheme == "Dark" and 2 or 1
+OpenBorder.Transparency = 0
 
 local TOGGLE = true
 Open.MouseButton1Click:Connect(function()
     TOGGLE = not TOGGLE
     dE.Visible = TOGGLE
     MainShadow.Visible = TOGGLE and CurrentTheme == "Light"
-    Open.Text = TOGGLE and "隐藏" or "显示"
+    Open.Text = TOGGLE and "隐藏" or "打开"
 end)
 
 -- 侧边栏
@@ -256,8 +266,8 @@ dI.Name = "Sidebar"
 dI.Parent = dE
 dI.BackgroundColor3 = Theme.Secondary
 dI.BorderSizePixel = 0
-dI.Position = dn(0, 6, 0, 40)
-dI.Size = dn(0, 110, 0, 254)
+dI.Position = dn(0, 6, 0, 36)
+dI.Size = dn(0, 106, 0, 238)
 
 dJ.CornerRadius = dm(0, 6)
 dJ.Name = "SidebarCorner"
@@ -270,14 +280,13 @@ dK.Active = true
 dK.BackgroundColor3 = dp(255, 255, 255)
 dK.BackgroundTransparency = 1
 dK.BorderSizePixel = 0
-dK.Size = dn(1, 0, 1, 0)
-dK.ScrollBarThickness = 3
-dK.ScrollBarImageColor3 = Theme.Accent
+dK.Size = dn(0, 106, 0, 238)
+dK.ScrollBarThickness = 0
 
 dL.Parent = dK
 dL.HorizontalAlignment = Enum.HorizontalAlignment.Center
 dL.SortOrder = Enum.SortOrder.LayoutOrder
-dL.Padding = dm(0, 6)
+dL.Padding = dm(0, 5)
 
 dM.Parent = dK
 dM.PaddingTop = dm(0, 6)
@@ -287,8 +296,8 @@ dN.Name = "TabHolder"
 dN.Parent = dE
 dN.BackgroundColor3 = Theme.Secondary
 dN.BorderSizePixel = 0
-dN.Position = dn(0, 122, 0, 40)
-dN.Size = dn(0, 332, 0, 254)
+dN.Position = dn(0, 118, 0, 36)
+dN.Size = dn(0, 324, 0, 238)
 
 dO.CornerRadius = dm(0, 6)
 dO.Name = "TabHolderCorner"
@@ -305,10 +314,12 @@ local themeElements = {
     {dG, "TextColor3", "Text"},
     {dI, "BackgroundColor3", "Secondary"},
     {dN, "BackgroundColor3", "Secondary"},
-    {Open, "BackgroundColor3", "Accent"},
+    {Open, "BackgroundColor3", "MinimizeBtn"},
+    {Open, "TextColor3", "Text"},
+    {OpenBorder, "Color", "MinimizeBorder"},
     {ThemeToggle, "BackgroundColor3", "Tertiary"},
     {ThemeToggle, "TextColor3", "Text"},
-    {dK, "ScrollBarImageColor3", "Accent"}
+    {MainBorder, "Color", "Border"}
 }
 
 library.updateTheme = function()
@@ -325,9 +336,14 @@ library.updateTheme = function()
     MainShadow.Visible = CurrentTheme == "Light" and dE.Visible
     
     -- 更新边框
-    if dE:FindFirstChild("UIStroke") then
-        dE.UIStroke.Color = Theme.Border
-        dE.UIStroke.Transparency = CurrentTheme == "Dark" and 1 or 0
+    MainBorder.Transparency = CurrentTheme == "Dark" and 1 or 0
+    OpenBorder.Thickness = CurrentTheme == "Dark" and 2 or 1
+    
+    -- 更新所有标签页的元素
+    for _, module in pairs(library.modules) do
+        if module.update then
+            module.update()
+        end
     end
 end
 
@@ -352,68 +368,101 @@ function createBaseNotifications()
     ToggleNotif.ZIndex = 5
     ToggleNotif.AnchorPoint = Vector2.new(1, 1)
     ToggleNotif.Visible = false
-    ToggleNotif.Size = UDim2.new(0, 300, 0, 70)
+    ToggleNotif.Size = UDim2.new(0, 291, 0, 56)
     ToggleNotif.Position = UDim2.new(1, 0, 1, 0)
-    ToggleNotif.BackgroundColor3 = Theme.Primary
+    ToggleNotif.BackgroundColor3 = dp(48, 48, 48)
     ToggleNotif.Parent = ScreenGui
     
     local UiCorner = Instance.new("UICorner")
-    UiCorner.CornerRadius = dm(0, 8)
+    UiCorner.CornerRadius = dm(0, 6)
     UiCorner.Parent = ToggleNotif
+    
+    local Dropshadow = Instance.new("UIStroke")
+    Dropshadow.Name = "Dropshadow"
+    Dropshadow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    Dropshadow.Transparency = 0.8
+    Dropshadow.Thickness = 2
+    Dropshadow.Color = dp(20, 20, 20)
+    Dropshadow.Parent = ToggleNotif
+    
+    local SepVertical = Instance.new("Frame")
+    SepVertical.Name = "SepVertical"
+    SepVertical.Size = UDim2.new(0, 2, 0, 56)
+    SepVertical.BackgroundTransparency = 0.5
+    SepVertical.Position = UDim2.new(0.7423077, 0, 0, 0)
+    SepVertical.BorderSizePixel = 0
+    SepVertical.BackgroundColor3 = dp(68, 68, 68)
+    SepVertical.Parent = ToggleNotif
+    
+    local SepHorizontal = Instance.new("Frame")
+    SepHorizontal.Name = "SepHorizontal"
+    SepHorizontal.Size = UDim2.new(0, 72, 0, 2)
+    SepHorizontal.BackgroundTransparency = 0.5
+    SepHorizontal.Position = UDim2.new(0.75, 0, 0.4464286, 2)
+    SepHorizontal.BorderSizePixel = 0
+    SepHorizontal.BackgroundColor3 = dp(68, 68, 68)
+    SepHorizontal.Parent = ToggleNotif
     
     local Title = Instance.new("TextLabel")
     Title.Name = "Title"
-    Title.Size = UDim2.new(0.7, 0, 0, 25)
+    Title.Size = UDim2.new(0, 216, 0, 19)
     Title.BackgroundTransparency = 1
-    Title.Position = UDim2.new(0, 10, 0, 5)
-    Title.TextColor3 = Theme.Text
-    Title.Font = Enum.Font.SourceSansBold
+    Title.BorderSizePixel = 0
+    Title.BackgroundColor3 = dp(255, 255, 255)
+    Title.FontSize = Enum.FontSize.Size14
     Title.TextSize = 14
-    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.TextColor3 = dp(255, 255, 255)
+    Title.Font = Enum.Font.SourceSans
     Title.Parent = ToggleNotif
     
     local Paragraph = Instance.new("TextLabel")
     Paragraph.Name = "Paragraph"
-    Paragraph.Size = UDim2.new(0.7, -10, 0, 40)
+    Paragraph.Size = UDim2.new(0, 218, 0, 37)
     Paragraph.BackgroundTransparency = 1
-    Paragraph.Position = UDim2.new(0, 10, 0, 25)
-    Paragraph.TextColor3 = Theme.TextDim
-    Paragraph.Font = Enum.Font.SourceSans
-    Paragraph.TextSize = 13
-    Paragraph.TextXAlignment = Enum.TextXAlignment.Left
+    Paragraph.Position = UDim2.new(0, 0, 0.3392857, 0)
+    Paragraph.BackgroundColor3 = dp(255, 255, 255)
+    Paragraph.FontSize = Enum.FontSize.Size14
+    Paragraph.TextSize = 14
+    Paragraph.TextColor3 = dp(255, 255, 255)
+    Paragraph.Text = ""
     Paragraph.TextYAlignment = Enum.TextYAlignment.Top
     Paragraph.TextWrapped = true
+    Paragraph.Font = Enum.Font.SourceSans
+    Paragraph.TextXAlignment = Enum.TextXAlignment.Left
     Paragraph.Parent = ToggleNotif
+    
+    local UIPadding = Instance.new("UIPadding")
+    UIPadding.PaddingLeft = UDim.new(0, 10)
+    UIPadding.PaddingRight = UDim.new(0, 5)
+    UIPadding.Parent = Paragraph
     
     local True = Instance.new("TextButton")
     True.Name = "True"
-    True.Size = UDim2.new(0, 70, 0, 28)
-    True.Position = UDim2.new(0.76, 0, 0, 8)
-    True.BackgroundColor3 = Theme.Success
+    True.Size = UDim2.new(0, 72, 0, 27)
+    True.BackgroundTransparency = 1
+    True.Position = UDim2.new(0.75, 0, 0, 0)
+    True.BorderSizePixel = 0
+    True.BackgroundColor3 = dp(255, 255, 255)
+    True.FontSize = Enum.FontSize.Size14
+    True.TextSize = 14
     True.TextColor3 = dp(255, 255, 255)
-    True.Font = Enum.Font.SourceSansBold
-    True.TextSize = 13
     True.Text = "Yes"
+    True.Font = Enum.Font.SourceSans
     True.Parent = ToggleNotif
-    
-    local TrueCorner = Instance.new("UICorner")
-    TrueCorner.CornerRadius = dm(0, 6)
-    TrueCorner.Parent = True
     
     local False = Instance.new("TextButton")
     False.Name = "False"
-    False.Size = UDim2.new(0, 70, 0, 28)
-    False.Position = UDim2.new(0.76, 0, 0, 38)
-    False.BackgroundColor3 = Theme.Danger
+    False.Size = UDim2.new(0, 72, 0, 27)
+    False.BackgroundTransparency = 1
+    False.Position = UDim2.new(0.75, 0, 0.5178571, 0)
+    False.BorderSizePixel = 0
+    False.BackgroundColor3 = dp(255, 255, 255)
+    False.FontSize = Enum.FontSize.Size14
+    False.TextSize = 14
     False.TextColor3 = dp(255, 255, 255)
-    False.Font = Enum.Font.SourceSansBold
-    False.TextSize = 13
     False.Text = "No"
+    False.Font = Enum.Font.SourceSans
     False.Parent = ToggleNotif
-    
-    local FalseCorner = Instance.new("UICorner")
-    FalseCorner.CornerRadius = dm(0, 6)
-    FalseCorner.Parent = False
     
     -- 默认通知
     local DefaultNotif = Instance.new("Frame")
@@ -421,38 +470,55 @@ function createBaseNotifications()
     DefaultNotif.ZIndex = 5
     DefaultNotif.AnchorPoint = Vector2.new(1, 1)
     DefaultNotif.Visible = false
-    DefaultNotif.Size = UDim2.new(0, 300, 0, 60)
+    DefaultNotif.Size = UDim2.new(0, 291, 0, 56)
     DefaultNotif.Position = UDim2.new(1, 0, 1, 0)
-    DefaultNotif.BackgroundColor3 = Theme.Primary
+    DefaultNotif.BackgroundColor3 = dp(48, 48, 48)
     DefaultNotif.Parent = ScreenGui
     
     local UiCorner1 = Instance.new("UICorner")
-    UiCorner1.CornerRadius = dm(0, 8)
+    UiCorner1.CornerRadius = dm(0, 6)
     UiCorner1.Parent = DefaultNotif
+    
+    local Dropshadow1 = Instance.new("UIStroke")
+    Dropshadow1.Name = "Dropshadow"
+    Dropshadow1.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    Dropshadow1.Transparency = 0.8
+    Dropshadow1.Thickness = 2
+    Dropshadow1.Color = dp(20, 20, 20)
+    Dropshadow1.Parent = DefaultNotif
     
     local Title1 = Instance.new("TextLabel")
     Title1.Name = "Title"
-    Title1.Size = UDim2.new(1, -20, 0, 25)
+    Title1.Size = UDim2.new(0, 291, 0, 19)
     Title1.BackgroundTransparency = 1
-    Title1.Position = UDim2.new(0, 10, 0, 5)
-    Title1.TextColor3 = Theme.Text
-    Title1.Font = Enum.Font.SourceSansBold
+    Title1.BorderSizePixel = 0
+    Title1.BackgroundColor3 = dp(255, 255, 255)
+    Title1.FontSize = Enum.FontSize.Size14
     Title1.TextSize = 14
-    Title1.TextXAlignment = Enum.TextXAlignment.Left
+    Title1.TextColor3 = dp(255, 255, 255)
+    Title1.Font = Enum.Font.SourceSans
     Title1.Parent = DefaultNotif
     
     local Paragraph1 = Instance.new("TextLabel")
     Paragraph1.Name = "Paragraph"
-    Paragraph1.Size = UDim2.new(1, -20, 0, 30)
+    Paragraph1.Size = UDim2.new(0, 291, 0, 37)
     Paragraph1.BackgroundTransparency = 1
-    Paragraph1.Position = UDim2.new(0, 10, 0, 25)
-    Paragraph1.TextColor3 = Theme.TextDim
-    Paragraph1.Font = Enum.Font.SourceSans
-    Paragraph1.TextSize = 13
-    Paragraph1.TextXAlignment = Enum.TextXAlignment.Left
+    Paragraph1.Position = UDim2.new(0, 0, 0.3392857, 0)
+    Paragraph1.BackgroundColor3 = dp(255, 255, 255)
+    Paragraph1.FontSize = Enum.FontSize.Size14
+    Paragraph1.TextSize = 14
+    Paragraph1.TextColor3 = dp(255, 255, 255)
+    Paragraph1.Text = ""
     Paragraph1.TextYAlignment = Enum.TextYAlignment.Top
     Paragraph1.TextWrapped = true
+    Paragraph1.Font = Enum.Font.SourceSans
+    Paragraph1.TextXAlignment = Enum.TextXAlignment.Left
     Paragraph1.Parent = DefaultNotif
+    
+    local UIPadding1 = Instance.new("UIPadding")
+    UIPadding1.PaddingLeft = UDim.new(0, 10)
+    UIPadding1.PaddingRight = UDim.new(0, 5)
+    UIPadding1.Parent = Paragraph1
     
     if syn then
         syn.protect_gui(ScreenGui)
@@ -469,13 +535,16 @@ removedPos = nil
 -- 通知函数
 function library:SelectNotify(args)
     args = args or {}
-    args.TweenSpeed = args.TweenSpeed or 0.3
+    args.TweenSpeed = args.TweenSpeed or 1
+    args.TweenInSpeed = args.TweenInSpeed or args.TweenSpeed
+    args.TweenOutSpeed = args.TweenOutSpeed or args.TweenSpeed
+    args.TweenVerticalSpeed = args.TweenVerticalSpeed or args.TweenSpeed
     args.Title = args.Title or "Title"
     args.Text = args.Text or "Text"
     args.TrueText = args.TrueText or "Yes"
     args.FalseText = args.FalseText or "No"
     args.Duration = args.Duration or 5
-    args.Callback = args.Callback or function() end
+    args.Callback = args.Callback or function() warn("No callback for notif") end
     
     notifAmount = notifAmount + 1
     local track = notifAmount
@@ -486,17 +555,13 @@ function library:SelectNotify(args)
     
     notif.Parent = notificationHolder
     notif.Visible = true
-    notif.Position = UDim2.new(1.2, 0, 1, -5)
-    notif.BackgroundColor3 = Theme.Primary
-    notif.Title.TextColor3 = Theme.Text
-    notif.Paragraph.TextColor3 = Theme.TextDim
+    notif.Position = UDim2.new(1, 300, 1, -5)
+    notif.Transparency = 0.05
     notif.True.Text = args.TrueText
     notif.False.Text = args.FalseText
-    notif.Paragraph.Text = args.Text
-    notif.Title.Text = args.Title
     
     task.spawn(function()
-        task.wait(args.Duration)
+        task.wait(args.Duration + args.TweenInSpeed)
         doesExist = false
     end)
     
@@ -516,38 +581,44 @@ function library:SelectNotify(args)
         pcall(args.Callback, false)
     end)
     
-    dv:Tween({Position = UDim2.new(1, -5, 1, -5 - (75 * (notifNum - 1)))}, notif, args.TweenSpeed)
+    notif.Paragraph.Text = args.Text
+    notif.Title.Text = args.Title
+    notif:TweenPosition(UDim2.new(1, -5, 1, -5), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, args.TweenInSpeed)
     
     task.spawn(function()
         local originalPos = notif.Position
         while doesExist and task.wait() do
+            local pos = notif.Position
             if notifAmount > track then
-                dv:Tween({Position = UDim2.new(1, -5, 1, -5 - (75 * (notifAmount - notifNum)))}, notif, 0.2)
+                notif:TweenPosition(UDim2.new(1, -5, 1, originalPos.Y.Offset - (65 * (notifAmount - notifNum))), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, args.TweenVerticalSpeed, true)
                 track = track + 1
-            elseif notifAmount < track then
-                if removedPos and removedPos > notif.Position.Y.Offset then
-                    dv:Tween({Position = UDim2.new(1, -5, 1, -5 - (75 * (notifAmount - notifNum)))}, notif, 0.2)
+            end
+            if notifAmount < track then
+                if removedPos > pos.Y.Offset then
+                    notif:TweenPosition(UDim2.new(1, -5, 1, originalPos.Y.Offset - (65 * (notifAmount - notifNum))), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, args.TweenVerticalSpeed, true)
                 else
                     notifNum = notifNum - 1
                 end
                 track = track - 1
             end
         end
-        
-        if not removed then
+        local pos = notif.Position
+        if removed == false then
             notifAmount = notifAmount - 1
             removedPos = notif.Position.Y.Offset
         end
-        
-        dv:Tween({Position = UDim2.new(1.2, 0, 1, notif.Position.Y.Offset)}, notif, args.TweenSpeed)
-        task.wait(args.TweenSpeed)
+        notif:TweenPosition(UDim2.new(1, 300, 1, pos.Y.Offset), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, args.TweenOutSpeed, true)
+        task.wait(args.TweenOutSpeed)
         notif:Destroy()
     end)
 end
 
 function library:Notify(args)
     args = args or {}
-    args.TweenSpeed = args.TweenSpeed or 0.3
+    args.TweenSpeed = args.TweenSpeed or 1
+    args.TweenInSpeed = args.TweenInSpeed or args.TweenSpeed
+    args.TweenOutSpeed = args.TweenOutSpeed or args.TweenSpeed
+    args.TweenVerticalSpeed = args.TweenVerticalSpeed or args.TweenSpeed
     args.Title = args.Title or "Title"
     args.Text = args.Text or "Text"
     args.Duration = args.Duration or 5
@@ -561,15 +632,15 @@ function library:Notify(args)
     
     notif.Parent = notificationHolder
     notif.Visible = true
-    notif.Position = UDim2.new(1.2, 0, 1, -5)
-    notif.BackgroundColor3 = Theme.Primary
-    notif.Title.TextColor3 = Theme.Text
-    notif.Paragraph.TextColor3 = Theme.TextDim
-    notif.Paragraph.Text = args.Text
-    notif.Title.Text = args.Title
+    notif.Position = UDim2.new(1, 300, 1, -5)
+    notif.Transparency = 0.05
     
-    notif.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    notif.InputBegan:Connect(function(InputObject)
+        if InputObject.UserInputType == Enum.UserInputType.MouseButton1 then
+            task.spawn(function()
+                local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0)
+                game:GetService("TweenService"):Create(notif, tweenInfo, {Transparency = 0.8}):Play()
+            end)
             doesExist = false
             removed = true
             notifAmount = notifAmount - 1
@@ -578,54 +649,61 @@ function library:Notify(args)
     end)
     
     task.spawn(function()
-        task.wait(args.Duration)
+        task.wait(args.Duration + args.TweenInSpeed)
         doesExist = false
     end)
     
-    dv:Tween({Position = UDim2.new(1, -5, 1, -5 - (65 * (notifNum - 1)))}, notif, args.TweenSpeed)
+    notif.Paragraph.Text = args.Text
+    notif.Title.Text = args.Title
+    notif:TweenPosition(UDim2.new(1, -5, 1, -5), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, args.TweenInSpeed)
     
     task.spawn(function()
+        local originalPos = notif.Position
         while doesExist and task.wait() do
+            local pos = notif.Position
             if notifAmount > track then
-                dv:Tween({Position = UDim2.new(1, -5, 1, -5 - (65 * (notifAmount - notifNum)))}, notif, 0.2)
+                notif:TweenPosition(UDim2.new(1, -5, 1, originalPos.Y.Offset - (65 * (notifAmount - notifNum))), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, args.TweenVerticalSpeed, true)
                 track = track + 1
-            elseif notifAmount < track then
-                if removedPos and removedPos > notif.Position.Y.Offset then
-                    dv:Tween({Position = UDim2.new(1, -5, 1, -5 - (65 * (notifAmount - notifNum)))}, notif, 0.2)
+            end
+            if notifAmount < track then
+                if removedPos > pos.Y.Offset then
+                    notif:TweenPosition(UDim2.new(1, -5, 1, originalPos.Y.Offset - (65 * (notifAmount - notifNum))), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, args.TweenVerticalSpeed, true)
                 else
                     notifNum = notifNum - 1
                 end
                 track = track - 1
             end
         end
-        
-        if not removed then
+        local pos = notif.Position
+        if removed == false then
             notifAmount = notifAmount - 1
+            removedPos = notif.Position.Y.Offset
         end
-        
-        dv:Tween({Position = UDim2.new(1.2, 0, 1, notif.Position.Y.Offset)}, notif, args.TweenSpeed)
-        task.wait(args.TweenSpeed)
+        notif:TweenPosition(UDim2.new(1, 300, 1, pos.Y.Offset), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, args.TweenOutSpeed, true)
+        task.wait(args.TweenOutSpeed)
         notif:Destroy()
     end)
 end
 
--- 创建标签页
+-- 创建标签页（恢复原始结构）
 function library:CreateTab(tabName)
     local tabButton = dq("TextButton")
     local tabCorner = dq("UICorner")
     local tabGlow = dq("Frame")
     local glowCorner = dq("UICorner")
+    local glowGradient = dq("UIGradient")
     local tabContent = dq("ScrollingFrame")
     local contentPadding = dq("UIPadding")
     local contentLayout = dq("UIListLayout")
     
+    -- 标签按钮（恢复原始样式）
     tabButton.Name = "TabButton"
     tabButton.Parent = dK
-    tabButton.BackgroundColor3 = Theme.Tertiary
+    tabButton.BackgroundColor3 = Theme.Primary
     tabButton.BorderSizePixel = 0
-    tabButton.Size = dn(0, 98, 0, 30)
+    tabButton.Size = dn(0, 94, 0, 28)
     tabButton.AutoButtonColor = false
-    tabButton.Font = Enum.Font.SourceSansSemibold
+    tabButton.Font = Enum.Font.GothamSemibold
     tabButton.Text = tabName
     tabButton.TextColor3 = Theme.Text
     tabButton.TextSize = 14
@@ -633,43 +711,50 @@ function library:CreateTab(tabName)
     tabCorner.CornerRadius = dm(0, 6)
     tabCorner.Parent = tabButton
     
+    -- 发光效果（恢复原始渐变）
     tabGlow.Name = "Glow"
     tabGlow.Parent = tabButton
-    tabGlow.BackgroundColor3 = Theme.Accent
+    tabGlow.BackgroundColor3 = dp(255, 255, 255)
     tabGlow.BorderSizePixel = 0
-    tabGlow.Position = dn(0, 0, 1, -2)
-    tabGlow.Size = dn(1, 0, 0, 2)
-    tabGlow.BackgroundTransparency = 1
+    tabGlow.Position = dn(0, 0, 0.928571463, 0)
+    tabGlow.Size = dn(0, 94, 0, 2)
+    tabGlow.Transparency = 1
     
     glowCorner.CornerRadius = dm(0, 6)
     glowCorner.Parent = tabGlow
     
+    glowGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0.00, Theme.Primary),
+        ColorSequenceKeypoint.new(0.50, dp(255, 255, 255)),
+        ColorSequenceKeypoint.new(1.00, Theme.Primary)
+    }
+    glowGradient.Name = "GlowGradient"
+    glowGradient.Parent = tabGlow
+    
+    -- 内容区域
     tabContent.Name = "Tab"
     tabContent.Parent = dN
     tabContent.Active = true
     tabContent.BackgroundColor3 = dp(255, 255, 255)
     tabContent.BackgroundTransparency = 1
     tabContent.BorderSizePixel = 0
-    tabContent.Size = dn(1, 0, 1, 0)
-    tabContent.ScrollBarThickness = 3
-    tabContent.ScrollBarImageColor3 = Theme.Accent
+    tabContent.Size = dn(0, 324, 0, 238)
+    tabContent.ScrollBarThickness = 0
     tabContent.Visible = false
     
     if library.currentTab == nil then
         library.currentTab = {tabContent, tabButton}
-        tabGlow.BackgroundTransparency = 0
+        tabGlow.Transparency = 0
         tabContent.Visible = true
     end
     
     contentPadding.Parent = tabContent
     contentPadding.PaddingTop = dm(0, 6)
-    contentPadding.PaddingLeft = dm(0, 6)
-    contentPadding.PaddingRight = dm(0, 6)
     
     contentLayout.Parent = tabContent
     contentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    contentLayout.Padding = dm(0, 6)
+    contentLayout.Padding = dm(0, 5)
     
     contentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         tabContent.CanvasSize = dn(0, 0, 0, contentLayout.AbsoluteContentSize.Y + 12)
@@ -697,12 +782,10 @@ function library:CreateTab(tabName)
     -- 分隔符
     function tabFunctions:NewSeparator()
         local sep = dq("Frame")
-        sep.Size = dn(1, -12, 0, 1)
+        sep.Transparency = 1
+        sep.Size = dn(0, 0, 0, 0)
         sep.BorderSizePixel = 0
-        sep.BackgroundColor3 = Theme.Border
         sep.Parent = tabContent
-        
-        table.insert(tabElements, {object = sep, property = "BackgroundColor3", theme = "Border"})
     end
     
     -- 按钮
@@ -714,11 +797,11 @@ function library:CreateTab(tabName)
         
         button.Name = "BtnModule"
         button.Parent = tabContent
-        button.BackgroundColor3 = Theme.Tertiary
+        button.BackgroundColor3 = Theme.Primary
         button.BorderSizePixel = 0
-        button.Size = dn(1, -12, 0, 32)
+        button.Size = dn(0, 312, 0, 28)
         button.AutoButtonColor = false
-        button.Font = Enum.Font.SourceSansSemibold
+        button.Font = Enum.Font.GothamSemibold
         button.Text = "  " .. text
         button.TextColor3 = Theme.Text
         button.TextSize = 14
@@ -729,29 +812,23 @@ function library:CreateTab(tabName)
         
         button.MouseButton1Click:Connect(callback)
         
-        button.MouseEnter:Connect(function()
-            dv:Tween({BackgroundColor3 = Theme.Border}, button, 0.15)
-        end)
-        
-        button.MouseLeave:Connect(function()
-            dv:Tween({BackgroundColor3 = Theme.Tertiary}, button, 0.15)
-        end)
-        
-        table.insert(tabElements, {object = button, property = "BackgroundColor3", theme = "Tertiary"})
+        table.insert(tabElements, {object = button, property = "BackgroundColor3", theme = "Primary"})
         table.insert(tabElements, {object = button, property = "TextColor3", theme = "Text"})
     end
     
-    -- 开关
+    -- 开关（恢复原始样式）
     function tabFunctions:NewToggle(text, flag, default, callback)
         local callback = callback or dr
         local default = default or false
         
         local toggle = dq("TextButton")
         local corner = dq("UICorner")
-        local toggleBg = dq("Frame")
-        local bgCorner = dq("UICorner")
-        local toggleDot = dq("Frame")
-        local dotCorner = dq("UICorner")
+        local offStatus = dq("Frame")
+        local offGrad = dq("UIGradient")
+        local offCorner = dq("UICorner")
+        local onStatus = dq("Frame")
+        local onCorner = dq("UICorner")
+        local onGrad = dq("UIGradient")
         
         library.flags[flag or text] = {
             State = false,
@@ -764,23 +841,18 @@ function library:CreateTab(tabName)
                     library.flags[flag].Callback(state)
                 end)
                 
-                if state then
-                    dv:Tween({Position = dn(1, -18, 0.5, -7)}, toggleDot, 0.15)
-                    dv:Tween({BackgroundColor3 = Theme.Success}, toggleBg, 0.15)
-                else
-                    dv:Tween({Position = dn(0, 3, 0.5, -7)}, toggleDot, 0.15)
-                    dv:Tween({BackgroundColor3 = Theme.Border}, toggleBg, 0.15)
-                end
+                dv:Tween({Transparency = state and 1 or 0}, offStatus)
+                dv:Tween({Transparency = state and 0 or 1}, onStatus)
             end
         }
         
         toggle.Name = "ToggleModule"
         toggle.Parent = tabContent
-        toggle.BackgroundColor3 = Theme.Tertiary
+        toggle.BackgroundColor3 = Theme.Primary
         toggle.BorderSizePixel = 0
-        toggle.Size = dn(1, -12, 0, 32)
+        toggle.Size = dn(0, 312, 0, 28)
         toggle.AutoButtonColor = false
-        toggle.Font = Enum.Font.SourceSansSemibold
+        toggle.Font = Enum.Font.GothamSemibold
         toggle.Text = "  " .. text
         toggle.TextColor3 = Theme.Text
         toggle.TextSize = 14
@@ -789,21 +861,46 @@ function library:CreateTab(tabName)
         corner.CornerRadius = dm(0, 6)
         corner.Parent = toggle
         
-        toggleBg.Parent = toggle
-        toggleBg.BackgroundColor3 = Theme.Border
-        toggleBg.Position = dn(1, -45, 0.5, -9)
-        toggleBg.Size = dn(0, 38, 0, 18)
+        -- 关闭状态
+        offStatus.Name = "OffStatus"
+        offStatus.Parent = toggle
+        offStatus.BackgroundColor3 = dp(255, 255, 255)
+        offStatus.BorderSizePixel = 0
+        offStatus.Position = dn(0.878205061, 0, 0.178571433, 0)
+        offStatus.Size = dn(0, 34, 0, 18)
         
-        bgCorner.CornerRadius = dm(0, 9)
-        bgCorner.Parent = toggleBg
+        offGrad.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0.00, dp(255, 83, 83)),
+            ColorSequenceKeypoint.new(0.15, dp(255, 83, 83)),
+            ColorSequenceKeypoint.new(0.62, Theme.Primary),
+            ColorSequenceKeypoint.new(1.00, Theme.Primary)
+        }
+        offGrad.Rotation = 300
+        offGrad.Parent = offStatus
         
-        toggleDot.Parent = toggleBg
-        toggleDot.BackgroundColor3 = CurrentTheme == "Dark" and Theme.Text or dp(255, 255, 255)
-        toggleDot.Position = dn(0, 3, 0.5, -7)
-        toggleDot.Size = dn(0, 14, 0, 14)
+        offCorner.CornerRadius = dm(0, 4)
+        offCorner.Parent = offStatus
         
-        dotCorner.CornerRadius = dm(0, 7)
-        dotCorner.Parent = toggleDot
+        -- 开启状态
+        onStatus.Name = "OnStatus"
+        onStatus.Parent = toggle
+        onStatus.BackgroundColor3 = dp(255, 255, 255)
+        onStatus.BackgroundTransparency = 1
+        onStatus.BorderSizePixel = 0
+        onStatus.Position = dn(0.878205121, 0, 0.178571433, 0)
+        onStatus.Size = dn(0, 34, 0, 18)
+        onStatus.Transparency = 1
+        
+        onCorner.CornerRadius = dm(0, 4)
+        onCorner.Parent = onStatus
+        
+        onGrad.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0.00, Theme.Primary),
+            ColorSequenceKeypoint.new(0.38, dp(48, 57, 67)),
+            ColorSequenceKeypoint.new(1.00, dp(53, 255, 134))
+        }
+        onGrad.Rotation = 300
+        onGrad.Parent = onStatus
         
         toggle.MouseButton1Click:Connect(function()
             library.flags[flag or text]:SetState()
@@ -813,14 +910,12 @@ function library:CreateTab(tabName)
             library.flags[flag or text]:SetState(default)
         end
         
-        table.insert(tabElements, {object = toggle, property = "BackgroundColor3", theme = "Tertiary"})
+        table.insert(tabElements, {object = toggle, property = "BackgroundColor3", theme = "Primary"})
         table.insert(tabElements, {object = toggle, property = "TextColor3", theme = "Text"})
     end
     
     -- 按键绑定（修复版）
     function tabFunctions:NewBind(text, default, callback)
-        local callback = callback or dr
-        
         local blacklist = {
             Return = true,
             Space = true,
@@ -832,168 +927,89 @@ function library:CreateTab(tabName)
         }
         
         local shortNames = {
-            RightControl = "RCtrl",
-            LeftControl = "LCtrl",
-            LeftShift = "LShift",
-            RightShift = "RShift",
-            RightAlt = "RAlt",
-            LeftAlt = "LAlt",
-            MouseButton1 = "M1",
-            MouseButton2 = "M2",
-            MouseButton3 = "M3"
+            RightControl = "Right Ctrl",
+            LeftControl = "Left Ctrl",
+            LeftShift = "Left Shift",
+            RightShift = "Right Shift",
+            Semicolon = ";",
+            Quote = '"',
+            LeftBracket = "[",
+            RightBracket = "]",
+            Equals = "=",
+            Minus = "-",
+            RightAlt = "Right Alt",
+            LeftAlt = "Left Alt"
         }
         
         local currentKey = default and Enum.KeyCode[default] or nil
         local keyText = currentKey and (shortNames[currentKey.Name] or currentKey.Name) or "None"
         
-        local bind = dq("Frame")
+        local bind = dq("TextButton")
         local corner = dq("UICorner")
-        local label = dq("TextLabel")
         local keyButton = dq("TextButton")
         local keyCorner = dq("UICorner")
         
-        local bindConnection = nil
-        local listening = false
-        
         bind.Name = "KeybindModule"
         bind.Parent = tabContent
-        bind.BackgroundColor3 = Theme.Tertiary
-        bind.Size = dn(1, -12, 0, 32)
+        bind.BackgroundColor3 = Theme.Primary
+        bind.BorderSizePixel = 0
+        bind.Size = dn(0, 312, 0, 28)
+        bind.AutoButtonColor = false
+        bind.Font = Enum.Font.GothamSemibold
+        bind.Text = "  " .. text
+        bind.TextColor3 = Theme.Text
+        bind.TextSize = 14
+        bind.TextXAlignment = Enum.TextXAlignment.Left
         
         corner.CornerRadius = dm(0, 6)
         corner.Parent = bind
         
-        label.Parent = bind
-        label.BackgroundTransparency = 1
-        label.Position = dn(0, 8, 0, 0)
-        label.Size = dn(0.7, 0, 1, 0)
-        label.Font = Enum.Font.SourceSansSemibold
-        label.Text = text
-        label.TextColor3 = Theme.Text
-        label.TextSize = 14
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        
         keyButton.Parent = bind
         keyButton.BackgroundColor3 = Theme.Secondary
         keyButton.BorderSizePixel = 0
-        keyButton.Position = dn(1, -75, 0.5, -10)
-        keyButton.Size = dn(0, 68, 0, 20)
+        keyButton.Position = dn(0.75, 0, 0.178571433, 0)
+        keyButton.Size = dn(0, 74, 0, 18)
         keyButton.AutoButtonColor = false
-        keyButton.Font = Enum.Font.SourceSansBold
+        keyButton.Font = Enum.Font.Gotham
         keyButton.Text = keyText
-        keyButton.TextColor3 = Theme.TextDim
-        keyButton.TextSize = 13
+        keyButton.TextColor3 = Theme.Text
+        keyButton.TextSize = 12
         
         keyCorner.CornerRadius = dm(0, 4)
         keyCorner.Parent = keyButton
         
-        local function setupKeyListener()
-            if bindConnection then
-                bindConnection:Disconnect()
-            end
-            
-            bindConnection = b.UserInputService.InputBegan:Connect(function(input, processed)
-                if processed then return end
-                if not currentKey then return end
-                
-                if input.KeyCode == currentKey then
-                    pcall(callback, currentKey.Name)
-                end
-            end)
-        end
-        
-        if currentKey then
-            setupKeyListener()
-        end
+        b.UserInputService.InputBegan:Connect(function(input, processed)
+            if processed then return end
+            if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+            if input.KeyCode ~= currentKey then return end
+            callback(currentKey.Name)
+        end)
         
         keyButton.MouseButton1Click:Connect(function()
-            if listening then return end
-            listening = true
-            
             keyButton.Text = "..."
-            keyButton.TextColor3 = Theme.Accent
+            wait()
+            local inputEnded, _ = b.UserInputService.InputEnded:Wait()
+            local keyName = tostring(inputEnded.KeyCode.Name)
             
-            if bindConnection then
-                bindConnection:Disconnect()
+            if inputEnded.UserInputType ~= Enum.UserInputType.Keyboard then
+                keyButton.Text = keyText
+                return
             end
             
-            local tempConnection
-            tempConnection = b.UserInputService.InputBegan:Connect(function(input, processed)
-                if processed and input.KeyCode ~= Enum.KeyCode.Escape then return end
-                
-                local newKey = nil
-                local newKeyText = "None"
-                
-                if input.UserInputType == Enum.UserInputType.Keyboard then
-                    local keyName = input.KeyCode.Name
-                    
-                    if keyName == "Escape" then
-                        currentKey = nil
-                        keyText = "None"
-                        newKeyText = "None"
-                    elseif not blacklist[keyName] then
-                        newKey = input.KeyCode
-                        newKeyText = shortNames[keyName] or keyName
-                        currentKey = newKey
-                        keyText = newKeyText
-                    else
-                        newKeyText = keyText
-                    end
-                elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    currentKey = Enum.KeyCode.MouseButton1
-                    keyText = "M1"
-                    newKeyText = "M1"
-                elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
-                    currentKey = Enum.KeyCode.MouseButton2
-                    keyText = "M2"
-                    newKeyText = "M2"
-                elseif input.UserInputType == Enum.UserInputType.MouseButton3 then
-                    currentKey = Enum.KeyCode.MouseButton3
-                    keyText = "M3"
-                    newKeyText = "M3"
-                end
-                
-                keyButton.Text = newKeyText
-                keyButton.TextColor3 = Theme.TextDim
-                
-                if currentKey then
-                    setupKeyListener()
-                end
-                
-                listening = false
-                tempConnection:Disconnect()
-            end)
+            if blacklist[keyName] then
+                keyButton.Text = keyText
+                return
+            end
             
-            task.spawn(function()
-                task.wait(5)
-                if listening then
-                    listening = false
-                    keyButton.Text = keyText
-                    keyButton.TextColor3 = Theme.TextDim
-                    
-                    if tempConnection then
-                        tempConnection:Disconnect()
-                    end
-                    
-                    if currentKey then
-                        setupKeyListener()
-                    end
-                end
-            end)
+            wait()
+            currentKey = Enum.KeyCode[keyName]
+            keyButton.Text = shortNames[keyName] or keyName
         end)
         
-        bind.MouseEnter:Connect(function()
-            dv:Tween({BackgroundColor3 = Theme.Border}, bind, 0.15)
-        end)
-        
-        bind.MouseLeave:Connect(function()
-            dv:Tween({BackgroundColor3 = Theme.Tertiary}, bind, 0.15)
-        end)
-        
-        table.insert(tabElements, {object = bind, property = "BackgroundColor3", theme = "Tertiary"})
-        table.insert(tabElements, {object = label, property = "TextColor3", theme = "Text"})
+        table.insert(tabElements, {object = bind, property = "BackgroundColor3", theme = "Primary"})
+        table.insert(tabElements, {object = bind, property = "TextColor3", theme = "Text"})
         table.insert(tabElements, {object = keyButton, property = "BackgroundColor3", theme = "Secondary"})
-        table.insert(tabElements, {object = keyButton, property = "TextColor3", theme = "TextDim"})
+        table.insert(tabElements, {object = keyButton, property = "TextColor3", theme = "Text"})
     end
     
     -- 滑块（修复版）
@@ -1001,418 +1017,426 @@ function library:CreateTab(tabName)
         local default = default or min
         local callback = callback or dr
         
-        local slider = dq("Frame")
+        local slider = dq("TextButton")
         local corner = dq("UICorner")
-        local title = dq("TextLabel")
-        local value = dq("TextBox")
-        local valueCorner = dq("UICorner")
         local sliderBar = dq("Frame")
         local barCorner = dq("UICorner")
         local sliderFill = dq("Frame")
         local fillCorner = dq("UICorner")
-        local sliderButton = dq("Frame")
-        local buttonCorner = dq("UICorner")
+        local sliderValue = dq("TextBox")
+        local valueCorner = dq("UICorner")
+        local addButton = dq("TextButton")
+        local minusButton = dq("TextButton")
         
         library.flags[flag] = {
             State = default,
             SetValue = function(self, val)
-                local percent
+                local percent = (ds.X - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X
                 
                 if val then
-                    val = math.clamp(val, min, max)
                     percent = (val - min) / (max - min)
+                end
+                
+                percent = math.clamp(percent, 0, 1)
+                
+                if float then
+                    val = val or tonumber(string.format("%.1f", tostring(min + (max - min) * percent)))
                 else
-                    local mousePos = ds.X
-                    local barPos = sliderBar.AbsolutePosition.X
-                    local barSize = sliderBar.AbsoluteSize.X
-                    
-                    percent = math.clamp((mousePos - barPos) / barSize, 0, 1)
-                    
-                    if float then
-                        val = tonumber(string.format("%.1f", min + (max - min) * percent))
-                    else
-                        val = math.floor(min + (max - min) * percent)
-                    end
+                    val = val or math.floor(min + (max - min) * percent)
                 end
                 
                 library.flags[flag].State = tonumber(val)
-                value.Text = tostring(val)
-                
+                sliderValue.Text = tostring(val)
                 sliderFill.Size = dn(percent, 0, 1, 0)
-                sliderButton.Position = dn(percent, -6, 0.5, -6)
-                
-                pcall(callback, tonumber(val))
+                callback(tonumber(val))
             end
         }
         
         slider.Name = "SliderModule"
         slider.Parent = tabContent
-        slider.BackgroundColor3 = Theme.Tertiary
-        slider.Size = dn(1, -12, 0, 48)
+        slider.BackgroundColor3 = Theme.Primary
+        slider.BorderSizePixel = 0
+        slider.Position = dn(0, 0, -0.140425533, 0)
+        slider.Size = dn(0, 312, 0, 28)
+        slider.AutoButtonColor = false
+        slider.Font = Enum.Font.GothamSemibold
+        slider.Text = "  " .. text
+        slider.TextColor3 = Theme.Text
+        slider.TextSize = 14
+        slider.TextXAlignment = Enum.TextXAlignment.Left
         
         corner.CornerRadius = dm(0, 6)
         corner.Parent = slider
         
-        title.Parent = slider
-        title.BackgroundTransparency = 1
-        title.Position = dn(0, 8, 0, 5)
-        title.Size = dn(0.6, 0, 0, 16)
-        title.Font = Enum.Font.SourceSansSemibold
-        title.Text = text
-        title.TextColor3 = Theme.Text
-        title.TextSize = 14
-        title.TextXAlignment = Enum.TextXAlignment.Left
-        
-        value.Parent = slider
-        value.BackgroundColor3 = Theme.Secondary
-        value.Position = dn(1, -55, 0, 5)
-        value.Size = dn(0, 48, 0, 18)
-        value.Font = Enum.Font.SourceSansBold
-        value.Text = tostring(default)
-        value.TextColor3 = Theme.Accent
-        value.TextSize = 13
-        value.ClearTextOnFocus = false
-        
-        valueCorner.CornerRadius = dm(0, 4)
-        valueCorner.Parent = value
-        
+        sliderBar.Name = "SliderBar"
         sliderBar.Parent = slider
-        sliderBar.BackgroundColor3 = Theme.Border
-        sliderBar.Position = dn(0, 8, 0, 28)
-        sliderBar.Size = dn(1, -16, 0, 8)
+        sliderBar.BackgroundColor3 = Theme.Secondary
+        sliderBar.BorderSizePixel = 0
+        sliderBar.Position = dn(0.442307681, 0, 0.392857134, 0)
+        sliderBar.Size = dn(0, 108, 0, 6)
         
-        barCorner.CornerRadius = dm(0, 4)
+        barCorner.CornerRadius = dm(0, 2)
         barCorner.Parent = sliderBar
         
+        sliderFill.Name = "SliderPart"
         sliderFill.Parent = sliderBar
-        sliderFill.BackgroundColor3 = Theme.Accent
-        sliderFill.Size = dn(0, 0, 1, 0)
+        sliderFill.BackgroundColor3 = dp(255, 255, 255)
+        sliderFill.BorderSizePixel = 0
+        sliderFill.Size = dn(0, 0, 0, 6)
         
-        fillCorner.CornerRadius = dm(0, 4)
+        fillCorner.CornerRadius = dm(0, 2)
         fillCorner.Parent = sliderFill
         
-        sliderButton.Parent = sliderBar
-        sliderButton.BackgroundColor3 = CurrentTheme == "Dark" and Theme.Text or Theme.Accent
-        sliderButton.Size = dn(0, 12, 0, 12)
-        sliderButton.Position = dn(0, -6, 0.5, -6)
-        sliderButton.ZIndex = 2
+        sliderValue.Name = "SliderValue"
+        sliderValue.Parent = slider
+        sliderValue.BackgroundColor3 = Theme.Secondary
+        sliderValue.BorderSizePixel = 0
+        sliderValue.Position = dn(0.884615362, 0, 0.178571433, 0)
+        sliderValue.Size = dn(0, 32, 0, 18)
+        sliderValue.Font = Enum.Font.Gotham
+        sliderValue.Text = default or min
+        sliderValue.TextColor3 = Theme.Text
+        sliderValue.TextSize = 12
         
-        buttonCorner.CornerRadius = dm(0, 6)
-        buttonCorner.Parent = sliderButton
+        valueCorner.CornerRadius = dm(0, 4)
+        valueCorner.Parent = sliderValue
+        
+        addButton.Name = "AddSlider"
+        addButton.Parent = slider
+        addButton.BackgroundColor3 = dp(255, 255, 255)
+        addButton.BackgroundTransparency = 1
+        addButton.BorderSizePixel = 0
+        addButton.Position = dn(0.807692289, 0, 0.178571433, 0)
+        addButton.Size = dn(0, 18, 0, 18)
+        addButton.Font = Enum.Font.Gotham
+        addButton.Text = "+"
+        addButton.TextColor3 = Theme.Text
+        addButton.TextSize = 18
+        
+        minusButton.Name = "MinusSlider"
+        minusButton.Parent = slider
+        minusButton.BackgroundColor3 = dp(255, 255, 255)
+        minusButton.BackgroundTransparency = 1
+        minusButton.BorderSizePixel = 0
+        minusButton.Position = dn(0.365384609, 0, 0.178571433, 0)
+        minusButton.Size = dn(0, 18, 0, 18)
+        minusButton.Font = Enum.Font.Gotham
+        minusButton.Text = "-"
+        minusButton.TextColor3 = Theme.Text
+        minusButton.TextSize = 18
+        
+        minusButton.MouseButton1Click:Connect(function()
+            local current = library.flags:GetState(flag)
+            current = math.clamp(current - 1, min, max)
+            library.flags[flag]:SetValue(current)
+        end)
+        
+        addButton.MouseButton1Click:Connect(function()
+            local current = library.flags:GetState(flag)
+            current = math.clamp(current + 1, min, max)
+            library.flags[flag]:SetValue(current)
+        end)
         
         library.flags[flag]:SetValue(default)
         
         local dragging = false
-        local dragConnection = nil
+        local focused = false
+        local allowed = {[""] = true, ["-"] = true}
         
         sliderBar.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or 
-               input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 library.flags[flag]:SetValue()
-            end
-        end)
-        
-        sliderButton.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or 
-               input.UserInputType == Enum.UserInputType.Touch then
                 dragging = true
-                
-                if dragConnection then
-                    dragConnection:Disconnect()
-                end
-                
-                dragConnection = b.RunService.RenderStepped:Connect(function()
-                    if dragging then
-                        library.flags[flag]:SetValue()
-                    end
-                end)
             end
         end)
         
         b.UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or 
-               input.UserInputType == Enum.UserInputType.Touch then
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                 dragging = false
-                
-                if dragConnection then
-                    dragConnection:Disconnect()
-                    dragConnection = nil
+            end
+        end)
+        
+        b.UserInputService.InputChanged:Connect(function(input)
+            if dragging then
+                library.flags[flag]:SetValue()
+            end
+        end)
+        
+        sliderValue.Focused:Connect(function()
+            focused = true
+        end)
+        
+        sliderValue.FocusLost:Connect(function()
+            focused = false
+            if sliderValue.Text == "" then
+                library.flags[flag]:SetValue(default)
+            end
+        end)
+        
+        sliderValue:GetPropertyChangedSignal("Text"):Connect(function()
+            if not focused then return end
+            sliderValue.Text = sliderValue.Text:gsub("%D+", "")
+            local text = sliderValue.Text
+            if not tonumber(text) then
+                sliderValue.Text = sliderValue.Text:gsub("%D+", "")
+            elseif not allowed[text] then
+                if tonumber(text) > max then
+                    text = max
+                    sliderValue.Text = tostring(max)
                 end
+                library.flags[flag]:SetValue(tonumber(text))
             end
         end)
         
-        value.FocusLost:Connect(function(enter)
-            local inputVal = tonumber(value.Text)
-            if inputVal then
-                library.flags[flag]:SetValue(inputVal)
-            else
-                value.Text = tostring(library.flags[flag].State)
-            end
-        end)
-        
-        local decrease = dq("TextButton")
-        decrease.Parent = slider
-        decrease.BackgroundTransparency = 1
-        decrease.Position = dn(0.65, 0, 0, 3)
-        decrease.Size = dn(0, 20, 0, 20)
-        decrease.Font = Enum.Font.SourceSansBold
-        decrease.Text = "-"
-        decrease.TextColor3 = Theme.TextDim
-        decrease.TextSize = 18
-        
-        local increase = dq("TextButton")
-        increase.Parent = slider
-        increase.BackgroundTransparency = 1
-        increase.Position = dn(0.75, 0, 0, 3)
-        increase.Size = dn(0, 20, 0, 20)
-        increase.Font = Enum.Font.SourceSansBold
-        increase.Text = "+"
-        increase.TextColor3 = Theme.TextDim
-        increase.TextSize = 18
-        
-        decrease.MouseButton1Click:Connect(function()
-            local current = library.flags[flag].State
-            library.flags[flag]:SetValue(current - (float and 0.1 or 1))
-        end)
-        
-        increase.MouseButton1Click:Connect(function()
-            local current = library.flags[flag].State
-            library.flags[flag]:SetValue(current + (float and 0.1 or 1))
-        end)
-        
-        table.insert(tabElements, {object = slider, property = "BackgroundColor3", theme = "Tertiary"})
-        table.insert(tabElements, {object = title, property = "TextColor3", theme = "Text"})
-        table.insert(tabElements, {object = value, property = "BackgroundColor3", theme = "Secondary"})
-        table.insert(tabElements, {object = sliderBar, property = "BackgroundColor3", theme = "Border"})
-        table.insert(tabElements, {object = decrease, property = "TextColor3", theme = "TextDim"})
-        table.insert(tabElements, {object = increase, property = "TextColor3", theme = "TextDim"})
+        table.insert(tabElements, {object = slider, property = "BackgroundColor3", theme = "Primary"})
+        table.insert(tabElements, {object = slider, property = "TextColor3", theme = "Text"})
+        table.insert(tabElements, {object = sliderBar, property = "BackgroundColor3", theme = "Secondary"})
+        table.insert(tabElements, {object = sliderValue, property = "BackgroundColor3", theme = "Secondary"})
+        table.insert(tabElements, {object = sliderValue, property = "TextColor3", theme = "Text"})
+        table.insert(tabElements, {object = addButton, property = "TextColor3", theme = "Text"})
+        table.insert(tabElements, {object = minusButton, property = "TextColor3", theme = "Text"})
     end
     
-    -- 下拉菜单
+    -- 下拉菜单（恢复原始样式）
     function tabFunctions:NewDropdown(text, flag, options, callback)
         local callback = callback or dr
         
-        library.flags[flag] = {
-            State = options[1]
-        }
+        library.flags[flag] = {State = options[1]}
         
-        local dropdown = dq("Frame")
+        local dropdown = dq("TextButton")
         local corner = dq("UICorner")
-        local button = dq("TextButton")
-        local arrow = dq("TextLabel")
-        local list = dq("ScrollingFrame")
-        local listLayout = dq("UIListLayout")
-        local listPadding = dq("UIPadding")
+        local dropText = dq("TextBox")
+        local openButton = dq("TextButton")
+        local dropBottom = dq("TextButton")
+        local bottomCorner = dq("UICorner")
+        local bottomLayout = dq("UIListLayout")
+        local bottomPadding = dq("UIPadding")
         
         dropdown.Name = "DropdownModule"
         dropdown.Parent = tabContent
-        dropdown.BackgroundColor3 = Theme.Tertiary
-        dropdown.Size = dn(1, -12, 0, 32)
-        dropdown.ClipsDescendants = true
+        dropdown.BackgroundColor3 = Theme.Primary
+        dropdown.BorderSizePixel = 0
+        dropdown.Size = dn(0, 312, 0, 28)
+        dropdown.AutoButtonColor = false
+        dropdown.Font = Enum.Font.GothamSemibold
+        dropdown.Text = ""
+        dropdown.TextColor3 = Theme.Text
+        dropdown.TextSize = 14
+        dropdown.TextXAlignment = Enum.TextXAlignment.Left
         
         corner.CornerRadius = dm(0, 6)
         corner.Parent = dropdown
         
-        button.Parent = dropdown
-        button.BackgroundTransparency = 1
-        button.Size = dn(1, 0, 0, 32)
-        button.Font = Enum.Font.SourceSansSemibold
-        button.Text = "  " .. text .. " - " .. options[1]
-        button.TextColor3 = Theme.Text
-        button.TextSize = 14
-        button.TextXAlignment = Enum.TextXAlignment.Left
+        dropText.Name = "DropdownText"
+        dropText.Parent = dropdown
+        dropText.BackgroundColor3 = dp(255, 255, 255)
+        dropText.BackgroundTransparency = 1
+        dropText.Position = dn(0.025641026, 0, 0, 0)
+        dropText.Size = dn(0, 192, 0, 28)
+        dropText.Font = Enum.Font.GothamSemibold
+        dropText.PlaceholderText = text
+        dropText.PlaceholderColor3 = Theme.Text
+        dropText.TextColor3 = Theme.Text
+        dropText.TextSize = 14
+        dropText.TextXAlignment = Enum.TextXAlignment.Left
+        dropText.Text = ""
         
-        arrow.Parent = button
-        arrow.BackgroundTransparency = 1
-        arrow.Position = dn(1, -25, 0, 0)
-        arrow.Size = dn(0, 25, 1, 0)
-        arrow.Font = Enum.Font.SourceSansBold
-        arrow.Text = "v"
-        arrow.TextColor3 = Theme.TextDim
-        arrow.TextSize = 14
+        openButton.Name = "OpenDropdown"
+        openButton.Parent = dropdown
+        openButton.BackgroundColor3 = dp(255, 255, 255)
+        openButton.BackgroundTransparency = 1
+        openButton.BorderSizePixel = 0
+        openButton.Position = dn(0.907051265, 0, 0.178571433, 0)
+        openButton.Size = dn(0, 18, 0, 18)
+        openButton.Font = Enum.Font.Gotham
+        openButton.Text = "+"
+        openButton.TextColor3 = Theme.Text
+        openButton.TextSize = 22
         
-        list.Parent = dropdown
-        list.BackgroundTransparency = 1
-        list.Position = dn(0, 0, 0, 32)
-        list.Size = dn(1, 0, 0, 0)
-        list.ScrollBarThickness = 2
-        list.ScrollBarImageColor3 = Theme.Accent
-        list.Visible = false
+        dropBottom.Name = "DropdownBottom"
+        dropBottom.Parent = tabContent
+        dropBottom.BackgroundColor3 = Theme.Primary
+        dropBottom.BorderSizePixel = 0
+        dropBottom.ClipsDescendants = true
+        dropBottom.Position = dn(0.0185185187, 0, 0.206896558, 0)
+        dropBottom.Size = dn(0, 312, 0, 0)
+        dropBottom.AutoButtonColor = false
+        dropBottom.Font = Enum.Font.GothamSemibold
+        dropBottom.Text = ""
+        dropBottom.TextColor3 = Theme.Text
+        dropBottom.TextSize = 14
+        dropBottom.TextXAlignment = Enum.TextXAlignment.Left
+        dropBottom.Visible = false
         
-        listLayout.Parent = list
-        listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        listLayout.Padding = dm(0, 4)
+        bottomCorner.CornerRadius = dm(0, 6)
+        bottomCorner.Parent = dropBottom
         
-        listPadding.Parent = list
-        listPadding.PaddingTop = dm(0, 4)
-        listPadding.PaddingLeft = dm(0, 6)
-        listPadding.PaddingRight = dm(0, 6)
+        bottomLayout.Name = "DropdownBottomLayout"
+        bottomLayout.Parent = dropBottom
+        bottomLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        bottomLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        bottomLayout.Padding = dm(0, 6)
+        
+        bottomPadding.Name = "DropdownBottomPadding"
+        bottomPadding.Parent = dropBottom
+        bottomPadding.PaddingTop = dm(0, 6)
         
         local isOpen = false
         
-        local function toggle()
-            isOpen = not isOpen
-            list.Visible = isOpen
-            
-            local targetSize = isOpen and math.min(#options * 28 + 12, 140) or 0
-            dv:Tween({Size = dn(1, -12, 0, 32 + targetSize)}, dropdown, 0.2)
-            dv:Tween({Rotation = isOpen and 180 or 0}, arrow, 0.2)
-            
-            if isOpen then
-                list.Size = dn(1, 0, 0, targetSize)
+        bottomLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            if not isOpen then return end
+            dv:Tween({Size = dn(0, 312, 0, bottomLayout.AbsoluteContentSize.Y + 12)}, dropBottom, 0.1)
+        end)
+        
+        local function searchOptions(query)
+            for _, element in next, dropBottom:GetChildren() do
+                if element:IsA("TextButton") then
+                    if string.find(element.Name:lower(), query:lower()) then
+                        element.Visible = true
+                    else
+                        element.Visible = false
+                    end
+                end
             end
         end
         
-        button.MouseButton1Click:Connect(toggle)
+        local function toggle()
+            isOpen = not isOpen
+            if isOpen then
+                dropBottom.Visible = true
+                searchOptions("")
+            else
+                task.spawn(function()
+                    task.wait(0.35)
+                    dropBottom.Visible = false
+                end)
+            end
+            openButton.Text = isOpen and "-" or "+"
+            dv:Tween({Size = dn(0, 312, 0, isOpen and bottomLayout.AbsoluteContentSize.Y + 12 or 0)}, dropBottom, 0.35)
+        end
+        
+        openButton.MouseButton1Click:Connect(toggle)
+        
+        dropText.Focused:Connect(function()
+            if isOpen then return end
+            toggle()
+        end)
+        
+        dropText:GetPropertyChangedSignal("Text"):Connect(function()
+            searchOptions(dropText.Text)
+        end)
         
         library.flags[flag].SetOptions = function(self, newOptions)
-            for _, child in pairs(list:GetChildren()) do
+            library.flags[flag]:ClearOptions()
+            for i = 1, #newOptions do
+                library.flags[flag]:AddOption(newOptions[i])
+            end
+        end
+        
+        library.flags[flag].ClearOptions = function(self)
+            for _, child in pairs(dropBottom:GetChildren()) do
                 if child:IsA("TextButton") then
                     child:Destroy()
                 end
             end
+        end
+        
+        library.flags[flag].AddOption = function(self, option)
+            local optionButton = dq("TextButton")
+            local optionCorner = dq("UICorner")
             
-            for _, option in pairs(newOptions) do
-                local optionBtn = dq("TextButton")
-                local optionCorner = dq("UICorner")
-                
-                optionBtn.Parent = list
-                optionBtn.BackgroundColor3 = Theme.Secondary
-                optionBtn.Size = dn(1, -12, 0, 24)
-                optionBtn.Font = Enum.Font.SourceSans
-                optionBtn.Text = option
-                optionBtn.TextColor3 = Theme.TextDim
-                optionBtn.TextSize = 13
-                
-                optionCorner.CornerRadius = dm(0, 4)
-                optionCorner.Parent = optionBtn
-                
-                optionBtn.MouseButton1Click:Connect(function()
-                    button.Text = "  " .. text .. " - " .. option
-                    library.flags[flag].State = option
-                    toggle()
-                    callback(option)
-                end)
-                
-                optionBtn.MouseEnter:Connect(function()
-                    dv:Tween({BackgroundColor3 = Theme.Border}, optionBtn, 0.15)
-                end)
-                
-                optionBtn.MouseLeave:Connect(function()
-                    dv:Tween({BackgroundColor3 = Theme.Secondary}, optionBtn, 0.15)
-                end)
-            end
+            optionButton.Name = option
+            optionButton.Parent = dropBottom
+            optionButton.BackgroundColor3 = Theme.Secondary
+            optionButton.BorderSizePixel = 0
+            optionButton.Size = dn(0, 300, 0, 28)
+            optionButton.AutoButtonColor = false
+            optionButton.Font = Enum.Font.GothamSemibold
+            optionButton.Text = option
+            optionButton.TextColor3 = Theme.Text
+            optionButton.TextSize = 14
             
-            list.CanvasSize = dn(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
+            optionCorner.CornerRadius = dm(0, 6)
+            optionCorner.Parent = optionButton
+            
+            optionButton.MouseButton1Click:Connect(function()
+                dropText.PlaceholderText = option
+                dropText.Text = ""
+                library.flags[flag].State = option
+                task.spawn(toggle)
+                callback(option)
+            end)
+        end
+        
+        library.flags[flag].RemoveOption = function(self, option)
+            dropBottom:WaitForChild(option):Destroy()
         end
         
         library.flags[flag]:SetOptions(options)
         
-        table.insert(tabElements, {object = dropdown, property = "BackgroundColor3", theme = "Tertiary"})
-        table.insert(tabElements, {object = button, property = "TextColor3", theme = "Text"})
-        table.insert(tabElements, {object = arrow, property = "TextColor3", theme = "TextDim"})
+        table.insert(tabElements, {object = dropdown, property = "BackgroundColor3", theme = "Primary"})
+        table.insert(tabElements, {object = dropText, property = "PlaceholderColor3", theme = "Text"})
+        table.insert(tabElements, {object = dropText, property = "TextColor3", theme = "Text"})
+        table.insert(tabElements, {object = openButton, property = "TextColor3", theme = "Text"})
+        table.insert(tabElements, {object = dropBottom, property = "BackgroundColor3", theme = "Primary"})
     end
     
     -- 文本框
     function tabFunctions:NewBox(text, placeholder, callback)
         local callback = callback or dr
         
-        local box = dq("Frame")
+        local box = dq("TextButton")
         local corner = dq("UICorner")
-        local label = dq("TextLabel")
         local textBox = dq("TextBox")
         local boxCorner = dq("UICorner")
         
         box.Name = "BoxModule"
         box.Parent = tabContent
-        box.BackgroundColor3 = Theme.Tertiary
-        box.Size = dn(1, -12, 0, 32)
+        box.BackgroundColor3 = Theme.Primary
+        box.BorderSizePixel = 0
+        box.Position = dn(0, 0, -0.140425533, 0)
+        box.Size = dn(0, 312, 0, 28)
+        box.AutoButtonColor = false
+        box.Font = Enum.Font.GothamSemibold
+        box.Text = "  " .. text
+        box.TextColor3 = Theme.Text
+        box.TextSize = 14
+        box.TextXAlignment = Enum.TextXAlignment.Left
         
         corner.CornerRadius = dm(0, 6)
         corner.Parent = box
         
-        label.Parent = box
-        label.BackgroundTransparency = 1
-        label.Position = dn(0, 8, 0, 0)
-        label.Size = dn(0.5, 0, 1, 0)
-        label.Font = Enum.Font.SourceSansSemibold
-        label.Text = text
-        label.TextColor3 = Theme.Text
-        label.TextSize = 14
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        
+        textBox.Name = "Box"
         textBox.Parent = box
         textBox.BackgroundColor3 = Theme.Secondary
-        textBox.Position = dn(0.5, 0, 0.5, -10)
-        textBox.Size = dn(0.47, 0, 0, 20)
-        textBox.Font = Enum.Font.SourceSans
-        textBox.PlaceholderText = placeholder
-        textBox.PlaceholderColor3 = Theme.TextMuted
+        textBox.BorderSizePixel = 0
+        textBox.Position = dn(0.774615362, 0, 0.178571433, 0)
+        textBox.Size = dn(0, 65, 0, 18)
+        textBox.Font = Enum.Font.Gotham
         textBox.Text = ""
+        textBox.PlaceholderText = placeholder
         textBox.TextColor3 = Theme.Text
-        textBox.TextSize = 13
-        textBox.ClearTextOnFocus = false
+        textBox.TextSize = 12
         
         boxCorner.CornerRadius = dm(0, 4)
         boxCorner.Parent = textBox
         
-        textBox.FocusLost:Connect(function(enter)
-            if enter then
-                callback(textBox.Text)
-                if getgenv().ClearTextBoxText then
-                    task.wait(0.1)
-                    textBox.Text = ""
-                end
+        textBox.FocusLost:Connect(function(enterPressed)
+            if not enterPressed then return end
+            callback(textBox.Text)
+            if getgenv().ClearTextBoxText then
+                wait(0.10)
+                textBox.Text = ""
             end
         end)
         
-        table.insert(tabElements, {object = box, property = "BackgroundColor3", theme = "Tertiary"})
-        table.insert(tabElements, {object = label, property = "TextColor3", theme = "Text"})
+        table.insert(tabElements, {object = box, property = "BackgroundColor3", theme = "Primary"})
+        table.insert(tabElements, {object = box, property = "TextColor3", theme = "Text"})
         table.insert(tabElements, {object = textBox, property = "BackgroundColor3", theme = "Secondary"})
         table.insert(tabElements, {object = textBox, property = "TextColor3", theme = "Text"})
-        table.insert(tabElements, {object = textBox, property = "PlaceholderColor3", theme = "TextMuted"})
     end
     
     return tabFunctions
-end
-
--- 更新主题时更新所有模块
-library.updateTheme = function()
-    Theme = Themes[CurrentTheme]
-    
-    for _, element in pairs(themeElements) do
-        element[1][element[2]] = Theme[element[3]]
-    end
-    
-    ThemeToggle.Text = CurrentTheme == "Dark" and "☀" or "🌙"
-    MainShadow.Visible = CurrentTheme == "Light" and dE.Visible
-    
-    if dE:FindFirstChild("UIStroke") then
-        dE.UIStroke.Transparency = CurrentTheme == "Dark" and 1 or 0
-    end
-    
-    -- 更新所有标签页的元素
-    for _, module in pairs(library.modules) do
-        if module.update then
-            module.update()
-        end
-    end
-    
-    -- 更新通知颜色
-    if notificationHolder then
-        for _, notif in pairs(notificationHolder:GetChildren()) do
-            if notif.Name == "ToggleNotif" or notif.Name == "DefaultNotif" then
-                notif.BackgroundColor3 = Theme.Primary
-                if notif:FindFirstChild("Title") then
-                    notif.Title.TextColor3 = Theme.Text
-                end
-                if notif:FindFirstChild("Paragraph") then
-                    notif.Paragraph.TextColor3 = Theme.TextDim
-                end
-            end
-        end
-    end
 end
 
 -- 设置UI名称
