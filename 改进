@@ -1,4 +1,4 @@
--- 完整的现代化UI系统（修复版本）
+-- 完整的现代化UI系统（重新修复版本）
 local a = {
     Plrs = "Players",
     LP = "LocalPlayer", 
@@ -151,15 +151,17 @@ function dv:Tween(props, object, duration, style, direction)
     return tween
 end
 
--- 统一覆盖层隐藏（修复版）
+-- 统一覆盖层隐藏
 function dv:HideOverlay()
     local gui = b.CoreGui[_CONFIGS.UI_NAME].Main
     local ProfilePage = gui.ProfilePage
     local SettingsPage = gui.SettingsPage
 
+    -- 隐藏所有覆盖层
     if ProfilePage then ProfilePage.Visible = false end
     if SettingsPage then SettingsPage.Visible = false end
 
+    -- 重置状态
     library.activeOverlay = nil
     library.isHomepageVisible = false
 
@@ -171,7 +173,7 @@ function dv:HideOverlay()
         dv:Tween({BorderColor3 = Theme.Secondary}, gui.Header.SettingsButton.SettingsStroke, 0.15)
     end
 
-    -- 恢复当前标签页（无论activeOverlay是否为nil都要恢复）
+    -- 恢复当前标签页
     if library.currentTab then
         library.currentTab[1].Visible = true
         if library.currentTab[2] and library.currentTab[2]:FindFirstChild("Glow") then
@@ -188,16 +190,13 @@ function dv:ShowOverlay(which)
     local ProfileStroke = gui.Header.ProfileButton.ProfileStroke
     local SettingsStroke = gui.Header.SettingsButton.SettingsStroke
 
-    -- 已经在该页则关闭
+    -- 如果已经在该页则关闭
     if library.activeOverlay == which then
         dv:HideOverlay()
         return
     end
 
-    -- 切换前先隐藏
-    dv:HideOverlay()
-
-    -- 隐藏标签页内容
+    -- 隐藏当前标签页内容
     if library.currentTab then
         library.currentTab[1].Visible = false
         if library.currentTab[2] and library.currentTab[2]:FindFirstChild("Glow") then
@@ -205,39 +204,41 @@ function dv:ShowOverlay(which)
         end
     end
 
+    -- 隐藏所有覆盖层
+    if ProfilePage then ProfilePage.Visible = false end
+    if SettingsPage then SettingsPage.Visible = false end
+    
+    -- 重置所有按钮边框
+    dv:Tween({BorderColor3 = Theme.Secondary}, ProfileStroke, 0.15)
+    dv:Tween({BorderColor3 = Theme.Secondary}, SettingsStroke, 0.15)
+
+    -- 显示对应覆盖层
     if which == "Profile" then
         if ProfilePage then ProfilePage.Visible = true end
         library.activeOverlay = "Profile"
         library.isHomepageVisible = true
         dv:Tween({BorderColor3 = Theme.Accent}, ProfileStroke, 0.15)
-        dv:Tween({BorderColor3 = Theme.Secondary}, SettingsStroke, 0.15)
     elseif which == "Settings" then
         if SettingsPage then SettingsPage.Visible = true end
         library.activeOverlay = "Settings"
         library.isHomepageVisible = false
-        dv:Tween({BorderColor3 = Theme.Secondary}, ProfileStroke, 0.15)
         dv:Tween({BorderColor3 = Theme.Accent}, SettingsStroke, 0.15)
     end
 end
 
--- 切换标签（修复版）
+-- 切换标签
 function dv:SwitchTab(newTab)
-    -- 切换标签时，确保覆盖层隐藏
-    dv:HideOverlay()
+    -- 如果有覆盖层显示，先隐藏
+    if library.activeOverlay then
+        dv:HideOverlay()
+    end
     
     local oldTab = library.currentTab
-    
-    -- 即使是同一个标签也要确保显示（修复空白页面问题）
-    if oldTab == newTab then 
-        newTab[1].Visible = true
-        if newTab[2] and newTab[2]:FindFirstChild("Glow") then
-            dv:Tween({BackgroundTransparency = 0}, newTab[2].Glow, 0.15)
-        end
-        return 
-    end
+    if oldTab == newTab then return end
     
     library.currentTab = newTab
     
+    -- 隐藏旧标签
     if oldTab then
         if oldTab[2] and oldTab[2]:FindFirstChild("Glow") then
             dv:Tween({BackgroundTransparency = 1}, oldTab[2].Glow, 0.15)
@@ -245,6 +246,7 @@ function dv:SwitchTab(newTab)
         oldTab[1].Visible = false
     end
     
+    -- 显示新标签
     if newTab[2] and newTab[2]:FindFirstChild("Glow") then
         dv:Tween({BackgroundTransparency = 0}, newTab[2].Glow, 0.15)
     end
@@ -556,17 +558,16 @@ local function createInfoLabel(parent, labelText, valueText, isAccent)
     return value
 end
 
--- 修复的服务器名称判断
+-- 服务器名称判断（修复版）
 local function getServerName()
     local psId = game.PrivateServerId
     local ownerId = game.PrivateServerOwnerId
     
-    -- 确保类型正确
-    if psId ~= nil and psId ~= "" then
-        if ownerId ~= nil and ownerId ~= 0 then
+    if psId ~= nil and psId ~= "" and psId ~= "0" then
+        if ownerId ~= nil and tonumber(ownerId) and tonumber(ownerId) > 0 then
             -- VIP/私人服务器
             local ownerName = "未知"
-            local success = pcall(function()
+            pcall(function()
                 ownerName = b.Players:GetNameFromUserIdAsync(ownerId)
             end)
             return "私人服务器@" .. ownerName
@@ -817,7 +818,7 @@ SettingsButton.MouseButton1Click:Connect(function()
     dv:ShowOverlay("Settings")
 end)
 
--- 通知系统（原样保持不变）
+-- 通知系统（原样保持不变，省略以节省空间）
 function createBaseNotifications()
     if b.Players.LocalPlayer.PlayerGui:FindFirstChild("NotificationHolder") then
         return b.Players.LocalPlayer.PlayerGui.NotificationHolder
@@ -1110,7 +1111,7 @@ function library:Notify(args)
     end)
 end
 
--- 创建标签页（其余代码保持不变）
+-- 创建标签页（后面的代码与原来相同，继续...）
 function library:CreateTab(tabName)
     local tabButton = dq("TextButton")
     local tabCorner = dq("UICorner")
@@ -1501,6 +1502,9 @@ function library:CreateTab(tabName)
         table.insert(tabElements, {keyButton, "BackgroundColor3", "Secondary"})
         table.insert(tabElements, {keyButton, "TextColor3", "TextDim"})
     end
+    
+    -- 后续的滑块、下拉菜单、文本框等控件代码与原来相同...
+    -- [为节省空间，其余代码省略，保持原样即可]
     
     -- 滑块
     function tabFunctions:NewSlider(text, flag, default, min, max, float, callback)
