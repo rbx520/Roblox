@@ -1,0 +1,863 @@
+local a = {
+    Plrs = "Players",
+    LP = "LocalPlayer",
+    RS = "ReplicatedStorage"
+}
+local b = setmetatable({}, {
+    __index = function(self, c)
+        return game.GetService(game, c)
+    end,
+    __call = function(self, c)
+        return game.GetService(game, c)
+    end
+})
+if b.CoreGui:FindFirstChild(_CONFIGS.UI_NAME) then
+    b.CoreGui[_CONFIGS.UI_NAME]:Destroy()
+end
+
+local dm = UDim.new
+local dn = UDim2.new
+local dp = Color3.fromRGB
+local dq = Instance.new
+local dr = function()
+end
+local ds = b.Players.LocalPlayer:GetMouse()
+
+-- 现代化配色方案
+local ColorTheme = {
+    -- 主要颜色
+    Background = dp(25, 27, 33),        -- 深色背景
+    Secondary = dp(32, 34, 42),         -- 次要背景
+    Tertiary = dp(40, 42, 52),          -- 第三背景
+    
+    -- 强调色
+    Accent = dp(88, 101, 242),          -- 主要强调色 (紫蓝色)
+    AccentLight = dp(139, 148, 250),    -- 浅强调色
+    Success = dp(87, 242, 135),         -- 成功色 (绿色)
+    Danger = dp(237, 66, 69),           -- 危险色 (红色)
+    Warning = dp(255, 179, 71),         -- 警告色 (橙色)
+    
+    -- 文本颜色
+    TextPrimary = dp(255, 255, 255),    -- 主要文本
+    TextSecondary = dp(163, 168, 178),  -- 次要文本
+    TextMuted = dp(109, 113, 124),      -- 静音文本
+    
+    -- 边框和分割线
+    Border = dp(48, 51, 60),
+    Divider = dp(55, 58, 68),
+    
+    -- 阴影
+    Shadow = dp(0, 0, 0),
+}
+
+getgenv().library = {
+    flags = {
+        GetState = function(dt, du)
+            return library.flags[du].State
+        end
+    },
+    modules = {},
+    currentTab = nil
+}
+
+function library:UpdateToggle(du, be)
+    local be = be or library.flags:GetState(du)
+    if be == library.flags:GetState(du) then
+        return
+    end
+    library.flags[du]:SetState(be)
+end
+
+local dv = {}
+
+-- 改进的Tween函数，添加了更流畅的动画
+function dv:Tween(dw, dx, dy, dz, dA)
+    return b.TweenService:Create(
+        dx, 
+        TweenInfo.new(
+            dy or 0.3, 
+            Enum.EasingStyle[dz or "Quart"], 
+            Enum.EasingDirection[dA or "Out"]
+        ), 
+        dw
+    )
+end
+
+-- 添加悬停效果
+function dv:AddHoverEffect(button, hoverColor, normalColor)
+    button.MouseEnter:Connect(function()
+        dv:Tween({BackgroundColor3 = hoverColor}, button, 0.2):Play()
+    end)
+    button.MouseLeave:Connect(function()
+        dv:Tween({BackgroundColor3 = normalColor}, button, 0.2):Play()
+    end)
+end
+
+function dv:SwitchTab(dB)
+    local dC = library.currentTab
+    if dC == dB then
+        return
+    end
+    library.currentTab = dB
+    
+    -- 更流畅的标签切换动画
+    dv:Tween({
+        BackgroundTransparency = 0.7,
+        TextColor3 = ColorTheme.TextSecondary
+    }, dC[2], 0.2):Play()
+    dv:Tween({
+        BackgroundColor3 = ColorTheme.Accent,
+        Size = dn(0, 0, 0, 3)
+    }, dC[2].Glow, 0.2):Play()
+    
+    dv:Tween({
+        BackgroundTransparency = 0,
+        TextColor3 = ColorTheme.TextPrimary
+    }, dB[2], 0.2):Play()
+    dv:Tween({
+        BackgroundColor3 = ColorTheme.AccentLight,
+        Size = dn(0, 94, 0, 3)
+    }, dB[2].Glow, 0.2):Play()
+    
+    -- 内容切换动画
+    dC[1].Visible = false
+    dB[1].Visible = true
+end
+
+-- 创建UI元素
+local dD = dq("ScreenGui")
+local Open = dq("TextButton")
+local dE = dq("Frame")
+local dF = dq("UICorner")
+local dG = dq("TextLabel")
+local dH = dq("UICorner")
+local dI = dq("Frame")
+local dJ = dq("UICorner")
+local dK = dq("ScrollingFrame")
+local dL = dq("UIListLayout")
+local dM = dq("UIPadding")
+local dN = dq("Frame")
+local dO = dq("UICorner")
+
+-- 添加阴影效果
+local Shadow = dq("ImageLabel")
+Shadow.Name = "Shadow"
+Shadow.Parent = dE
+Shadow.BackgroundTransparency = 1
+Shadow.Position = dn(0, -15, 0, -15)
+Shadow.Size = dn(1, 30, 1, 30)
+Shadow.ZIndex = -1
+Shadow.Image = "rbxassetid://5554236805"
+Shadow.ImageColor3 = ColorTheme.Shadow
+Shadow.ImageTransparency = 0.3
+Shadow.ScaleType = Enum.ScaleType.Slice
+Shadow.SliceCenter = Rect.new(23, 23, 277, 277)
+
+dD.Name = _CONFIGS.UI_NAME
+dD.Parent = b.CoreGui
+
+-- 主窗口
+dE.Name = "Main"
+dE.Parent = dD
+dE.BackgroundColor3 = ColorTheme.Background
+dE.BorderSizePixel = 0
+dE.Position = dn(0.5, 0, 0.5, 0)
+dE.Size = dn(0, 480, 0, 320)
+dE.AnchorPoint = Vector2.new(0.5, 0.5)
+dE.Active = true
+dE.Draggable = true
+
+dF.CornerRadius = dm(0, 12)
+dF.Name = "MainCorner"
+dF.Parent = dE
+
+-- 标题栏
+dG.Parent = dE
+dG.BackgroundColor3 = ColorTheme.Secondary
+dG.BorderSizePixel = 0
+dG.Position = dn(0, 0, 0, 0)
+dG.Size = dn(1, 0, 0, 36)
+dG.Font = Enum.Font.GothamBold
+dG.Text = "  " .. _CONFIGS.UI_NAME
+dG.TextColor3 = ColorTheme.TextPrimary
+dG.TextSize = 16
+dG.TextXAlignment = Enum.TextXAlignment.Left
+
+-- 添加图标
+local Icon = dq("TextLabel")
+Icon.Parent = dG
+Icon.BackgroundTransparency = 1
+Icon.Position = dn(0, 10, 0, 8)
+Icon.Size = dn(0, 20, 0, 20)
+Icon.Font = Enum.Font.GothamBold
+Icon.Text = "◆"
+Icon.TextColor3 = ColorTheme.Accent
+Icon.TextSize = 18
+
+-- 隐藏/显示按钮（现代化设计）
+Open.Name = "Open"
+Open.Parent = dD
+Open.BackgroundColor3 = ColorTheme.Accent
+Open.Position = dn(0.85, 0, 0, 10)
+Open.BorderSizePixel = 0
+Open.Size = dn(0, 80, 0, 32)
+Open.Font = Enum.Font.GothamSemibold
+Open.Text = "隐藏"
+Open.TextColor3 = ColorTheme.TextPrimary
+Open.TextSize = 14
+Open.Active = true
+Open.Draggable = true
+
+local OpenCorner = dq("UICorner")
+OpenCorner.CornerRadius = dm(0, 8)
+OpenCorner.Parent = Open
+
+-- 添加按钮悬停效果
+dv:AddHoverEffect(Open, ColorTheme.AccentLight, ColorTheme.Accent)
+
+local TOGGLE = true
+Open.MouseButton1Down:connect(function()
+    TOGGLE = not TOGGLE
+    if TOGGLE then
+        dE.Visible = true
+        dv:Tween({Size = dn(0, 480, 0, 320)}, dE, 0.3):Play()
+        Open.Text = "隐藏"
+    else
+        dv:Tween({Size = dn(0, 0, 0, 0)}, dE, 0.3):Play()
+        task.wait(0.3)
+        dE.Visible = false
+        Open.Text = "显示"
+    end
+end)
+
+dH.CornerRadius = dm(0, 12)
+dH.Name = "TextLabelCorner"
+dH.Parent = dG
+
+-- 侧边栏
+dI.Name = "Sidebar"
+dI.Parent = dE
+dI.BackgroundColor3 = ColorTheme.Secondary
+dI.BorderSizePixel = 0
+dI.Position = dn(0, 10, 0, 46)
+dI.Size = dn(0, 120, 0, 264)
+
+dJ.CornerRadius = dm(0, 8)
+dJ.Name = "SidebarCorner"
+dJ.Parent = dI
+
+-- 标签按钮容器
+dK.Name = "TabButtons"
+dK.Parent = dI
+dK.Active = true
+dK.BackgroundColor3 = dp(255, 255, 255)
+dK.BackgroundTransparency = 1
+dK.BorderSizePixel = 0
+dK.Size = dn(1, 0, 1, 0)
+dK.ScrollBarThickness = 4
+dK.ScrollBarImageColor3 = ColorTheme.Accent
+
+dL.Parent = dK
+dL.HorizontalAlignment = Enum.HorizontalAlignment.Center
+dL.SortOrder = Enum.SortOrder.LayoutOrder
+dL.Padding = dm(0, 8)
+
+dM.Parent = dK
+dM.PaddingTop = dm(0, 8)
+dM.PaddingBottom = dm(0, 8)
+
+-- 内容区域
+dN.Name = "TabHolder"
+dN.Parent = dE
+dN.BackgroundColor3 = ColorTheme.Secondary
+dN.BorderSizePixel = 0
+dN.Position = dn(0, 140, 0, 46)
+dN.Size = dn(0, 330, 0, 264)
+
+dO.CornerRadius = dm(0, 8)
+dO.Name = "TabHolderCorner"
+dO.Parent = dN
+
+dL:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    dK.CanvasSize = dn(0, 0, 0, dL.AbsoluteContentSize.Y + 16)
+end)
+
+-- 通知系统（现代化设计）
+function createBaseNotifications()
+    if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("NotificationHolder") then
+        return game:GetService("Players").LocalPlayer.PlayerGui.NotificationHolder
+    end
+    
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    -- 现代化通知样式
+    local ToggleNotif = Instance.new("Frame")
+    ToggleNotif.Name = "ToggleNotif"
+    ToggleNotif.ZIndex = 5
+    ToggleNotif.AnchorPoint = Vector2.new(1, 1)
+    ToggleNotif.Visible = false
+    ToggleNotif.Size = UDim2.new(0, 320, 0, 80)
+    ToggleNotif.Position = UDim2.new(1, 0, 1, 0)
+    ToggleNotif.BackgroundColor3 = ColorTheme.Background
+    ToggleNotif.Parent = ScreenGui
+    
+    local UiCorner = Instance.new("UICorner")
+    UiCorner.CornerRadius = dm(0, 10)
+    UiCorner.Parent = ToggleNotif
+    
+    -- 添加发光边框
+    local Glow = Instance.new("UIStroke")
+    Glow.Name = "Glow"
+    Glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    Glow.Transparency = 0.5
+    Glow.Thickness = 2
+    Glow.Color = ColorTheme.Accent
+    Glow.Parent = ToggleNotif
+    
+    -- 其他通知元素...
+    
+    if syn then
+        syn.protect_gui(ScreenGui)
+    end
+    ScreenGui.Parent = game:GetService("Players").LocalPlayer.PlayerGui
+    return ScreenGui
+end
+
+notificationHolder = createBaseNotifications()
+notifAmount = 0
+removedPos = nil
+
+-- 创建标签页函数
+function library:CreateTab(dZ)
+    local d_ = dq("TextButton")
+    local e0 = dq("UICorner")
+    local e1 = dq("Frame")
+    local e2 = dq("UICorner")
+    local e4 = dq("ScrollingFrame")
+    local e5 = dq("UIPadding")
+    local e6 = dq("UIListLayout")
+    
+    -- 标签按钮
+    d_.Name = "TabButton"
+    d_.Parent = dK
+    d_.BackgroundColor3 = ColorTheme.Tertiary
+    d_.BackgroundTransparency = 0.7
+    d_.BorderSizePixel = 0
+    d_.Size = dn(0, 104, 0, 36)
+    d_.AutoButtonColor = false
+    d_.Font = Enum.Font.GothamSemibold
+    d_.Text = dZ
+    d_.TextColor3 = ColorTheme.TextSecondary
+    d_.TextSize = 14
+    
+    e0.CornerRadius = dm(0, 8)
+    e0.Name = "TabButtonCorner"
+    e0.Parent = d_
+    
+    -- 添加悬停效果
+    dv:AddHoverEffect(d_, ColorTheme.Tertiary, ColorTheme.Tertiary)
+    
+    -- 活动指示器
+    e1.Name = "Glow"
+    e1.Parent = d_
+    e1.BackgroundColor3 = ColorTheme.Accent
+    e1.BorderSizePixel = 0
+    e1.Position = dn(0, 0, 1, -3)
+    e1.Size = dn(0, 0, 0, 3)
+    
+    e2.CornerRadius = dm(0, 2)
+    e2.Name = "GlowCorner"
+    e2.Parent = e1
+    
+    -- 内容区域
+    e4.Name = "Tab"
+    e4.Parent = dN
+    e4.Active = true
+    e4.BackgroundColor3 = dp(255, 255, 255)
+    e4.BackgroundTransparency = 1
+    e4.BorderSizePixel = 0
+    e4.Size = dn(1, 0, 1, 0)
+    e4.ScrollBarThickness = 4
+    e4.ScrollBarImageColor3 = ColorTheme.Accent
+    e4.Visible = false
+    
+    if library.currentTab == nil then
+        library.currentTab = {e4, d_}
+        e1.Size = dn(1, 0, 0, 3)
+        d_.BackgroundTransparency = 0
+        d_.TextColor3 = ColorTheme.TextPrimary
+        e4.Visible = true
+    end
+    
+    e5.Name = "TabPadding"
+    e5.Parent = e4
+    e5.PaddingTop = dm(0, 8)
+    e5.PaddingLeft = dm(0, 8)
+    e5.PaddingRight = dm(0, 8)
+    
+    e6.Name = "TabLayout"
+    e6.Parent = e4
+    e6.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    e6.SortOrder = Enum.SortOrder.LayoutOrder
+    e6.Padding = dm(0, 8)
+    
+    e6:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        e4.CanvasSize = dn(0, 0, 0, e6.AbsoluteContentSize.Y + 16)
+    end)
+    
+    d_.MouseButton1Click:Connect(function()
+        dv:SwitchTab({e4, d_})
+    end)
+    
+    local e7 = {}
+    
+    -- 创建分隔符
+    function e7:NewSeparator()
+        local Separator = dq("Frame")
+        Separator.Size = dn(1, -16, 0, 1)
+        Separator.BorderSizePixel = 0
+        Separator.BackgroundColor3 = ColorTheme.Divider
+        Separator.Parent = e4
+        
+        local Padding = dq("Frame")
+        Padding.Size = dn(1, 0, 0, 8)
+        Padding.BackgroundTransparency = 1
+        Padding.Parent = e4
+    end
+    
+    -- 创建按钮（现代化设计）
+    function e7:NewButton(e9, ea)
+        local ea = ea or dr
+        local eb = dq("TextButton")
+        local ec = dq("UICorner")
+        
+        eb.Name = "BtnModule"
+        eb.Parent = e4
+        eb.BackgroundColor3 = ColorTheme.Tertiary
+        eb.BorderSizePixel = 0
+        eb.Size = dn(1, -16, 0, 36)
+        eb.AutoButtonColor = false
+        eb.Font = Enum.Font.GothamSemibold
+        eb.Text = "  " .. e9
+        eb.TextColor3 = ColorTheme.TextPrimary
+        eb.TextSize = 14
+        eb.TextXAlignment = Enum.TextXAlignment.Left
+        
+        ec.CornerRadius = dm(0, 8)
+        ec.Name = "BtnModuleCorner"
+        ec.Parent = eb
+        
+        -- 添加点击动画
+        eb.MouseButton1Click:Connect(function()
+            -- 点击波纹效果
+            dv:Tween({BackgroundColor3 = ColorTheme.Accent}, eb, 0.1):Play()
+            task.wait(0.1)
+            dv:Tween({BackgroundColor3 = ColorTheme.Tertiary}, eb, 0.2):Play()
+            ea()
+        end)
+        
+        -- 悬停效果
+        dv:AddHoverEffect(eb, ColorTheme.Border, ColorTheme.Tertiary)
+    end
+    
+    -- 创建开关（现代化设计）
+    function e7:NewToggle(e9, du, ed, ea)
+        local ea = ea or dr
+        local ed = ed or false
+        
+        local ee = dq("TextButton")
+        local ef = dq("UICorner")
+        local ToggleFrame = dq("Frame")
+        local ToggleCorner = dq("UICorner")
+        local ToggleSlider = dq("Frame")
+        local SliderCorner = dq("UICorner")
+        
+        library.flags[du or e9] = {
+            State = false,
+            Callback = ea,
+            SetState = function(self, be)
+                local be = be ~= nil and be or not library.flags:GetState(du)
+                library.flags[du].State = be
+                task.spawn(function()
+                    library.flags[du].Callback(be)
+                end)
+                
+                -- 动画切换
+                if be then
+                    dv:Tween({
+                        Position = dn(0, 26, 0.5, -8),
+                        BackgroundColor3 = ColorTheme.TextPrimary
+                    }, ToggleSlider, 0.2):Play()
+                    dv:Tween({
+                        BackgroundColor3 = ColorTheme.Success
+                    }, ToggleFrame, 0.2):Play()
+                else
+                    dv:Tween({
+                        Position = dn(0, 4, 0.5, -8),
+                        BackgroundColor3 = ColorTheme.TextSecondary
+                    }, ToggleSlider, 0.2):Play()
+                    dv:Tween({
+                        BackgroundColor3 = ColorTheme.Border
+                    }, ToggleFrame, 0.2):Play()
+                end
+            end
+        }
+        
+        ee.Name = "ToggleModule"
+        ee.Parent = e4
+        ee.BackgroundColor3 = ColorTheme.Tertiary
+        ee.BorderSizePixel = 0
+        ee.Size = dn(1, -16, 0, 36)
+        ee.AutoButtonColor = false
+        ee.Font = Enum.Font.GothamSemibold
+        ee.Text = "  " .. e9
+        ee.TextColor3 = ColorTheme.TextPrimary
+        ee.TextSize = 14
+        ee.TextXAlignment = Enum.TextXAlignment.Left
+        
+        ef.CornerRadius = dm(0, 8)
+        ef.Parent = ee
+        
+        -- 开关框架
+        ToggleFrame.Name = "ToggleFrame"
+        ToggleFrame.Parent = ee
+        ToggleFrame.BackgroundColor3 = ColorTheme.Border
+        ToggleFrame.Position = dn(1, -60, 0.5, -10)
+        ToggleFrame.Size = dn(0, 46, 0, 20)
+        
+        ToggleCorner.CornerRadius = dm(0, 10)
+        ToggleCorner.Parent = ToggleFrame
+        
+        -- 滑块
+        ToggleSlider.Name = "Slider"
+        ToggleSlider.Parent = ToggleFrame
+        ToggleSlider.BackgroundColor3 = ColorTheme.TextSecondary
+        ToggleSlider.Position = dn(0, 4, 0.5, -8)
+        ToggleSlider.Size = dn(0, 16, 0, 16)
+        
+        SliderCorner.CornerRadius = dm(0, 8)
+        SliderCorner.Parent = ToggleSlider
+        
+        ee.MouseButton1Click:Connect(function()
+            library.flags[du or e9]:SetState()
+        end)
+        
+        if ed then
+            library.flags[du or e9]:SetState(ed)
+        end
+        
+        dv:AddHoverEffect(ee, ColorTheme.Border, ColorTheme.Tertiary)
+    end
+    
+    -- 创建滑块（现代化设计）
+    function e7:NewSlider(e9, du, em, ey, ez, eA, ea)
+        local em = em or ey
+        local ea = ea or dr
+        
+        local SliderFrame = dq("Frame")
+        local SliderCorner = dq("UICorner")
+        local SliderBar = dq("Frame")
+        local BarCorner = dq("UICorner")
+        local SliderFill = dq("Frame")
+        local FillCorner = dq("UICorner")
+        local SliderButton = dq("TextButton")
+        local ButtonCorner = dq("UICorner")
+        local ValueLabel = dq("TextLabel")
+        local TitleLabel = dq("TextLabel")
+        
+        library.flags[du] = {
+            State = em,
+            SetValue = function(self, be)
+                local eL = (ds.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X
+                if be then
+                    eL = (be - ey) / (ez - ey)
+                end
+                eL = math.clamp(eL, 0, 1)
+                
+                if eA then
+                    be = be or tonumber(string.format("%.1f", tostring(ey + (ez - ey) * eL)))
+                else
+                    be = be or math.floor(ey + (ez - ey) * eL)
+                end
+                
+                library.flags[du].State = tonumber(be)
+                ValueLabel.Text = tostring(be)
+                SliderFill.Size = dn(eL, 0, 1, 0)
+                SliderButton.Position = dn(eL, -6, 0.5, -6)
+                ea(tonumber(be))
+            end
+        }
+        
+        SliderFrame.Name = "SliderModule"
+        SliderFrame.Parent = e4
+        SliderFrame.BackgroundColor3 = ColorTheme.Tertiary
+        SliderFrame.Size = dn(1, -16, 0, 50)
+        
+        SliderCorner.CornerRadius = dm(0, 8)
+        SliderCorner.Parent = SliderFrame
+        
+        TitleLabel.Parent = SliderFrame
+        TitleLabel.BackgroundTransparency = 1
+        TitleLabel.Position = dn(0, 10, 0, 5)
+        TitleLabel.Size = dn(0.6, 0, 0, 20)
+        TitleLabel.Font = Enum.Font.GothamSemibold
+        TitleLabel.Text = e9
+        TitleLabel.TextColor3 = ColorTheme.TextPrimary
+        TitleLabel.TextSize = 14
+        TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        
+        ValueLabel.Parent = SliderFrame
+        ValueLabel.BackgroundTransparency = 1
+        ValueLabel.Position = dn(1, -50, 0, 5)
+        ValueLabel.Size = dn(0, 40, 0, 20)
+        ValueLabel.Font = Enum.Font.GothamBold
+        ValueLabel.Text = tostring(em)
+        ValueLabel.TextColor3 = ColorTheme.Accent
+        ValueLabel.TextSize = 14
+        
+        SliderBar.Parent = SliderFrame
+        SliderBar.BackgroundColor3 = ColorTheme.Border
+        SliderBar.Position = dn(0, 10, 0, 30)
+        SliderBar.Size = dn(1, -20, 0, 6)
+        
+        BarCorner.CornerRadius = dm(0, 3)
+        BarCorner.Parent = SliderBar
+        
+        SliderFill.Parent = SliderBar
+        SliderFill.BackgroundColor3 = ColorTheme.Accent
+        SliderFill.Size = dn(0, 0, 1, 0)
+        
+        FillCorner.CornerRadius = dm(0, 3)
+        FillCorner.Parent = SliderFill
+        
+        SliderButton.Parent = SliderBar
+        SliderButton.BackgroundColor3 = ColorTheme.AccentLight
+        SliderButton.Size = dn(0, 12, 0, 12)
+        SliderButton.Position = dn(0, -6, 0.5, -6)
+        SliderButton.Text = ""
+        
+        ButtonCorner.CornerRadius = dm(0, 6)
+        ButtonCorner.Parent = SliderButton
+        
+        library.flags[du]:SetValue(em)
+        
+        local dragging = false
+        
+        SliderButton.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = true
+            end
+        end)
+        
+        SliderBar.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                library.flags[du]:SetValue()
+            end
+        end)
+        
+        b.UserInputService.InputEnded:Connect(function(input)
+            if dragging and input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = false
+            end
+        end)
+        
+        b.UserInputService.InputChanged:Connect(function(input)
+            if dragging then
+                library.flags[du]:SetValue()
+            end
+        end)
+    end
+    
+    -- 创建下拉菜单（现代化设计）
+    function e7:NewDropdown(e9, du, eP, ea)
+        local ea = ea or dr
+        library.flags[du] = {
+            State = eP[1]
+        }
+        
+        local DropdownFrame = dq("Frame")
+        local DropdownCorner = dq("UICorner")
+        local DropdownButton = dq("TextButton")
+        local DropdownIcon = dq("TextLabel")
+        local DropdownList = dq("ScrollingFrame")
+        local ListLayout = dq("UIListLayout")
+        local ListPadding = dq("UIPadding")
+        
+        DropdownFrame.Name = "DropdownModule"
+        DropdownFrame.Parent = e4
+        DropdownFrame.BackgroundColor3 = ColorTheme.Tertiary
+        DropdownFrame.Size = dn(1, -16, 0, 36)
+        DropdownFrame.ClipsDescendants = true
+        
+        DropdownCorner.CornerRadius = dm(0, 8)
+        DropdownCorner.Parent = DropdownFrame
+        
+        DropdownButton.Parent = DropdownFrame
+        DropdownButton.BackgroundTransparency = 1
+        DropdownButton.Size = dn(1, 0, 0, 36)
+        DropdownButton.Font = Enum.Font.GothamSemibold
+        DropdownButton.Text = "  " .. e9
+        DropdownButton.TextColor3 = ColorTheme.TextPrimary
+        DropdownButton.TextSize = 14
+        DropdownButton.TextXAlignment = Enum.TextXAlignment.Left
+        
+        DropdownIcon.Parent = DropdownButton
+        DropdownIcon.BackgroundTransparency = 1
+        DropdownIcon.Position = dn(1, -30, 0, 0)
+        DropdownIcon.Size = dn(0, 30, 0, 36)
+        DropdownIcon.Font = Enum.Font.GothamBold
+        DropdownIcon.Text = "▼"
+        DropdownIcon.TextColor3 = ColorTheme.TextSecondary
+        DropdownIcon.TextSize = 12
+        
+        DropdownList.Parent = DropdownFrame
+        DropdownList.BackgroundTransparency = 1
+        DropdownList.Position = dn(0, 0, 0, 36)
+        DropdownList.Size = dn(1, 0, 0, 0)
+        DropdownList.ScrollBarThickness = 4
+        DropdownList.ScrollBarImageColor3 = ColorTheme.Accent
+        DropdownList.Visible = false
+        
+        ListLayout.Parent = DropdownList
+        ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        ListLayout.Padding = dm(0, 4)
+        
+        ListPadding.Parent = DropdownList
+        ListPadding.PaddingTop = dm(0, 4)
+        ListPadding.PaddingLeft = dm(0, 8)
+        ListPadding.PaddingRight = dm(0, 8)
+        
+        local isOpen = false
+        
+        local function toggleDropdown()
+            isOpen = not isOpen
+            DropdownList.Visible = isOpen
+            
+            if isOpen then
+                dv:Tween({
+                    Size = dn(1, -16, 0, 36 + math.min(#eP * 32 + 8, 150))
+                }, DropdownFrame, 0.2):Play()
+                dv:Tween({
+                    Rotation = 180
+                }, DropdownIcon, 0.2):Play()
+                DropdownList.Size = dn(1, 0, 0, math.min(#eP * 32 + 8, 150))
+            else
+                dv:Tween({
+                    Size = dn(1, -16, 0, 36)
+                }, DropdownFrame, 0.2):Play()
+                dv:Tween({
+                    Rotation = 0
+                }, DropdownIcon, 0.2):Play()
+            end
+        end
+        
+        DropdownButton.MouseButton1Click:Connect(toggleDropdown)
+        
+        library.flags[du].SetOptions = function(self, options)
+            for _, child in pairs(DropdownList:GetChildren()) do
+                if child:IsA("TextButton") then
+                    child:Destroy()
+                end
+            end
+            
+            for _, option in pairs(options) do
+                local OptionButton = dq("TextButton")
+                local OptionCorner = dq("UICorner")
+                
+                OptionButton.Parent = DropdownList
+                OptionButton.BackgroundColor3 = ColorTheme.Border
+                OptionButton.Size = dn(1, -16, 0, 28)
+                OptionButton.Font = Enum.Font.Gotham
+                OptionButton.Text = option
+                OptionButton.TextColor3 = ColorTheme.TextSecondary
+                OptionButton.TextSize = 13
+                
+                OptionCorner.CornerRadius = dm(0, 6)
+                OptionCorner.Parent = OptionButton
+                
+                OptionButton.MouseButton1Click:Connect(function()
+                    DropdownButton.Text = "  " .. option
+                    library.flags[du].State = option
+                    toggleDropdown()
+                    ea(option)
+                end)
+                
+                dv:AddHoverEffect(OptionButton, ColorTheme.Tertiary, ColorTheme.Border)
+            end
+            
+            DropdownList.CanvasSize = dn(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 8)
+        end
+        
+        library.flags[du]:SetOptions(eP)
+        
+        dv:AddHoverEffect(DropdownFrame, ColorTheme.Border, ColorTheme.Tertiary)
+    end
+    
+    -- 创建文本框（现代化设计）
+    function e7:NewBox(e9, du, ea)
+        local ea = ea or dr
+        
+        local BoxFrame = dq("Frame")
+        local BoxCorner = dq("UICorner")
+        local BoxLabel = dq("TextLabel")
+        local TextBox = dq("TextBox")
+        local TextBoxCorner = dq("UICorner")
+        
+        BoxFrame.Name = "BoxModule"
+        BoxFrame.Parent = e4
+        BoxFrame.BackgroundColor3 = ColorTheme.Tertiary
+        BoxFrame.Size = dn(1, -16, 0, 36)
+        
+        BoxCorner.CornerRadius = dm(0, 8)
+        BoxCorner.Parent = BoxFrame
+        
+        BoxLabel.Parent = BoxFrame
+        BoxLabel.BackgroundTransparency = 1
+        BoxLabel.Position = dn(0, 10, 0, 0)
+        BoxLabel.Size = dn(0.5, 0, 1, 0)
+        BoxLabel.Font = Enum.Font.GothamSemibold
+        BoxLabel.Text = e9
+        BoxLabel.TextColor3 = ColorTheme.TextPrimary
+        BoxLabel.TextSize = 14
+        BoxLabel.TextXAlignment = Enum.TextXAlignment.Left
+        
+        TextBox.Parent = BoxFrame
+        TextBox.BackgroundColor3 = ColorTheme.Border
+        TextBox.Position = dn(0.5, 0, 0.5, -12)
+        TextBox.Size = dn(0.45, 0, 0, 24)
+        TextBox.Font = Enum.Font.Gotham
+        TextBox.PlaceholderText = du
+        TextBox.PlaceholderColor3 = ColorTheme.TextMuted
+        TextBox.Text = ""
+        TextBox.TextColor3 = ColorTheme.TextPrimary
+        TextBox.TextSize = 13
+        
+        TextBoxCorner.CornerRadius = dm(0, 6)
+        TextBoxCorner.Parent = TextBox
+        
+        TextBox.FocusLost:Connect(function(enterPressed)
+            if enterPressed then
+                ea(TextBox.Text)
+                if getgenv().ClearTextBoxText then
+                    task.wait(0.1)
+                    TextBox.Text = ""
+                end
+            end
+        end)
+        
+        dv:AddHoverEffect(BoxFrame, ColorTheme.Border, ColorTheme.Tertiary)
+    end
+    
+    return e7
+end
+
+setmetatable(getgenv().library, {
+    __newindex = function(self, i, v)
+        if i == 'Name' then
+            dG.Text = "  " .. v
+            return true
+        end
+        rawset(self, i, v)
+    end
+})
