@@ -1,9 +1,7 @@
--- 完整的现代化UI系统（个人主页、设置功能优化版）
-
--- 服务获取的元表封装
+-- 完整的现代化UI系统（修复阴影问题版本 + 标题栏设置 + 覆盖层管理 + 服务器名称修复）
 local a = {
     Plrs = "Players",
-    LP = "LocalPlayer",
+    LP = "LocalPlayer", 
     RS = "ReplicatedStorage"
 }
 
@@ -20,7 +18,6 @@ if b.CoreGui:FindFirstChild(_CONFIGS.UI_NAME) then
     b.CoreGui[_CONFIGS.UI_NAME]:Destroy()
 end
 
--- 常用函数和实例别名
 local dm = UDim.new
 local dn = UDim2.new
 local dp = Color3.fromRGB
@@ -31,46 +28,46 @@ local ds = b.Players.LocalPlayer:GetMouse()
 -- 主题系统（现代化配色）
 local Themes = {
     Dark = {
-        Primary = dp(30, 30, 36),        -- 深色背景
-        Secondary = dp(35, 35, 42),      -- 次要背景
-        Tertiary = dp(40, 40, 48),       -- 第三背景
-        Accent = dp(100, 120, 255),      -- 蓝色强调色
-        Success = dp(100, 255, 100),     -- 绿色成功色
-        Danger = dp(255, 100, 100),      -- 红色危险色
-        Warning = dp(255, 200, 100),     -- 橙色警告色
-        Text = dp(255, 255, 255),        -- 白色文本
-        TextDim = dp(180, 180, 180),     -- 次要文本
-        TextMuted = dp(120, 120, 120),   -- 静音文本
-        Border = dp(50, 50, 58),         -- 边框色
-        MinimizeBtn = dp(35, 35, 42),    -- 最小化按钮背景
-        MinimizeBorder = dp(50, 50, 58), -- 最小化按钮边框
-        SliderFill = dp(100, 120, 255),  -- 滑块填充色
-        SliderHandle = dp(255, 255, 255),-- 滑块按钮颜色 (白色，高对比度)
-        ToggleOn = dp(100, 255, 100),    -- 开关开启色
-        ToggleOff = dp(50, 50, 58),      -- 开关关闭色
-        MainBorder = dp(50, 50, 58),     -- 主窗口边框
-        ScrollBar = dp(100, 120, 255)    -- 滚动条颜色
+        Primary = dp(30, 30, 36),
+        Secondary = dp(35, 35, 42),
+        Tertiary = dp(40, 40, 48),
+        Accent = dp(100, 120, 255),
+        Success = dp(100, 255, 100),
+        Danger = dp(255, 100, 100),
+        Warning = dp(255, 200, 100),
+        Text = dp(255, 255, 255),
+        TextDim = dp(180, 180, 180),
+        TextMuted = dp(120, 120, 120),
+        Border = dp(50, 50, 58),
+        MinimizeBtn = dp(35, 35, 42),
+        MinimizeBorder = dp(50, 50, 58),
+        SliderFill = dp(100, 120, 255),
+        SliderHandle = dp(255, 255, 255),
+        ToggleOn = dp(100, 255, 100),
+        ToggleOff = dp(50, 50, 58),
+        MainBorder = dp(50, 50, 58),
+        ScrollBar = dp(100, 120, 255)
     },
     Light = {
-        Primary = dp(255, 255, 255),      -- 白色背景
-        Secondary = dp(245, 246, 250),    -- 浅灰背景
-        Tertiary = dp(235, 237, 242),     -- 更浅的灰色
-        Accent = dp(88, 101, 242),        -- 蓝紫色强调
-        Success = dp(34, 197, 94),        -- 绿色成功
-        Danger = dp(239, 68, 68),         -- 红色危险
-        Warning = dp(245, 158, 11),       -- 橙色警告
-        Text = dp(17, 24, 39),            -- 深色文本
-        TextDim = dp(75, 85, 99),         -- 次要文本
-        TextMuted = dp(156, 163, 175),    -- 静音文本
-        Border = dp(229, 231, 235),       -- 浅色边框
-        MinimizeBtn = dp(255, 255, 255),  -- 最小化按钮白色背景
-        MinimizeBorder = dp(229, 231, 235), -- 最小化按钮边框
-        SliderFill = dp(34, 197, 94),     -- [修改] 使用主题的绿色，与暗色主题的蓝色区分开
-        SliderHandle = dp(255, 255, 255), -- 滑块按钮颜色 (白色，高对比度)
-        ToggleOn = dp(34, 197, 94),       -- 开关开启色
-        ToggleOff = dp(229, 231, 235),    -- 开关关闭色
-        MainBorder = dp(220, 220, 220),   -- 主窗口边框
-        ScrollBar = dp(88, 101, 242)      -- 滚动条颜色
+        Primary = dp(255, 255, 255),
+        Secondary = dp(245, 246, 250),
+        Tertiary = dp(235, 237, 242),
+        Accent = dp(88, 101, 242),
+        Success = dp(34, 197, 94),
+        Danger = dp(239, 68, 68),
+        Warning = dp(245, 158, 11),
+        Text = dp(17, 24, 39),
+        TextDim = dp(75, 85, 99),
+        TextMuted = dp(156, 163, 175),
+        Border = dp(229, 231, 235),
+        MinimizeBtn = dp(255, 255, 255),
+        MinimizeBorder = dp(229, 231, 235),
+        SliderFill = dp(34, 197, 94),
+        SliderHandle = dp(255, 255, 255),
+        ToggleOn = dp(34, 197, 94),
+        ToggleOff = dp(229, 231, 235),
+        MainBorder = dp(220, 220, 220),
+        ScrollBar = dp(88, 101, 242)
     }
 }
 
@@ -78,7 +75,6 @@ local Themes = {
 local CurrentTheme = "Dark"
 local Theme = Themes[CurrentTheme]
 
--- [优化] 扩展 library 存储更多状态
 getgenv().library = {
     flags = {
         GetState = function(dt, du)
@@ -87,19 +83,44 @@ getgenv().library = {
     },
     modules = {},
     currentTab = nil,
-    activeView = "Tabs", -- [新增] 当前主视图状态: "Tabs", "Homepage", "Settings"
+    isHomepageVisible = false, -- 兼容旧字段（实际由 activeOverlay 管）
     theme = CurrentTheme,
-    savedData = { -- [新增] 用于保存用户设置
-        CustomTitle = _CONFIGS.UI_NAME
-    }
+    activeOverlay = nil, -- nil / "Profile" / "Settings"
+    CustomTitle = nil
 }
 
--- 切换主题函数
+-- UTF8 安全截断到最多 n 个字符（中文算 1 个）
+local function utf8SubMax(s, n)
+    s = tostring(s or "")
+    local ok, len = pcall(utf8.len, s)
+    if ok and len then
+        if len <= n then return s end
+        local offset = utf8.offset(s, n + 1)
+        if offset then
+            return string.sub(s, 1, offset - 1)
+        end
+        return s
+    else
+        -- 遇到非法序列时，手动按UTF8步进
+        local count, i = 0, 1
+        while i <= #s and count < n do
+            local c = s:byte(i)
+            local step = (c < 128 and 1) or (c < 224 and 2) or (c < 240 and 3) or (c < 248 and 4) or 1
+            i = i + step
+            count = count + 1
+        end
+        return s:sub(1, i-1)
+    end
+end
+
+-- 切换主题
 function library:SetTheme(themeName)
     if not Themes[themeName] then return end
+    
     CurrentTheme = themeName
-    Theme = Themes[CurrentTheme]
+    Theme = Themes[themeName]
     library.theme = themeName
+    
     if library.updateTheme then
         library.updateTheme()
     end
@@ -117,25 +138,122 @@ local dv = {}
 
 -- 优化的Tween函数
 function dv:Tween(props, object, duration, style, direction)
-    return b.TweenService:Create(object, TweenInfo.new(duration or 0.2, style or Enum.EasingStyle.Quad, direction or Enum.EasingDirection.Out), props):Play()
+    local tween = b.TweenService:Create(
+        object,
+        TweenInfo.new(
+            duration or 0.2,
+            style or Enum.EasingStyle.Quad,
+            direction or Enum.EasingDirection.Out
+        ),
+        props
+    )
+    tween:Play()
+    return tween
 end
 
+-- 统一覆盖层隐藏
+function dv:HideOverlay()
+    if library.activeOverlay == nil then return end
+    local gui = b.CoreGui[_CONFIGS.UI_NAME].Main
+    local ProfilePage = gui.ProfilePage
+    local SettingsPage = gui.SettingsPage
+
+    if ProfilePage then ProfilePage.Visible = false end
+    if SettingsPage then SettingsPage.Visible = false end
+
+    library.activeOverlay = nil
+    library.isHomepageVisible = false
+
+    -- 取消按钮高亮
+    if gui.Header:FindFirstChild("ProfileButton") then
+        dv:Tween({BorderColor3 = Theme.Secondary}, gui.Header.ProfileButton.ProfileStroke, 0.15)
+    end
+    if gui.Header:FindFirstChild("SettingsButton") then
+        dv:Tween({BorderColor3 = Theme.Secondary}, gui.Header.SettingsButton.SettingsStroke, 0.15)
+    end
+
+    -- 恢复当前标签页
+    if library.currentTab then
+        library.currentTab[1].Visible = true
+        if library.currentTab[2] and library.currentTab[2]:FindFirstChild("Glow") then
+            dv:Tween({BackgroundTransparency = 0}, library.currentTab[2].Glow, 0.15)
+        end
+    end
+end
+
+-- 显示某个覆盖层（Profile/Settings）
+function dv:ShowOverlay(which)
+    local gui = b.CoreGui[_CONFIGS.UI_NAME].Main
+    local ProfilePage = gui.ProfilePage
+    local SettingsPage = gui.SettingsPage
+    local ProfileStroke = gui.Header.ProfileButton.ProfileStroke
+    local SettingsStroke = gui.Header.SettingsButton.SettingsStroke
+
+    -- 已经在该页则关闭
+    if library.activeOverlay == which then
+        dv:HideOverlay()
+        return
+    end
+
+    -- 切换前先隐藏
+    dv:HideOverlay()
+
+    -- 隐藏标签页内容
+    if library.currentTab then
+        library.currentTab[1].Visible = false
+        if library.currentTab[2] and library.currentTab[2]:FindFirstChild("Glow") then
+            dv:Tween({BackgroundTransparency = 1}, library.currentTab[2].Glow, 0.15)
+        end
+    end
+
+    if which == "Profile" then
+        if ProfilePage then ProfilePage.Visible = true end
+        library.activeOverlay = "Profile"
+        library.isHomepageVisible = true
+        dv:Tween({BorderColor3 = Theme.Accent}, ProfileStroke, 0.15)
+        dv:Tween({BorderColor3 = Theme.Secondary}, SettingsStroke, 0.15)
+    elseif which == "Settings" then
+        if SettingsPage then SettingsPage.Visible = true end
+        library.activeOverlay = "Settings"
+        library.isHomepageVisible = false
+        dv:Tween({BorderColor3 = Theme.Secondary}, ProfileStroke, 0.15)
+        dv:Tween({BorderColor3 = Theme.Accent}, SettingsStroke, 0.15)
+    end
+end
+
+-- 切换标签
+function dv:SwitchTab(newTab)
+    -- 切换标签时，确保覆盖层隐藏
+    dv:HideOverlay()
+    
+    local oldTab = library.currentTab
+    if oldTab == newTab then return end
+    
+    library.currentTab = newTab
+    
+    if oldTab then
+        if oldTab[2] and oldTab[2]:FindFirstChild("Glow") then
+            dv:Tween({BackgroundTransparency = 1}, oldTab[2].Glow, 0.15)
+        end
+        oldTab[1].Visible = false
+    end
+    
+    if newTab[2] and newTab[2]:FindFirstChild("Glow") then
+        dv:Tween({BackgroundTransparency = 0}, newTab[2].Glow, 0.15)
+    end
+    newTab[1].Visible = true
+end
 
 -- 创建主界面
 local dD = dq("ScreenGui")
-dD.Name = _CONFIGS.UI_NAME
-dD.Parent = b.CoreGui
-dD.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
 local Open = dq("TextButton")
 local OpenCorner = dq("UICorner")
 local OpenBorder = dq("UIStroke")
 local dE = dq("Frame")
 local dF = dq("UICorner")
 local MainBorder = dq("UIStroke")
-local HeaderBackground = dq("Frame") -- [优化] 使用Frame作为标题栏背景，而不是TextLabel
-local HeaderCorner = dq("UICorner")
-local TitleText = dq("TextLabel") -- [新增] 独立的标题文本
+local dG = dq("TextLabel") -- Header（容器 + 背景，不再显示文字）
+local dH = dq("UICorner")
 local dI = dq("Frame")
 local dJ = dq("UICorner")
 local dK = dq("ScrollingFrame")
@@ -144,52 +262,87 @@ local dM = dq("UIPadding")
 local dN = dq("Frame")
 local dO = dq("UICorner")
 
--- 标题栏按钮
+-- 标题文本（新增，避免与头像冲突）
+local TitleLabel = dq("TextLabel")
+
+-- 个人主页按钮
 local ProfileButton = dq("ImageButton")
 local ProfileCorner = dq("UICorner")
 local ProfileStroke = dq("UIStroke")
-local SettingsButton = dq("TextButton") -- [新增] 设置按钮
+
+-- 设置按钮（新增）
+local SettingsButton = dq("TextButton")
 local SettingsCorner = dq("UICorner")
 local SettingsStroke = dq("UIStroke")
+
+-- 主题切换按钮
 local ThemeToggle = dq("TextButton")
 local ThemeCorner = dq("UICorner")
 
+dD.Name = _CONFIGS.UI_NAME
+dD.Parent = b.CoreGui
+dD.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 -- 主窗口
 dE.Name = "Main"
 dE.Parent = dD
 dE.BackgroundColor3 = Theme.Primary
+dE.BorderSizePixel = 0
 dE.Position = dn(0.5, 0, 0.5, 0)
 dE.Size = dn(0, 460, 0, 300)
 dE.AnchorPoint = Vector2.new(0.5, 0.5)
 dE.Active = true
 dE.Draggable = true
 
+-- 边框
 MainBorder.Parent = dE
 MainBorder.Color = Theme.MainBorder
-MainBorder.Thickness = 1
-MainBorder.Transparency = 0.5
+MainBorder.Thickness = CurrentTheme == "Light" and 2 or 1
+MainBorder.Transparency = CurrentTheme == "Light" and 0 or 0.5
 MainBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
 dF.CornerRadius = dm(0, 8)
+dF.Name = "MainCorner"
 dF.Parent = dE
 
--- [优化] 标题栏背景
-HeaderBackground.Name = "Header"
-HeaderBackground.Parent = dE
-HeaderBackground.BackgroundColor3 = Theme.Secondary
-HeaderBackground.Position = dn(0, 6, 0, 6)
-HeaderBackground.Size = dn(1, -12, 0, 28)
+-- 标题栏（作为容器）
+dG.Name = "Header"
+dG.Parent = dE
+dG.BackgroundColor3 = Theme.Secondary
+dG.BorderSizePixel = 0
+dG.Position = dn(0, 6, 0, 6)
+dG.Size = dn(1, -12, 0, 28)
+dG.Font = Enum.Font.SourceSansBold
+dG.Text = "" -- 不在这里渲染文字
+dG.TextColor3 = Theme.Text
+dG.TextSize = 15
+dG.TextXAlignment = Enum.TextXAlignment.Left
+dG.ClipsDescendants = true
 
-HeaderCorner.CornerRadius = dm(0, 6)
-HeaderCorner.Parent = HeaderBackground
+dH.CornerRadius = dm(0, 6)
+dH.Name = "TextLabelCorner"
+dH.Parent = dG
 
--- [新增] 个人主页按钮
+-- 标题文本
+TitleLabel.Name = "Title"
+TitleLabel.Parent = dG
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = dn(0, 34, 0, 0) -- 避开左侧头像22px + 留白
+TitleLabel.Size = dn(1, -120, 1, 0)   -- 右侧预留给设置+主题按钮
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.Text = _CONFIGS.UI_NAME
+TitleLabel.TextColor3 = Theme.Text
+TitleLabel.TextSize = 15
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.TextTruncate = Enum.TextTruncate.AtEnd
+
+-- 个人主页按钮
 ProfileButton.Name = "ProfileButton"
-ProfileButton.Parent = HeaderBackground
+ProfileButton.Parent = dG
 ProfileButton.Size = dn(0, 22, 0, 22)
 ProfileButton.Position = dn(0, 5, 0.5, -11)
 ProfileButton.BackgroundColor3 = Theme.Tertiary
+ProfileButton.BorderSizePixel = 0
 ProfileButton.ZIndex = 2
 local player = b.Players.LocalPlayer
 local userId = player.UserId
@@ -202,81 +355,71 @@ end
 
 ProfileCorner.CornerRadius = dm(1, 0)
 ProfileCorner.Parent = ProfileButton
-
 ProfileStroke.Name = "ProfileStroke"
 ProfileStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-ProfileStroke.Color = Theme.Secondary -- 默认不选中
+ProfileStroke.Color = Theme.Secondary
 ProfileStroke.Thickness = 1.5
 ProfileStroke.Parent = ProfileButton
 
--- [新增] 独立的标题文本
-TitleText.Name = "TitleText"
-TitleText.Parent = HeaderBackground
-TitleText.BackgroundColor3 = dp(255, 255, 255)
-TitleText.BackgroundTransparency = 1
-TitleText.Position = dn(0, 32, 0, 0) -- 在头像按钮右侧
-TitleText.Size = dn(1, -95, 1, 0) -- 留出右侧按钮空间
-TitleText.Font = Enum.Font.SourceSansBold
-TitleText.Text = library.savedData.CustomTitle
-TitleText.TextColor3 = Theme.Text
-TitleText.TextSize = 15
-TitleText.TextXAlignment = Enum.TextXAlignment.Left
-
--- [新增] 设置按钮
+-- 设置按钮（⚙）
 SettingsButton.Name = "SettingsButton"
-SettingsButton.Parent = HeaderBackground
-SettingsButton.BackgroundColor3 = Theme.Tertiary
-SettingsButton.Position = dn(1, -55, 0.5, -11) -- 放在主题按钮左边
+SettingsButton.Parent = dG
 SettingsButton.Size = dn(0, 22, 0, 22)
-SettingsButton.Text = "⚙️" -- 齿轮图标
-SettingsButton.TextColor3 = Theme.TextDim
-SettingsButton.TextSize = 16
-SettingsButton.Font = Enum.Font.SourceSans
-SettingsButton.ZIndex = 2
+SettingsButton.Position = dn(1, -55, 0.5, -11)
+SettingsButton.BackgroundColor3 = Theme.Tertiary
+SettingsButton.BorderSizePixel = 0
+SettingsButton.Text = "⚙"
+SettingsButton.TextSize = 14
+SettingsButton.TextColor3 = Theme.Text
+SettingsButton.Font = Enum.Font.SourceSansBold
+SettingsButton.AutoButtonColor = false
 
 SettingsCorner.CornerRadius = dm(0, 6)
 SettingsCorner.Parent = SettingsButton
-
 SettingsStroke.Name = "SettingsStroke"
 SettingsStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-SettingsStroke.Color = Theme.Secondary -- 默认不选中
+SettingsStroke.Color = Theme.Secondary
 SettingsStroke.Thickness = 1.5
 SettingsStroke.Parent = SettingsButton
 
-
 -- 主题切换按钮
 ThemeToggle.Name = "ThemeToggle"
-ThemeToggle.Parent = HeaderBackground
+ThemeToggle.Parent = dG
 ThemeToggle.BackgroundColor3 = Theme.Tertiary
-ThemeToggle.Position = dn(1, -30, 0.5, -11)
-ThemeToggle.Size = dn(0, 22, 0, 22)
+ThemeToggle.Position = dn(1, -30, 0.5, -10)
+ThemeToggle.Size = dn(0, 20, 0, 20)
 ThemeToggle.Text = CurrentTheme == "Dark" and "☀" or "🌙"
 ThemeToggle.TextColor3 = Theme.Text
-ThemeToggle.TextSize = 14
+ThemeToggle.TextSize = 12
+ThemeToggle.BorderSizePixel = 0
 ThemeToggle.Font = Enum.Font.SourceSans
 
-ThemeCorner.CornerRadius = dm(0, 6)
+ThemeCorner.CornerRadius = dm(0, 4)
 ThemeCorner.Parent = ThemeToggle
-
 
 -- 隐藏/显示按钮
 Open.Name = "Open"
 Open.Parent = dD
 Open.BackgroundColor3 = Theme.MinimizeBtn
 Open.Position = dn(0.84, 0, 0, 10)
+Open.BorderSizePixel = 0
 Open.Size = dn(0, 60, 0, 28)
 Open.Font = Enum.Font.SourceSansBold
 Open.Text = "隐藏"
-Open.TextColor3 = Theme.Text
+Open.TextColor3 = CurrentTheme == "Dark" and dp(255, 255, 255) or dp(17, 24, 39)
+Open.TextSize = 14
 Open.Active = true
 Open.Draggable = true
+
 OpenCorner.CornerRadius = dm(0, 6)
 OpenCorner.Parent = Open
+
 OpenBorder.Parent = Open
 OpenBorder.Color = Theme.MinimizeBorder
 OpenBorder.Thickness = 1
-OpenBorder.Transparency = 0.5
+OpenBorder.Transparency = CurrentTheme == "Dark" and 0.5 or 0
 OpenBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
 local TOGGLE = true
 Open.MouseButton1Click:Connect(function()
     TOGGLE = not TOGGLE
@@ -284,28 +427,34 @@ Open.MouseButton1Click:Connect(function()
     Open.Text = TOGGLE and "隐藏" or "显示"
 end)
 
-
 -- 侧边栏
 dI.Name = "Sidebar"
 dI.Parent = dE
 dI.BackgroundColor3 = Theme.Secondary
+dI.BorderSizePixel = 0
 dI.Position = dn(0, 6, 0, 40)
 dI.Size = dn(0, 110, 0, 254)
+
 dJ.CornerRadius = dm(0, 6)
+dJ.Name = "SidebarCorner"
 dJ.Parent = dI
 
 -- 标签按钮容器
 dK.Name = "TabButtons"
 dK.Parent = dI
+dK.Active = true
 dK.BackgroundColor3 = dp(255, 255, 255)
 dK.BackgroundTransparency = 1
+dK.BorderSizePixel = 0
 dK.Size = dn(1, 0, 1, 0)
 dK.ScrollBarThickness = 3
 dK.ScrollBarImageColor3 = Theme.ScrollBar
+
 dL.Parent = dK
 dL.HorizontalAlignment = Enum.HorizontalAlignment.Center
 dL.SortOrder = Enum.SortOrder.LayoutOrder
 dL.Padding = dm(0, 6)
+
 dM.Parent = dK
 dM.PaddingTop = dm(0, 6)
 
@@ -313,155 +462,52 @@ dM.PaddingTop = dm(0, 6)
 dN.Name = "TabHolder"
 dN.Parent = dE
 dN.BackgroundColor3 = Theme.Secondary
+dN.BorderSizePixel = 0
 dN.Position = dn(0, 122, 0, 40)
 dN.Size = dn(0, 332, 0, 254)
+
 dO.CornerRadius = dm(0, 6)
+dO.Name = "TabHolderCorner"
 dO.Parent = dN
 
--- [优化] 个人主页、设置页、标签页等主视图容器
+-- 覆盖层1：个人主页
 local ProfilePage = dq("Frame")
 ProfilePage.Name = "ProfilePage"
 ProfilePage.Parent = dE
 ProfilePage.BackgroundColor3 = Theme.Secondary
+ProfilePage.BorderSizePixel = 0
 ProfilePage.Position = dN.Position
 ProfilePage.Size = dN.Size
-ProfilePage.Visible = false -- 默认隐藏
+ProfilePage.Visible = false
 ProfilePage.ZIndex = 2
+
 local ProfilePageCorner = dq("UICorner")
 ProfilePageCorner.CornerRadius = dm(0, 6)
 ProfilePageCorner.Parent = ProfilePage
 
--- [新增] 设置页面
-local SettingsPage = dq("ScrollingFrame")
-SettingsPage.Name = "SettingsPage"
-SettingsPage.Parent = dE
-SettingsPage.BackgroundColor3 = Theme.Secondary
-SettingsPage.Position = dN.Position
-SettingsPage.Size = dN.Size
-SettingsPage.Visible = false -- 默认隐藏
-SettingsPage.ZIndex = 2
-SettingsPage.ScrollBarThickness = 3
-SettingsPage.ScrollBarImageColor3 = Theme.ScrollBar
-local SettingsPageCorner = dq("UICorner")
-SettingsPageCorner.CornerRadius = dm(0, 6)
-SettingsPageCorner.Parent = SettingsPage
-local SettingsPageLayout = dq("UIListLayout")
-SettingsPageLayout.Parent = SettingsPage
-SettingsPageLayout.Padding = dm(0, 6)
-SettingsPageLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-local SettingsPagePadding = dq("UIPadding")
-SettingsPagePadding.Parent = SettingsPage
-SettingsPagePadding.PaddingTop = dm(0, 6)
-SettingsPagePadding.PaddingLeft = dm(0, 6)
-SettingsPagePadding.PaddingRight = dm(0, 6)
-SettingsPageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    SettingsPage.CanvasSize = dn(0, 0, 0, SettingsPageLayout.AbsoluteContentSize.Y + 12)
-end)
-
-
--- [新增] 状态管理核心函数：更新主视图
-function dv:UpdateMainView(targetView)
-    library.activeView = targetView or library.activeView
-    
-    -- 1. 隐藏所有主视图内容
-    ProfilePage.Visible = false
-    SettingsPage.Visible = false
-    if library.currentTab then
-        library.currentTab[1].Visible = false
-    end
-    
-    -- 2. 重置所有激活状态的视觉效果
-    dv:Tween({BorderColor3 = Theme.Secondary}, ProfileStroke, 0.15)
-    dv:Tween({BorderColor3 = Theme.Secondary}, SettingsStroke, 0.15)
-    if library.currentTab then
-        dv:Tween({BackgroundTransparency = 1}, library.currentTab[2].Glow, 0.15)
-    end
-    
-    -- 3. 根据目标视图，显示对应内容并更新状态
-    if library.activeView == "Homepage" then
-        ProfilePage.Visible = true
-        dv:Tween({BorderColor3 = Theme.Accent}, ProfileStroke, 0.15)
-        TitleText.Text = "个人主页"
-    elseif library.activeView == "Settings" then
-        SettingsPage.Visible = true
-        dv:Tween({BorderColor3 = Theme.Accent}, SettingsStroke, 0.15)
-        TitleText.Text = "设置"
-    elseif library.activeView == "Tabs" then
-        if library.currentTab then
-            library.currentTab[1].Visible = true
-            dv:Tween({BackgroundTransparency = 0}, library.currentTab[2].Glow, 0.15)
-        end
-        TitleText.Text = library.savedData.CustomTitle
-    end
-end
-
--- [优化] 切换标签函数
-function dv:SwitchTab(newTab)
-    if library.currentTab == newTab then
-        -- 如果点击的是当前标签，且主视图不是标签页，则切换回标签页
-        if library.activeView ~= "Tabs" then
-            dv:UpdateMainView("Tabs")
-        end
-        return
-    end
-    
-    local oldTab = library.currentTab
-    library.currentTab = newTab
-    
-    if oldTab then
-        oldTab[1].Visible = false
-        dv:Tween({BackgroundTransparency = 1}, oldTab[2].Glow, 0.15)
-    end
-    
-    -- 总是切换到标签页视图
-    dv:UpdateMainView("Tabs")
-end
-
-
--- 填充个人主页内容
+-- 个人主页内容
 local ProfileAvatar = dq("ImageLabel")
+ProfileAvatar.Name = "ProfileAvatar"
 ProfileAvatar.Parent = ProfilePage
 ProfileAvatar.Size = dn(0, 100, 0, 100)
-ProfileAvatar.Position = dn(0.5, -50, 0, 20)
-ProfileAvatar.AnchorPoint = Vector2.new(0.5, 0)
+ProfileAvatar.Position = dn(0, 20, 0.5, -50)
+ProfileAvatar.AnchorPoint = Vector2.new(0, 0.5)
 ProfileAvatar.BackgroundColor3 = Theme.Tertiary
 ProfileAvatar.Image = content
 local AvatarCorner = dq("UICorner")
 AvatarCorner.CornerRadius = dm(0, 8)
 AvatarCorner.Parent = ProfileAvatar
 
-local PlayerNameLabel = dq("TextLabel")
-PlayerNameLabel.Parent = ProfilePage
-PlayerNameLabel.BackgroundTransparency = 1
-PlayerNameLabel.Position = dn(0.5, 0, 0, 130)
-PlayerNameLabel.AnchorPoint = Vector2.new(0.5, 0)
-PlayerNameLabel.Size = dn(1, -40, 0, 20)
-PlayerNameLabel.Font = Enum.Font.SourceSansBold
-PlayerNameLabel.Text = player.DisplayName
-PlayerNameLabel.TextColor3 = Theme.Text
-PlayerNameLabel.TextSize = 18
-
-local PlayerUsernameLabel = dq("TextLabel")
-PlayerUsernameLabel.Parent = ProfilePage
-PlayerUsernameLabel.BackgroundTransparency = 1
-PlayerUsernameLabel.Position = dn(0.5, 0, 0, 150)
-PlayerUsernameLabel.AnchorPoint = Vector2.new(0.5, 0)
-PlayerUsernameLabel.Size = dn(1, -40, 0, 16)
-PlayerUsernameLabel.Font = Enum.Font.SourceSans
-PlayerUsernameLabel.Text = "@" .. player.Name
-PlayerUsernameLabel.TextColor3 = Theme.TextDim
-PlayerUsernameLabel.TextSize = 13
-
 local InfoContainer = dq("Frame")
+InfoContainer.Name = "InfoContainer"
 InfoContainer.Parent = ProfilePage
 InfoContainer.BackgroundTransparency = 1
-InfoContainer.Position = dn(0.5, 0, 0, 180)
-InfoContainer.AnchorPoint = Vector2.new(0.5, 0)
-InfoContainer.Size = dn(1, -40, 1, -200)
+InfoContainer.Position = dn(0, 140, 0, 20)
+InfoContainer.Size = dn(1, -160, 1, -40)
 
 local InfoLayout = dq("UIListLayout")
 InfoLayout.Parent = InfoContainer
-InfoLayout.Padding = dm(0, 5)
+InfoLayout.Padding = dm(0, 8)
 InfoLayout.FillDirection = Enum.FillDirection.Vertical
 InfoLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
@@ -470,53 +516,93 @@ local function createInfoLabel(parent, labelText, valueText, isAccent)
     frame.Parent = parent
     frame.BackgroundTransparency = 1
     frame.Size = dn(1, 0, 0, 16)
+    
     local label = dq("TextLabel")
     label.Parent = frame
     label.BackgroundTransparency = 1
-    label.Size = dn(0.35, 0, 1, 0)
+    label.Size = dn(0.4, 0, 1, 0)
     label.Font = Enum.Font.SourceSans
-    label.Text = labelText
+    label.Text = labelText .. ":"
     label.TextColor3 = Theme.TextDim
     label.TextSize = 14
     label.TextXAlignment = Enum.TextXAlignment.Left
+    
     local value = dq("TextLabel")
     value.Name = "ValueLabel"
     value.Parent = frame
     value.BackgroundTransparency = 1
-    value.Position = dn(0.35, 5, 0, 0)
-    value.Size = dn(0.65, -5, 1, 0)
+    value.Position = dn(0.4, 5, 0, 0)
+    value.Size = dn(0.6, -5, 1, 0)
     value.Font = Enum.Font.SourceSansBold
     value.Text = tostring(valueText)
     value.TextColor3 = isAccent and Theme.Accent or Theme.Text
     value.TextSize = 14
     value.TextXAlignment = Enum.TextXAlignment.Left
-    table.insert(library.modules, { update = function() label.TextColor3 = Theme.TextDim; value.TextColor3 = isAccent and Theme.Accent or Theme.Text end })
+
+    table.insert(library.modules, {
+        update = function()
+            label.TextColor3 = Theme.TextDim
+            value.TextColor3 = isAccent and Theme.Accent or Theme.Text
+        end
+    })
+    
     return value
 end
 
-local serverNameLabel = createInfoLabel(InfoContainer, "服务器名称", "加载中...", false)
--- [优化] 修复服务器名称获取
-task.spawn(function()
-    local success, result = pcall(function()
-        return b.MarketplaceService:GetProductInfo(game.PlaceId)
-    end)
-    if success and result then
-        serverNameLabel.Text = result.Name
-    else
-        serverNameLabel.Text = game.Name -- 备用方案
+-- 服务器名称修复：公共/私人(VIP)/保留
+local function getServerName()
+    local psId = game.PrivateServerId
+    local ownerId = game.PrivateServerOwnerId
+    if type(psId) == "string" and psId ~= "" then
+        if ownerId and ownerId ~= 0 then
+            local ownerName = "未知"
+            pcall(function()
+                ownerName = b.Players:GetNameFromUserIdAsync(ownerId)
+            end)
+            return "私人服务器@" .. ownerName
+        else
+            return "保留服务器"
+        end
     end
-end)
+    return "公共服务器"
+end
 
-local playerCountLabel = createInfoLabel(InfoContainer, "服务器人数", "")
+-- 个人主页信息
+createInfoLabel(InfoContainer, "用户名", player.Name, false).Parent.Parent.LayoutOrder = 1
+createInfoLabel(InfoContainer, "显示名称", player.DisplayName, false).Parent.Parent.LayoutOrder = 2
+createInfoLabel(InfoContainer, "用户 ID", player.UserId, false).Parent.Parent.LayoutOrder = 3
+createInfoLabel(InfoContainer, "账号年龄", player.AccountAge, false).Parent.Parent.LayoutOrder = 4
+
+local separator = dq("Frame")
+separator.Parent = InfoContainer
+separator.BackgroundColor3 = Theme.Border
+separator.Size = dn(1, 0, 0, 1)
+separator.LayoutOrder = 5
+table.insert(library.modules, { update = function() separator.BackgroundColor3 = Theme.Border end })
+
+-- 修复后的服务器名称
+createInfoLabel(InfoContainer, "服务器名称", getServerName(), false).Parent.Parent.LayoutOrder = 6
+
+-- 实时服务器人数
+local playerCountLabel = createInfoLabel(InfoContainer, "服务器人数", "", false)
+playerCountLabel.Parent.Parent.LayoutOrder = 7
 local function updatePlayerCount()
-    playerCountLabel.Text = string.format("%d / %d", #b.Players:GetPlayers(), b.Players.MaxPlayers)
+    local currentPlayers = #b.Players:GetPlayers()
+    local maxPlayers = b.Players.MaxPlayers
+    playerCountLabel.Text = string.format("%d / %d", currentPlayers, maxPlayers)
 end
 updatePlayerCount()
 b.Players.PlayerAdded:Connect(updatePlayerCount)
 b.Players.PlayerRemoving:Connect(updatePlayerCount)
 
 local pingLabel = createInfoLabel(InfoContainer, "延迟", "N/A", true)
+pingLabel.Parent.Parent.LayoutOrder = 8
 local fpsLabel = createInfoLabel(InfoContainer, "帧率", "N/A", true)
+fpsLabel.Parent.Parent.LayoutOrder = 9
+createInfoLabel(InfoContainer, "服务器 ID", game.JobId:sub(1, 18) .. "...", false).Parent.Parent.LayoutOrder = 10
+createInfoLabel(InfoContainer, "地图 ID", game.PlaceId, false).Parent.Parent.LayoutOrder = 11
+
+-- Ping 和 FPS 的实时更新
 task.spawn(function()
     local lastUpdate = 0
     b.RunService.RenderStepped:Connect(function(dt)
@@ -529,43 +615,127 @@ task.spawn(function()
     end)
 end)
 
-
--- [新增] 填充设置页面内容
-local tempTabFuncs = library:CreateTab("temp") -- 借用CreateTab来创建组件
-local customTitleBox = tempTabFuncs:NewBox("自定义标题", "输入新标题...", function(text)
-    -- 使用 utf8.len 来正确计算中文字符长度
-    if utf8.len(text) > 6 then
-        library:Notify({Title = "错误", Text = "标题不能超过6个字!"})
-        -- 可以在这里将输入框的文本重置为旧标题
-        -- customTitleBox.Text = library.savedData.CustomTitle
-        return
-    end
-    
-    if text == "" then
-        text = _CONFIGS.UI_NAME -- 如果为空，则重置为默认标题
-    end
-
-    library.savedData.CustomTitle = text
-    if library.activeView == "Tabs" then
-        TitleText.Text = text
-    end
-    library:Notify({Title = "成功", Text = "标题已更新!"})
-end)
-customTitleBox.Parent = SettingsPage
--- 销毁临时创建的无用UI
-dK:FindFirstChild("TabButton"):Destroy()
-dN:FindFirstChild("Tab"):Destroy()
-
-
 dL:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     dK.CanvasSize = dn(0, 0, 0, dL.AbsoluteContentSize.Y + 12)
+end)
+
+-- 覆盖层2：设置页（新增）
+local SettingsPage = dq("Frame")
+SettingsPage.Name = "SettingsPage"
+SettingsPage.Parent = dE
+SettingsPage.BackgroundColor3 = Theme.Secondary
+SettingsPage.BorderSizePixel = 0
+SettingsPage.Position = dN.Position
+SettingsPage.Size = dN.Size
+SettingsPage.Visible = false
+SettingsPage.ZIndex = 2
+
+local SettingsPageCorner = dq("UICorner")
+SettingsPageCorner.CornerRadius = dm(0, 6)
+SettingsPageCorner.Parent = SettingsPage
+
+-- 设置页内容：自定义标题（最多6个字）
+local SetTitleLabel = dq("TextLabel")
+SetTitleLabel.Parent = SettingsPage
+SetTitleLabel.BackgroundTransparency = 1
+SetTitleLabel.Position = dn(0, 12, 0, 12)
+SetTitleLabel.Size = dn(1, -24, 0, 20)
+SetTitleLabel.Font = Enum.Font.SourceSansBold
+SetTitleLabel.Text = "自定义脚本标题（最多6个字）"
+SetTitleLabel.TextColor3 = Theme.Text
+SetTitleLabel.TextSize = 14
+SetTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local TitleInput = dq("TextBox")
+TitleInput.Parent = SettingsPage
+TitleInput.BackgroundColor3 = Theme.Tertiary
+TitleInput.BorderSizePixel = 0
+TitleInput.Position = dn(0, 12, 0, 42)
+TitleInput.Size = dn(1, -120, 0, 24)
+TitleInput.Font = Enum.Font.SourceSans
+TitleInput.PlaceholderText = "输入标题..."
+TitleInput.PlaceholderColor3 = Theme.TextMuted
+TitleInput.Text = ""
+TitleInput.TextColor3 = Theme.Text
+TitleInput.TextSize = 14
+local TitleInputCorner = dq("UICorner")
+TitleInputCorner.CornerRadius = dm(0, 6)
+TitleInputCorner.Parent = TitleInput
+
+local ApplyBtn = dq("TextButton")
+ApplyBtn.Parent = SettingsPage
+ApplyBtn.BackgroundColor3 = Theme.Accent
+ApplyBtn.BorderSizePixel = 0
+ApplyBtn.Position = dn(1, -96, 0, 42)
+ApplyBtn.Size = dn(0, 36, 0, 24)
+ApplyBtn.Font = Enum.Font.SourceSansBold
+ApplyBtn.Text = "应用"
+ApplyBtn.TextColor3 = dp(255, 255, 255)
+ApplyBtn.TextSize = 14
+local ApplyBtnCorner = dq("UICorner")
+ApplyBtnCorner.CornerRadius = dm(0, 6)
+ApplyBtnCorner.Parent = ApplyBtn
+
+local ResetBtn = dq("TextButton")
+ResetBtn.Parent = SettingsPage
+ResetBtn.BackgroundColor3 = Theme.Danger
+ResetBtn.BorderSizePixel = 0
+ResetBtn.Position = dn(1, -56, 0, 42)
+ResetBtn.Size = dn(0, 44, 0, 24)
+ResetBtn.Font = Enum.Font.SourceSansBold
+ResetBtn.Text = "重置"
+ResetBtn.TextColor3 = dp(255, 255, 255)
+ResetBtn.TextSize = 14
+local ResetBtnCorner = dq("UICorner")
+ResetBtnCorner.CornerRadius = dm(0, 6)
+ResetBtnCorner.Parent = ResetBtn
+
+local TipLabel = dq("TextLabel")
+TipLabel.Parent = SettingsPage
+TipLabel.BackgroundTransparency = 1
+TipLabel.Position = dn(0, 12, 0, 72)
+TipLabel.Size = dn(1, -24, 0, 18)
+TipLabel.Font = Enum.Font.SourceSans
+TipLabel.Text = "提示：超出6个字将自动截断。"
+TipLabel.TextColor3 = Theme.TextDim
+TipLabel.TextSize = 13
+TipLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- 应用标题
+local function applyCustomTitle(text)
+    local trimmed = utf8SubMax(text or "", 6)
+    TitleInput.Text = trimmed
+    library.CustomTitle = trimmed ~= "" and trimmed or nil
+    -- 实际显示优先使用自定义，否则默认
+    local finalTitle = library.CustomTitle or _CONFIGS.UI_NAME
+    TitleLabel.Text = finalTitle
+end
+
+-- 输入限制：实时限制到6字
+TitleInput:GetPropertyChangedSignal("Text"):Connect(function()
+    local trimmed = utf8SubMax(TitleInput.Text, 6)
+    if TitleInput.Text ~= trimmed then
+        TitleInput.Text = trimmed
+        TitleInput.CursorPosition = #TitleInput.Text + 1
+    end
+end)
+TitleInput.FocusLost:Connect(function(enter)
+    if enter then
+        applyCustomTitle(TitleInput.Text)
+    end
+end)
+ApplyBtn.MouseButton1Click:Connect(function()
+    applyCustomTitle(TitleInput.Text)
+end)
+ResetBtn.MouseButton1Click:Connect(function()
+    TitleInput.Text = ""
+    applyCustomTitle("")
 end)
 
 -- 主题更新函数
 local themeElements = {
     {dE, "BackgroundColor3", "Primary"},
-    {HeaderBackground, "BackgroundColor3", "Secondary"},
-    {TitleText, "TextColor3", "Text"},
+    {dG, "BackgroundColor3", "Secondary"},
     {dI, "BackgroundColor3", "Secondary"},
     {dN, "BackgroundColor3", "Secondary"},
     {Open, "BackgroundColor3", "MinimizeBtn"},
@@ -574,40 +744,45 @@ local themeElements = {
     {ThemeToggle, "TextColor3", "Text"},
     {MainBorder, "Color", "MainBorder"},
     {dK, "ScrollBarImageColor3", "ScrollBar"},
-    -- 个人主页与设置
-    {ProfilePage, "BackgroundColor3", "Secondary"},
-    {SettingsPage, "BackgroundColor3", "Secondary"},
-    {SettingsPage, "ScrollBarImageColor3", "ScrollBar"},
-    {ProfileButton, "BackgroundColor3", "Tertiary"},
+    -- 标题和按钮
+    {TitleLabel, "TextColor3", "Text"},
     {SettingsButton, "BackgroundColor3", "Tertiary"},
-    {SettingsButton, "TextColor3", "TextDim"},
+    {SettingsButton, "TextColor3", "Text"},
+    {ProfileButton, "BackgroundColor3", "Tertiary"},
+    -- 覆盖层主题元素
+    {ProfilePage, "BackgroundColor3", "Secondary"},
     {ProfileAvatar, "BackgroundColor3", "Tertiary"},
-    {PlayerNameLabel, "TextColor3", "Text"},
-    {PlayerUsernameLabel, "TextColor3", "TextDim"},
-    {ProfileStroke, "Color", "Secondary"}, -- 默认颜色
-    {SettingsStroke, "Color", "Secondary"}, -- 默认颜色
+    {SettingsPage, "BackgroundColor3", "Secondary"},
+    {TitleInput, "BackgroundColor3", "Tertiary"},
+    {TitleInput, "TextColor3", "Text"},
+    {SetTitleLabel, "TextColor3", "Text"},
+    {TipLabel, "TextColor3", "TextDim"},
+    {ApplyBtn, "BackgroundColor3", "Accent"},
+    {ResetBtn, "BackgroundColor3", "Danger"},
+    {dK, "ScrollBarImageColor3", "ScrollBar"}
 }
 
 library.updateTheme = function()
     Theme = Themes[CurrentTheme]
-    
+
     for _, element in pairs(themeElements) do
-        element[1][element[2]] = Theme[element[3]]
+        if element[1] and element[1][element[2]] ~= nil then
+            element[1][element[2]] = Theme[element[3]]
+        end
     end
-    
-    -- 根据当前激活视图更新高亮颜色
-    if library.activeView == "Homepage" then
-        ProfileStroke.Color = Theme.Accent
-    elseif library.activeView == "Settings" then
-        SettingsStroke.Color = Theme.Accent
-    end
-    
+
+    -- 特殊元素更新
     ThemeToggle.Text = CurrentTheme == "Dark" and "☀" or "🌙"
     Open.TextColor3 = CurrentTheme == "Dark" and dp(255, 255, 255) or dp(17, 24, 39)
     MainBorder.Thickness = CurrentTheme == "Light" and 2 or 1
     MainBorder.Transparency = CurrentTheme == "Light" and 0 or 0.5
     OpenBorder.Transparency = CurrentTheme == "Dark" and 0.5 or 0
-    
+
+    -- 覆盖层按钮边框高亮
+    ProfileStroke.Color = (library.activeOverlay == "Profile") and Theme.Accent or Theme.Secondary
+    SettingsStroke.Color = (library.activeOverlay == "Settings") and Theme.Accent or Theme.Secondary
+
+    -- 更新动态模块
     for _, module in pairs(library.modules) do
         if module.update then
             module.update()
@@ -620,25 +795,17 @@ ThemeToggle.MouseButton1Click:Connect(function()
     library:SetTheme(CurrentTheme == "Dark" and "Light" or "Dark")
 end)
 
--- [优化] 按钮点击事件使用新的状态管理
+-- 个人主页按钮事件（使用统一覆盖层管理）
 ProfileButton.MouseButton1Click:Connect(function()
-    if library.activeView == "Homepage" then
-        dv:UpdateMainView("Tabs") -- 如果已在主页，则返回标签页
-    else
-        dv:UpdateMainView("Homepage")
-    end
+    dv:ShowOverlay("Profile")
 end)
 
+-- 设置按钮事件
 SettingsButton.MouseButton1Click:Connect(function()
-    if library.activeView == "Settings" then
-        dv:UpdateMainView("Tabs") -- 如果已在设置，则返回标签页
-    else
-        dv:UpdateMainView("Settings")
-    end
+    dv:ShowOverlay("Settings")
 end)
 
--- 通知系统 (代码保持不变，此处省略以减少篇幅)
--- ... [您的通知系统代码] ...
+-- 通知系统（原样）
 function createBaseNotifications()
     if b.Players.LocalPlayer.PlayerGui:FindFirstChild("NotificationHolder") then
         return b.Players.LocalPlayer.PlayerGui.NotificationHolder
@@ -648,7 +815,6 @@ function createBaseNotifications()
     ScreenGui.Name = "NotificationHolder"
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
-    -- 选择通知
     local ToggleNotif = Instance.new("Frame")
     ToggleNotif.Name = "ToggleNotif"
     ToggleNotif.ZIndex = 5
@@ -723,7 +889,6 @@ function createBaseNotifications()
     FalseCorner.CornerRadius = dm(0, 6)
     FalseCorner.Parent = False
     
-    -- 默认通知
     local DefaultNotif = Instance.new("Frame")
     DefaultNotif.Name = "DefaultNotif"
     DefaultNotif.ZIndex = 5
@@ -780,7 +945,7 @@ notificationHolder = createBaseNotifications()
 notifAmount = 0
 removedPos = nil
 
--- 通知函数
+-- 通知函数（保持不变）
 function library:SelectNotify(args)
     args = args or {}
     args.TweenSpeed = args.TweenSpeed or 0.3
@@ -933,8 +1098,7 @@ function library:Notify(args)
     end)
 end
 
--- 创建标签页 (代码大部分保持不变)
--- ... [您的CreateTab, NewSeparator, NewButton等函数] ...
+-- 创建标签页
 function library:CreateTab(tabName)
     local tabButton = dq("TextButton")
     local tabCorner = dq("UICorner")
@@ -960,7 +1124,7 @@ function library:CreateTab(tabName)
     
     tabGlow.Name = "Glow"
     tabGlow.Parent = tabButton
-    tabGlow.BackgroundColor3 = Theme.SliderFill -- [修改] 使用滑块填充色以保持统一
+    tabGlow.BackgroundColor3 = Theme.SliderFill
     tabGlow.BorderSizePixel = 0
     tabGlow.Position = dn(0, 0, 1, -2)
     tabGlow.Size = dn(1, 0, 0, 2)
@@ -1008,11 +1172,10 @@ function library:CreateTab(tabName)
     local tabElements = {
         {tabButton, "BackgroundColor3", "Tertiary"},
         {tabButton, "TextColor3", "Text"},
-        {tabGlow, "BackgroundColor3", "SliderFill"}, -- [修改] 确保主题切换时更新为正确的颜色
+        {tabGlow, "BackgroundColor3", "SliderFill"},
         {tabContent, "ScrollBarImageColor3", "ScrollBar"}
     }
     
-    -- 添加主题更新支持
     table.insert(library.modules, {
         elements = tabElements,
         update = function()
@@ -1148,7 +1311,7 @@ function library:CreateTab(tabName)
         table.insert(tabElements, {toggleBg, "BackgroundColor3", library.flags[flag].State and "ToggleOn" or "ToggleOff"})
     end
     
-    -- 按键绑定（修复版）
+    -- 按键绑定
     function tabFunctions:NewBind(text, default, callback)
         local callback = callback or dr
         
@@ -1327,7 +1490,7 @@ function library:CreateTab(tabName)
         table.insert(tabElements, {keyButton, "TextColor3", "TextDim"})
     end
     
-    -- 滑块（修复版）
+    -- 滑块
     function tabFunctions:NewSlider(text, flag, default, min, max, float, callback)
         local default = default or min
         local callback = callback or dr
@@ -1400,7 +1563,7 @@ function library:CreateTab(tabName)
         value.Size = dn(0, 48, 0, 18)
         value.Font = Enum.Font.SourceSansBold
         value.Text = tostring(default)
-        value.TextColor3 = Theme.SliderFill -- [修改] 使用滑块填充色以保持统一
+        value.TextColor3 = Theme.SliderFill
         value.TextSize = 13
         value.ClearTextOnFocus = false
         
@@ -1515,7 +1678,7 @@ function library:CreateTab(tabName)
         table.insert(tabElements, {slider, "BackgroundColor3", "Tertiary"})
         table.insert(tabElements, {title, "TextColor3", "Text"})
         table.insert(tabElements, {value, "BackgroundColor3", "Secondary"})
-        table.insert(tabElements, {value, "TextColor3", "SliderFill"}) -- [修改] 确保主题切换时更新为正确的颜色
+        table.insert(tabElements, {value, "TextColor3", "SliderFill"})
         table.insert(tabElements, {sliderBar, "BackgroundColor3", "Border"})
         table.insert(tabElements, {sliderFill, "BackgroundColor3", "SliderFill"})
         table.insert(tabElements, {sliderButton, "BackgroundColor3", "SliderHandle"})
@@ -1523,13 +1686,10 @@ function library:CreateTab(tabName)
         table.insert(tabElements, {increase, "TextColor3", "TextDim"})
     end
     
-    -- 下拉菜单
+    -- 下拉菜单、文本框（原样）
     function tabFunctions:NewDropdown(text, flag, options, callback)
         local callback = callback or dr
-        
-        library.flags[flag] = {
-            State = options[1]
-        }
+        library.flags[flag] = { State = options[1] }
         
         local dropdown = dq("Frame")
         local corner = dq("UICorner")
@@ -1584,12 +1744,13 @@ function library:CreateTab(tabName)
         listPadding.PaddingRight = dm(0, 6)
         
         local isOpen = false
+        local optionsRef = options
         
         local function toggle()
             isOpen = not isOpen
             list.Visible = isOpen
             
-            local targetSize = isOpen and math.min(#options * 28 + 12, 140) or 0
+            local targetSize = isOpen and math.min(#optionsRef * 28 + 12, 140) or 0
             dv:Tween({Size = dn(1, -12, 0, 32 + targetSize)}, dropdown, 0.2)
             dv:Tween({Rotation = isOpen and 180 or 0}, arrow, 0.2)
             
@@ -1600,59 +1761,7 @@ function library:CreateTab(tabName)
         
         button.MouseButton1Click:Connect(toggle)
         
-        library.flags[flag].SetOptions = function(self, newOptions)
-            for _, child in pairs(list:GetChildren()) do
-                if child:IsA("TextButton") then
-                    child:Destroy()
-                end
-            end
-            
-            for _, option in pairs(newOptions) do
-                local optionBtn = dq("TextButton")
-                local optionCorner = dq("UICorner")
-                
-                optionBtn.Parent = list
-                optionBtn.BackgroundColor3 = Theme.Secondary
-                optionBtn.Size = dn(1, -12, 0, 24)
-                optionBtn.Font = Enum.Font.SourceSans
-                optionBtn.Text = option
-                optionBtn.TextColor3 = Theme.TextDim
-                optionBtn.TextSize = 13
-                
-                optionCorner.CornerRadius = dm(0, 4)
-                optionCorner.Parent = optionBtn
-                
-                optionBtn.MouseButton1Click:Connect(function()
-                    button.Text = "  " .. text .. " - " .. option
-                    library.flags[flag].State = option
-                    toggle()
-                    callback(option)
-                end)
-                
-                optionBtn.MouseEnter:Connect(function()
-                    dv:Tween({BackgroundColor3 = Theme.Border}, optionBtn, 0.15)
-                end)
-                
-                optionBtn.MouseLeave:Connect(function()
-                    dv:Tween({BackgroundColor3 = Theme.Secondary}, optionBtn, 0.15)
-                end)
-                
-                table.insert(tabElements, {optionBtn, "BackgroundColor3", "Secondary"})
-                table.insert(tabElements, {optionBtn, "TextColor3", "TextDim"})
-            end
-            
-            list.CanvasSize = dn(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
-        end
-        
-        library.flags[flag].ClearOptions = function(self)
-            for _, child in pairs(list:GetChildren()) do
-                if child:IsA("TextButton") then
-                    child:Destroy()
-                end
-            end
-        end
-        
-        library.flags[flag].AddOption = function(self, option)
+        local function makeOption(option)
             local optionBtn = dq("TextButton")
             local optionCorner = dq("UICorner")
             
@@ -1674,13 +1783,46 @@ function library:CreateTab(tabName)
                 callback(option)
             end)
             
+            optionBtn.MouseEnter:Connect(function()
+                dv:Tween({BackgroundColor3 = Theme.Border}, optionBtn, 0.15)
+            end)
+            optionBtn.MouseLeave:Connect(function()
+                dv:Tween({BackgroundColor3 = Theme.Secondary}, optionBtn, 0.15)
+            end)
+            
             table.insert(tabElements, {optionBtn, "BackgroundColor3", "Secondary"})
             table.insert(tabElements, {optionBtn, "TextColor3", "TextDim"})
-            
+        end
+        
+        library.flags[flag].SetOptions = function(self, newOptions)
+            optionsRef = newOptions
+            for _, child in pairs(list:GetChildren()) do
+                if child:IsA("TextButton") then child:Destroy() end
+            end
+            for _, option in pairs(newOptions) do
+                makeOption(option)
+            end
+            list.CanvasSize = dn(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
+        end
+        
+        library.flags[flag].ClearOptions = function(self)
+            optionsRef = {}
+            for _, child in pairs(list:GetChildren()) do
+                if child:IsA("TextButton") then child:Destroy() end
+            end
+            list.CanvasSize = dn(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
+        end
+        
+        library.flags[flag].AddOption = function(self, option)
+            table.insert(optionsRef, option)
+            makeOption(option)
             list.CanvasSize = dn(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
         end
         
         library.flags[flag].RemoveOption = function(self, option)
+            for i, v in ipairs(optionsRef) do
+                if v == option then table.remove(optionsRef, i) break end
+            end
             for _, child in pairs(list:GetChildren()) do
                 if child:IsA("TextButton") and child.Text == option then
                     child:Destroy()
@@ -1698,7 +1840,6 @@ function library:CreateTab(tabName)
         table.insert(tabElements, {list, "ScrollBarImageColor3", "Accent"})
     end
     
-    -- 文本框
     function tabFunctions:NewBox(text, placeholder, callback)
         local callback = callback or dr
         
@@ -1756,16 +1897,28 @@ function library:CreateTab(tabName)
         table.insert(tabElements, {textBox, "BackgroundColor3", "Secondary"})
         table.insert(tabElements, {textBox, "TextColor3", "Text"})
         table.insert(tabElements, {textBox, "PlaceholderColor3", "TextMuted"})
-        return textBox
     end
     
     return tabFunctions
 end
 
+-- 设置UI名称（重定向到 TitleLabel）
+setmetatable(getgenv().library, {
+    __newindex = function(self, i, v)
+        if i == 'Name' then
+            TitleLabel.Text = tostring(v)
+            return true
+        end
+        rawset(self, i, v)
+    end
+})
 
--- [移除] 不再需要旧的`__newindex`方式来改名，因为我们有了设置功能
--- setmetatable(getgenv().library, {
---     __newindex = function(self, i, v) ... end
--- })
+-- 初始化默认标题（考虑可能存在自定义标题）
+TitleLabel.Text = library.CustomTitle or _CONFIGS.UI_NAME
+
+-- 首次主题应用
+if library.updateTheme then
+    library.updateTheme()
+end
 
 return library
