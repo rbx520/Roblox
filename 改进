@@ -83,6 +83,7 @@ getgenv().library = {
     },
     modules = {},
     currentTab = nil,
+    isHomepageVisible = false, -- [新增] 追踪个人主页是否可见
     theme = CurrentTheme
 }
 
@@ -125,8 +126,29 @@ function dv:Tween(props, object, duration, style, direction)
     return tween
 end
 
+-- [新增] 隐藏个人主页的函数
+function dv:HideHomepage()
+    if not library.isHomepageVisible then return end
+    
+    local ProfilePage = b.CoreGui[_CONFIGS.UI_NAME].Main.ProfilePage
+    local ProfileButton = b.CoreGui[_CONFIGS.UI_NAME].Main.Header.ProfileButton
+    
+    ProfilePage.Visible = false
+    library.isHomepageVisible = false
+    dv:Tween({BorderColor3 = Theme.Secondary}, ProfileButton.ProfileStroke, 0.15)
+    
+    -- 恢复显示之前活动的标签页
+    if library.currentTab then
+        library.currentTab[1].Visible = true
+        dv:Tween({BackgroundTransparency = 0}, library.currentTab[2].Glow, 0.15)
+    end
+end
+
 -- 切换标签
 function dv:SwitchTab(newTab)
+    -- [修改] 切换标签时，确保个人主页是隐藏的
+    dv:HideHomepage()
+    
     local oldTab = library.currentTab
     if oldTab == newTab then return end
     
@@ -159,6 +181,11 @@ local dM = dq("UIPadding")
 local dN = dq("Frame")
 local dO = dq("UICorner")
 
+-- [新增] 个人主页按钮
+local ProfileButton = dq("ImageButton")
+local ProfileCorner = dq("UICorner")
+local ProfileStroke = dq("UIStroke")
+
 -- 主题切换按钮
 local ThemeToggle = dq("TextButton")
 local ThemeCorner = dq("UICorner")
@@ -190,13 +217,14 @@ dF.Name = "MainCorner"
 dF.Parent = dE
 
 -- 标题栏
+dG.Name = "Header" -- [修改] 方便引用
 dG.Parent = dE
 dG.BackgroundColor3 = Theme.Secondary
 dG.BorderSizePixel = 0
 dG.Position = dn(0, 6, 0, 6)
 dG.Size = dn(1, -12, 0, 28)
 dG.Font = Enum.Font.SourceSansBold
-dG.Text = "  " .. _CONFIGS.UI_NAME
+dG.Text = "        " .. _CONFIGS.UI_NAME -- [修改] 留出空间给头像
 dG.TextColor3 = Theme.Text
 dG.TextSize = 15
 dG.TextXAlignment = Enum.TextXAlignment.Left
@@ -204,6 +232,32 @@ dG.TextXAlignment = Enum.TextXAlignment.Left
 dH.CornerRadius = dm(0, 6)
 dH.Name = "TextLabelCorner"
 dH.Parent = dG
+
+-- [新增] 个人主页按钮设置
+ProfileButton.Name = "ProfileButton"
+ProfileButton.Parent = dG
+ProfileButton.Size = dn(0, 22, 0, 22)
+ProfileButton.Position = dn(0, 5, 0.5, -11)
+ProfileButton.BackgroundColor3 = Theme.Tertiary
+ProfileButton.BorderSizePixel = 0
+ProfileButton.ZIndex = 2
+local player = b.Players.LocalPlayer
+local userId = player.UserId
+local thumbType = Enum.ThumbnailType.HeadShot
+local thumbSize = Enum.ThumbnailSize.Size420x420
+local content, isReady = b.Players:GetUserThumbnailAsync(userId, thumbType, thumbSize)
+if isReady then
+    ProfileButton.Image = content
+end
+
+ProfileCorner.CornerRadius = dm(1, 0) -- 圆形
+ProfileCorner.Parent = ProfileButton
+
+ProfileStroke.Name = "ProfileStroke"
+ProfileStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+ProfileStroke.Color = Theme.Secondary -- 默认不选中状态
+ProfileStroke.Thickness = 1.5
+ProfileStroke.Parent = ProfileButton
 
 -- 主题切换按钮
 ThemeToggle.Name = "ThemeToggle"
@@ -294,6 +348,119 @@ dO.CornerRadius = dm(0, 6)
 dO.Name = "TabHolderCorner"
 dO.Parent = dN
 
+-- [新增] 个人主页界面
+local ProfilePage = dq("Frame")
+ProfilePage.Name = "ProfilePage"
+ProfilePage.Parent = dE
+ProfilePage.BackgroundColor3 = Theme.Secondary
+ProfilePage.BorderSizePixel = 0
+ProfilePage.Position = dN.Position
+ProfilePage.Size = dN.Size
+ProfilePage.Visible = false -- 默认隐藏
+ProfilePage.ZIndex = 2 -- 确保在标签页之上
+
+local ProfilePageCorner = dq("UICorner")
+ProfilePageCorner.CornerRadius = dm(0, 6)
+ProfilePageCorner.Parent = ProfilePage
+
+-- [新增] 个人主页内容
+local ProfileAvatar = dq("ImageLabel")
+ProfileAvatar.Name = "ProfileAvatar"
+ProfileAvatar.Parent = ProfilePage
+ProfileAvatar.Size = dn(0, 100, 0, 100)
+ProfileAvatar.Position = dn(0, 20, 0.5, -50)
+ProfileAvatar.AnchorPoint = Vector2.new(0, 0.5)
+ProfileAvatar.BackgroundColor3 = Theme.Tertiary
+ProfileAvatar.Image = content -- 使用上面获取的头像
+local AvatarCorner = dq("UICorner")
+AvatarCorner.CornerRadius = dm(0, 8)
+AvatarCorner.Parent = ProfileAvatar
+
+local InfoContainer = dq("Frame")
+InfoContainer.Name = "InfoContainer"
+InfoContainer.Parent = ProfilePage
+InfoContainer.BackgroundTransparency = 1
+InfoContainer.Position = dn(0, 140, 0, 20)
+InfoContainer.Size = dn(1, -160, 1, -40)
+
+local InfoLayout = dq("UIListLayout")
+InfoLayout.Parent = InfoContainer
+InfoLayout.Padding = dm(0, 8)
+InfoLayout.FillDirection = Enum.FillDirection.Vertical
+InfoLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+local function createInfoLabel(parent, labelText, valueText, isAccent)
+    local frame = dq("Frame")
+    frame.Parent = parent
+    frame.BackgroundTransparency = 1
+    frame.Size = dn(1, 0, 0, 16)
+    
+    local label = dq("TextLabel")
+    label.Parent = frame
+    label.BackgroundTransparency = 1
+    label.Size = dn(0.4, 0, 1, 0)
+    label.Font = Enum.Font.SourceSans
+    label.Text = labelText .. ":"
+    label.TextColor3 = Theme.TextDim
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local value = dq("TextLabel")
+    value.Name = "ValueLabel" -- 方便之后更新
+    value.Parent = frame
+    value.BackgroundTransparency = 1
+    value.Position = dn(0.4, 5, 0, 0)
+    value.Size = dn(0.6, -5, 1, 0)
+    value.Font = Enum.Font.SourceSansBold
+    value.Text = tostring(valueText)
+    value.TextColor3 = isAccent and Theme.Accent or Theme.Text
+    value.TextSize = 14
+    value.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- 主题更新支持
+    table.insert(library.modules, {
+        update = function()
+            label.TextColor3 = Theme.TextDim
+            value.TextColor3 = isAccent and Theme.Accent or Theme.Text
+        end
+    })
+    
+    return value
+end
+
+createInfoLabel(InfoContainer, "Username", player.Name)
+createInfoLabel(InfoContainer, "Display Name", player.DisplayName)
+createInfoLabel(InfoContainer, "User ID", player.UserId)
+createInfoLabel(InfoContainer, "Account Age", player.AccountAge)
+
+local separator = dq("Frame")
+separator.Parent = InfoContainer
+separator.BackgroundColor3 = Theme.Border
+separator.Size = dn(1, 0, 0, 1)
+separator.LayoutOrder = 5
+table.insert(library.modules, { update = function() separator.BackgroundColor3 = Theme.Border end })
+
+local pingLabel = createInfoLabel(InfoContainer, "Ping", "N/A", true)
+pingLabel.Parent.Parent.LayoutOrder = 6
+local fpsLabel = createInfoLabel(InfoContainer, "FPS", "N/A", true)
+fpsLabel.Parent.Parent.LayoutOrder = 7
+createInfoLabel(InfoContainer, "Job ID", game.JobId:sub(1, 18) .. "...", false).Parent.Parent.LayoutOrder = 8
+createInfoLabel(InfoContainer, "Place ID", game.PlaceId, false).Parent.Parent.LayoutOrder = 9
+
+-- [新增] Ping 和 FPS 的实时更新
+task.spawn(function()
+    local lastUpdate = 0
+    b.RunService.RenderStepped:Connect(function(dt)
+        if tick() - lastUpdate > 0.5 then -- 每0.5秒更新一次
+            lastUpdate = tick()
+            local ping = b.Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+            pingLabel.Text = math.floor(ping) .. " ms"
+            fpsLabel.Text = tostring(math.floor(1 / dt))
+        end
+    end)
+end)
+
+
 dL:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     dK.CanvasSize = dn(0, 0, 0, dL.AbsoluteContentSize.Y + 12)
 end)
@@ -310,12 +477,20 @@ local themeElements = {
     {ThemeToggle, "BackgroundColor3", "Tertiary"},
     {ThemeToggle, "TextColor3", "Text"},
     {MainBorder, "Color", "MainBorder"},
-    {dK, "ScrollBarImageColor3", "ScrollBar"}
+    {dK, "ScrollBarImageColor3", "ScrollBar"},
+    -- [新增] 个人主页主题元素
+    {ProfilePage, "BackgroundColor3", "Secondary"},
+    {ProfileButton, "BackgroundColor3", "Tertiary"},
+    {ProfileAvatar, "BackgroundColor3", "Tertiary"},
+    {ProfileStroke, "Color", library.isHomepageVisible and "Accent" or "Secondary"},
 }
 
 library.updateTheme = function()
     Theme = Themes[CurrentTheme]
     
+    -- [修改] 更新个人主页按钮边框颜色
+    themeElements[#themeElements][3] = library.isHomepageVisible and "Accent" or "Secondary"
+
     for _, element in pairs(themeElements) do
         element[1][element[2]] = Theme[element[3]]
     end
@@ -344,6 +519,25 @@ end
 ThemeToggle.MouseButton1Click:Connect(function()
     library:SetTheme(CurrentTheme == "Dark" and "Light" or "Dark")
 end)
+
+-- [新增] 个人主页按钮点击事件
+ProfileButton.MouseButton1Click:Connect(function()
+    library.isHomepageVisible = not library.isHomepageVisible
+
+    if library.isHomepageVisible then
+        -- 显示个人主页
+        if library.currentTab then
+            library.currentTab[1].Visible = false -- 隐藏当前标签页内容
+            dv:Tween({BackgroundTransparency = 1}, library.currentTab[2].Glow, 0.15) -- 隐藏标签页高光
+        end
+        ProfilePage.Visible = true
+        dv:Tween({BorderColor3 = Theme.Accent}, ProfileStroke, 0.15)
+    else
+        -- 隐藏个人主页
+        dv:HideHomepage()
+    end
+end)
+
 
 -- 通知系统
 function createBaseNotifications()
@@ -1471,194 +1665,11 @@ end
 setmetatable(getgenv().library, {
     __newindex = function(self, i, v)
         if i == 'Name' then
-            dG.Text = "  " .. v
+            dG.Text = "        " .. v -- [修改] 保持头像的空间
             return true
         end
         rawset(self, i, v)
     end
 })
-
--- =================================================================
--- [新功能] 创建个人主页标签页
--- 将此代码块粘贴到您脚本的末尾，'return library' 之前
--- =================================================================
-
-task.spawn(function()
-    -- 确保UI已经完全加载
-    task.wait(0.1)
-
-    local player = b.Players.LocalPlayer
-    
-    -- 创建一个名为 "🏠 主页" 的新标签页，并获取其功能表
-    local profileTab = library:CreateTab("🏠 主页")
-    local tabElements = library.modules[#library.modules].elements
-    
-    -- 主容器，用于放置头像和信息
-    local profileFrame = dq("Frame")
-    profileFrame.Name = "ProfileFrame"
-    profileFrame.Parent = profileTab.Parent -- Parent to the tab's ScrollingFrame directly
-    profileFrame.BackgroundColor3 = Theme.Primary
-    profileFrame.Size = dn(1, -12, 0, 80)
-    profileFrame.BorderSizePixel = 0
-    table.insert(tabElements, {profileFrame, "BackgroundColor3", "Primary"})
-    
-    local profileCorner = dq("UICorner")
-    profileCorner.CornerRadius = dm(0, 6)
-    profileCorner.Parent = profileFrame
-    
-    local profileLayout = dq("UIListLayout")
-    profileLayout.FillDirection = Enum.FillDirection.Horizontal
-    profileLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    profileLayout.Padding = dm(0, 10)
-    profileLayout.Parent = profileFrame
-
-    local profilePadding = dq("UIPadding")
-    profilePadding.PaddingLeft = dm(0, 10)
-    profilePadding.Parent = profileFrame
-
-    -- 头像
-    local avatarImage = dq("ImageLabel")
-    avatarImage.Name = "Avatar"
-    avatarImage.Parent = profileFrame
-    avatarImage.Size = dn(0, 64, 0, 64)
-    avatarImage.BackgroundTransparency = 1
-    
-    local imageCorner = dq("UICorner")
-    imageCorner.CornerRadius = UDim.new(1, 0) -- 使其变为圆形
-    imageCorner.Parent = avatarImage
-    
-    -- 异步加载玩家头像
-    local success, content, isReady = pcall(function()
-        return b.Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
-    end)
-    if success and isReady then
-        avatarImage.Image = content
-    end
-
-    -- 玩家名称容器
-    local nameContainer = dq("Frame")
-    nameContainer.Name = "NameContainer"
-    nameContainer.Parent = profileFrame
-    nameContainer.BackgroundTransparency = 1
-    nameContainer.Size = dn(1, -90, 1, 0)
-    
-    local nameLayout = dq("UIListLayout")
-    nameLayout.FillDirection = Enum.FillDirection.Vertical
-    nameLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-    nameLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    nameLayout.Parent = nameContainer
-    
-    -- 显示名称
-    local displayNameLabel = dq("TextLabel")
-    displayNameLabel.Name = "DisplayName"
-    displayNameLabel.Parent = nameContainer
-    displayNameLabel.BackgroundTransparency = 1
-    displayNameLabel.Size = dn(1, 0, 0, 20)
-    displayNameLabel.Font = Enum.Font.SourceSansBold
-    displayNameLabel.Text = player.DisplayName
-    displayNameLabel.TextColor3 = Theme.Text
-    displayNameLabel.TextSize = 18
-    displayNameLabel.TextXAlignment = Enum.TextXAlignment.Left
-    table.insert(tabElements, {displayNameLabel, "TextColor3", "Text"})
-
-    -- 用户名
-    local usernameLabel = dq("TextLabel")
-    usernameLabel.Name = "Username"
-    usernameLabel.Parent = nameContainer
-    usernameLabel.BackgroundTransparency = 1
-    usernameLabel.Size = dn(1, 0, 0, 16)
-    usernameLabel.Font = Enum.Font.SourceSans
-    usernameLabel.Text = "@" .. player.Name
-    usernameLabel.TextColor3 = Theme.TextDim
-    usernameLabel.TextSize = 14
-    usernameLabel.TextXAlignment = Enum.TextXAlignment.Left
-    table.insert(tabElements, {usernameLabel, "TextColor3", "TextDim"})
-
-    -- 分隔符
-    profileTab:NewSeparator()
-
-    -- 信息行创建函数
-    local function createInfoLine(label, initialValue)
-        local frame = dq("Frame")
-        frame.Parent = profileTab.Parent
-        frame.BackgroundTransparency = 1
-        frame.Size = dn(1, -12, 0, 20)
-
-        local labelText = dq("TextLabel")
-        labelText.Parent = frame
-        labelText.BackgroundTransparency = 1
-        labelText.Size = dn(0.5, 0, 1, 0)
-        labelText.Font = Enum.Font.SourceSans
-        labelText.Text = label
-        labelText.TextColor3 = Theme.TextDim
-        labelText.TextSize = 14
-        labelText.TextXAlignment = Enum.TextXAlignment.Left
-        table.insert(tabElements, {labelText, "TextColor3", "TextDim"})
-
-        local valueText = dq("TextLabel")
-        valueText.Parent = frame
-        valueText.BackgroundTransparency = 1
-        valueText.Size = dn(0.5, 0, 1, 0)
-        valueText.Position = dn(0.5, 0, 0, 0)
-        valueText.Font = Enum.Font.SourceSansSemibold
-        valueText.Text = initialValue
-        valueText.TextColor3 = Theme.Text
-        valueText.TextSize = 14
-        valueText.TextXAlignment = Enum.TextXAlignment.Right
-        table.insert(tabElements, {valueText, "TextColor3", "Text"})
-
-        return valueText
-    end
-
-    -- 服务器信息
-    local serverTitle = dq("TextLabel")
-    serverTitle.Parent = profileTab.Parent
-    serverTitle.Size = dn(1, -12, 0, 22)
-    serverTitle.BackgroundTransparency = 1
-    serverTitle.Font = Enum.Font.SourceSansBold
-    serverTitle.Text = "服务器信息"
-    serverTitle.TextColor3 = Theme.Text
-    serverTitle.TextSize = 15
-    serverTitle.TextXAlignment = Enum.TextXAlignment.Left
-    table.insert(tabElements, {serverTitle, "TextColor3", "Text"})
-    
-    createInfoLine("游戏 ID (Place ID):", game.PlaceId)
-    createInfoLine("服务器 ID (Job ID):", game.JobId:sub(1, 18) .. "...")
-    local playersLabel = createInfoLine("玩家数量:", #b.Players:GetPlayers() .. " / " .. b.Players.MaxPlayers)
-
-    -- 客户端信息
-    local clientTitle = dq("TextLabel")
-    clientTitle.Parent = profileTab.Parent
-    clientTitle.Size = dn(1, -12, 0, 22)
-    clientTitle.LayoutOrder = 10 -- Ensure it's after the server info
-    clientTitle.BackgroundTransparency = 1
-    clientTitle.Font = Enum.Font.SourceSansBold
-    clientTitle.Text = "客户端信息"
-    clientTitle.TextColor3 = Theme.Text
-    clientTitle.TextSize = 15
-    clientTitle.TextXAlignment = Enum.TextXAlignment.Left
-    table.insert(tabElements, {clientTitle, "TextColor3", "Text"})
-    
-    local pingLabel = createInfoLine("延迟 (Ping):", "...")
-    local fpsLabel = createInfoLine("帧率 (FPS):", "...")
-    
-    -- 实时更新循环
-    local fps = 0
-    b.RunService.RenderStepped:Connect(function(dt)
-        fps = 1/dt
-    end)
-    
-    task.spawn(function()
-        while task.wait(1) do
-            if not profileFrame.Parent then break end -- 如果UI关闭则停止循环
-            
-            pcall(function()
-                playersLabel.Text = #b.Players:GetPlayers() .. " / " .. b.Players.MaxPlayers
-                pingLabel.Text = math.floor(player:GetNetworkPing() * 1000) .. " ms"
-                fpsLabel.Text = math.floor(fps)
-            end)
-        end
-    end)
-end)
 
 return library
