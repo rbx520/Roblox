@@ -24,27 +24,100 @@ end
 local ds = b.Players.LocalPlayer:GetMouse()
 
 -- 柔和浅灰主题与圆角定义
-local THEME = {
-	-- 大面积底色与卡片色（避免纯白刺眼）
-	WHITE = dp(246,243,232),   -- 主容器/卡片
-	SHEET = dp(234, 237, 242),   -- 标题栏/侧栏
-	INPUT = dp(225, 229, 236),   -- 输入框/小控件底
-	BAR   = dp(206, 212, 222),   -- 滑条背景
+-- 更精细的 THEME（保留旧键名兼容）
+local THEME = {}
 
-	-- 文本与描边
-	TEXT    = dp(28, 30, 33),
-	SUBTEXT = dp(105, 110, 120),
-	BORDER  = dp(204, 210, 220),
-
-	-- 强调/状态色（轻微降饱和）
-	ACCENT = dp(56, 126, 226),
-	GOOD   = dp(46, 160, 85),
-	BAD    = dp(214, 73, 60),
-
-	-- Tab 下划线渐变
-	GL1 = dp(176, 180, 190),
-	GL2 = dp(140, 146, 156),
+-- 表面层（大区域/容器）
+THEME.SURFACE = {
+	WINDOW   = dp(242, 244, 247), -- 主容器/窗体
+	TITLEBAR = dp(234, 237, 242), -- 标题栏
+	SIDEBAR  = dp(234, 237, 242), -- 侧栏
+	PANEL    = dp(242, 244, 247), -- Tab 内容区
+	CARD     = dp(242, 244, 247), -- 模块卡片
+	CARD_ALT = dp(238, 241, 246), -- 备用卡片（想让卡片更突出可用）
 }
+
+-- 文本
+THEME.TEXTS = {
+	PRIMARY     = dp(28, 30, 33),   -- 主文字
+	SECONDARY   = dp(105, 110, 120),-- 次级/说明
+	PLACEHOLDER = dp(130, 135, 145),-- 占位文字
+	INVERT      = dp(255, 255, 255) -- 反相（深底上）
+}
+
+-- 描边
+THEME.BORDERS = {
+	SOFT   = dp(214, 219, 228),
+	MEDIUM = dp(204, 210, 220),
+	HARD   = dp(186, 192, 205),
+}
+
+-- 控件/组件细分
+THEME.CONTROL = {
+	-- 输入与小控件
+	INPUT_BG        = dp(225, 229, 236),
+	INPUT_BG_FOCUS  = dp(220, 224, 232),
+
+	-- 下拉
+	DROPDOWN_BG       = dp(242, 244, 247), -- 展开面板
+	DROPDOWN_ITEM_BG  = dp(234, 237, 242), -- 每项
+
+	-- 滑条
+	SLIDER_BAR_BG   = dp(206, 212, 222), -- 背景
+	SLIDER_FILL     = dp(56, 126, 226),  -- 进度
+
+	-- 开关（渐变两端）
+	TOGGLE_OFF_START = dp(214, 73, 60),
+	TOGGLE_OFF_END   = dp(206, 212, 222),
+	TOGGLE_ON_START  = dp(206, 212, 222),
+	TOGGLE_ON_END    = dp(46, 160, 85),
+
+	-- 图标/小符号
+	ICON_PRIMARY = dp(28, 30, 33),
+	ICON_MUTED   = dp(105, 110, 120),
+}
+
+-- 状态/强调
+THEME.STATE = {
+	ACCENT  = dp(56, 126, 226), -- 强调
+	SUCCESS = dp(46, 160, 85),  -- 成功
+	DANGER  = dp(214, 73, 60),  -- 错误
+	WARNING = dp(245, 190, 75), -- 警告（备用）
+}
+
+-- Glow 渐变（Tab 下划线）
+THEME.GLOW = {
+	START = dp(176, 180, 190),
+	MID   = dp(140, 146, 156),
+	END   = dp(176, 180, 190),
+}
+
+-- 滚动条（备用）
+THEME.SCROLLBAR = {
+	TRACK = dp(234, 237, 242),
+	THUMB = dp(206, 212, 222),
+}
+
+-- 一些透明度（供 UIStroke 等统一调节）
+THEME.ALPHA = {
+	STROKE_CONTAINER = 0.45,
+	STROKE_CARD      = 0.55,
+	STROKE_INPUT     = 0.65,
+}
+
+-- 兼容旧键名（保持你现有代码不需要改）
+THEME.WHITE   = THEME.SURFACE.WINDOW      -- 主容器/卡片
+THEME.SHEET   = THEME.SURFACE.TITLEBAR    -- 标题栏/侧栏
+THEME.INPUT   = THEME.CONTROL.INPUT_BG    -- 输入框
+THEME.BAR     = THEME.CONTROL.SLIDER_BAR_BG
+THEME.TEXT    = THEME.TEXTS.PRIMARY
+THEME.SUBTEXT = THEME.TEXTS.SECONDARY
+THEME.BORDER  = THEME.BORDERS.MEDIUM
+THEME.ACCENT  = THEME.STATE.ACCENT
+THEME.GOOD    = THEME.STATE.SUCCESS
+THEME.BAD     = THEME.STATE.DANGER
+THEME.GL1     = THEME.GLOW.START
+THEME.GL2     = THEME.GLOW.MID
 local R = {
 	big = dm(0,12),
 	mid = dm(0,10),
