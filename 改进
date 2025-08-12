@@ -1,4 +1,4 @@
--- 完整的现代化UI系统（增强设置版 + 覆盖层修复 + 服务器名称更稳健判断）
+-- 完整的现代化UI系统（增强设置版 + 覆盖层修复 + 服务器名称更稳健判断 + 设置页下拉修复）
 local a = {
     Plrs = "Players",
     LP = "LocalPlayer",
@@ -14,8 +14,11 @@ local b = setmetatable({}, {
     end
 })
 
-if b.CoreGui:FindFirstChild(_CONFIGS.UI_NAME) then
-    b.CoreGui[_CONFIGS.UI_NAME]:Destroy()
+-- UI 名称的安全兼容
+local UI_NAME = (_CONFIGS and _CONFIGS.UI_NAME) or "ModernUI"
+
+if b.CoreGui:FindFirstChild(UI_NAME) then
+    b.CoreGui[UI_NAME]:Destroy()
 end
 
 local dm = UDim.new
@@ -113,7 +116,7 @@ getgenv().library = {
 }
 
 -- 文件保存辅助（根据环境自动探测）
-local SETTINGS_FILE = (_CONFIGS and _CONFIGS.UI_NAME or "ModernUI") .. "_settings.json"
+local SETTINGS_FILE = (UI_NAME) .. "_settings.json"
 
 local function hasFileAPI()
     return type(isfile) == "function" and type(readfile) == "function" and type(writefile) == "function"
@@ -245,7 +248,9 @@ end
 -- 统一覆盖层隐藏（修复：UIStroke 使用 Color）
 function dv:HideOverlay()
     if library.activeOverlay == nil then return end
-    local gui = b.CoreGui[_CONFIGS.UI_NAME].Main
+    local guiHolder = b.CoreGui[UI_NAME]
+    if not guiHolder then return end
+    local gui = guiHolder.Main
     local ProfilePage = gui.ProfilePage
     local SettingsPage = gui.SettingsPage
 
@@ -271,7 +276,9 @@ end
 
 -- 显示覆盖层（修复：UIStroke 使用 Color）
 function dv:ShowOverlay(which)
-    local gui = b.CoreGui[_CONFIGS.UI_NAME].Main
+    local guiHolder = b.CoreGui[UI_NAME]
+    if not guiHolder then return end
+    local gui = guiHolder.Main
     local ProfilePage = gui.ProfilePage
     local SettingsPage = gui.SettingsPage
     local ProfileStroke = gui.Header.ProfileButton.ProfileStroke
@@ -353,7 +360,7 @@ local SettingsStroke = dq("UIStroke")
 local ThemeToggle = dq("TextButton")
 local ThemeCorner = dq("UICorner")
 
-dD.Name = _CONFIGS.UI_NAME
+dD.Name = UI_NAME
 dD.Parent = b.CoreGui
 dD.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -406,7 +413,7 @@ TitleLabel.BackgroundTransparency = 1
 TitleLabel.Position = dn(0, 34, 0, 0)
 TitleLabel.Size = dn(1, -120, 1, 0)
 TitleLabel.Font = Enum.Font.SourceSansBold
-TitleLabel.Text = library.CustomTitle or _CONFIGS.UI_NAME
+TitleLabel.Text = library.CustomTitle or UI_NAME
 TitleLabel.TextColor3 = Theme.Text
 TitleLabel.TextSize = 15
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -784,6 +791,7 @@ SettingsScroll.Parent = SettingsPage
 SettingsScroll.BackgroundTransparency = 1
 SettingsScroll.Position = dn(0, 0, 0, 0)
 SettingsScroll.Size = dn(1, 0, 1, 0)
+SettingsScroll.Active = true -- 确保可滚动
 SettingsScroll.ScrollBarThickness = 3
 SettingsScroll.ScrollBarImageColor3 = Theme.ScrollBar
 local SList = dq("UIListLayout")
@@ -877,7 +885,7 @@ local function applyCustomTitle(text)
     local trimmed = utf8SubMax(text or "", 6)
     TitleInput.Text = trimmed
     library.CustomTitle = trimmed ~= "" and trimmed or nil
-    local finalTitle = library.CustomTitle or _CONFIGS.UI_NAME
+    local finalTitle = library.CustomTitle or UI_NAME
     TitleLabel.Text = finalTitle
     if library.settings.autoSave then SaveSettings() end
 end
@@ -931,73 +939,95 @@ local function makeLeftLabel(parent, text)
     return lbl
 end
 
--- 简易下拉（用于主题、强调色）
-local function makeDropdown(parent, defaultText, options, onSelect)
-    local Holder = dq("Frame")
-    Holder.Parent = parent
-    Holder.BackgroundTransparency = 1
-    Holder.Position = dn(0.56, 0, 0.5, -12)
-    Holder.Size = dn(0.44, 0, 0, 24)
+-- 简易下拉（用于设置页的主题、强调色）- 修复：撑开行高 + 提高ZIndex，避免被覆盖并可滚动到末尾
+local function makeDropdown(parentRow, defaultText, options, onSelect)
+    local row = parentRow
+    local baseHeight = row.Size.Y.Offset > 0 and row.Size.Y.Offset or 32
 
-    local Btn = dq("TextButton")
+    local Holder = Instance.new("Frame")
+    Holder.Name = "DropdownHolder"
+    Holder.Parent = row
+    Holder.BackgroundTransparency = 1
+    Holder.Position = UDim2.new(0.56, 0, 0, 4)
+    Holder.Size = UDim2.new(0.44, 0, 0, 24)
+    Holder.ZIndex = 60
+    Holder.ClipsDescendants = false
+
+    local Btn = Instance.new("TextButton")
     Btn.Parent = Holder
     Btn.BackgroundColor3 = Theme.Tertiary
     Btn.BorderSizePixel = 0
-    Btn.Size = dn(1, 0, 0, 24)
+    Btn.Size = UDim2.new(1, 0, 0, 24)
     Btn.Font = Enum.Font.SourceSans
     Btn.Text = defaultText
     Btn.TextColor3 = Theme.Text
     Btn.TextSize = 14
-    local BtnCorner = dq("UICorner")
-    BtnCorner.CornerRadius = dm(0, 6)
+    Btn.ZIndex = 61
+    local BtnCorner = Instance.new("UICorner")
+    BtnCorner.CornerRadius = UDim.new(0, 6)
     BtnCorner.Parent = Btn
 
-    local List = dq("ScrollingFrame")
+    local List = Instance.new("ScrollingFrame")
     List.Parent = Holder
     List.BackgroundColor3 = Theme.Secondary
     List.BorderSizePixel = 0
-    List.Position = dn(0, 0, 0, 28)
-    List.Size = dn(1, 0, 0, 0)
+    List.Position = UDim2.new(0, 0, 0, 28)
+    List.Size = UDim2.new(1, 0, 0, 0) -- 初始关闭
     List.Visible = false
     List.ScrollBarThickness = 2
     List.ScrollBarImageColor3 = library.AccentOverride or Theme.Accent
-    local LLayout = dq("UIListLayout")
+    List.ZIndex = 70
+    List.ClipsDescendants = true
+
+    local LLayout = Instance.new("UIListLayout")
     LLayout.Parent = List
-    LLayout.Padding = dm(0, 4)
-    local LPad = dq("UIPadding")
+    LLayout.Padding = UDim.new(0, 4)
+    local LPad = Instance.new("UIPadding")
     LPad.Parent = List
-    LPad.PaddingTop = dm(0, 4)
-    LPad.PaddingLeft = dm(0, 6)
-    LPad.PaddingRight = dm(0, 6)
+    LPad.PaddingTop = UDim.new(0, 4)
+    LPad.PaddingLeft = UDim.new(0, 6)
+    LPad.PaddingRight = UDim.new(0, 6)
+
+    LLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        List.CanvasSize = UDim2.new(0, 0, 0, LLayout.AbsoluteContentSize.Y + 8)
+    end)
 
     local isOpen = false
-    local function toggle()
-        isOpen = not isOpen
-        List.Visible = isOpen
+    local function toggle(open)
+        if open == nil then open = not isOpen end
+        isOpen = open
         local target = isOpen and math.min(#options * 26 + 8, 140) or 0
-        dv:Tween({Size = dn(1, 0, 0, target)}, List, 0.2)
+
+        List.Visible = isOpen
+        dv:Tween({Size = UDim2.new(1, 0, 0, target)}, List, 0.2)
+        -- 关键：把整行的高度一起拉大，这样滚动区域会更新，不会被盖/滚不到
+        dv:Tween({Size = UDim2.new(1, -24, 0, baseHeight + (isOpen and (target + 4) or 0))}, row, 0.2)
+
+        -- 展开时让这一行的层级更高，避免与同页其它控件互盖
+        row.ZIndex = isOpen and 65 or 50
     end
     Btn.MouseButton1Click:Connect(toggle)
 
     local function addOption(txt)
-        local op = dq("TextButton")
+        local op = Instance.new("TextButton")
         op.Parent = List
         op.BackgroundColor3 = Theme.Secondary
         op.BorderSizePixel = 0
-        op.Size = dn(1, -12, 0, 22)
+        op.Size = UDim2.new(1, -12, 0, 22)
         op.Font = Enum.Font.SourceSans
         op.Text = txt
         op.TextColor3 = Theme.TextDim
         op.TextSize = 13
-        local oc = dq("UICorner")
-        oc.CornerRadius = dm(0, 4)
+        op.ZIndex = 71
+        local oc = Instance.new("UICorner")
+        oc.CornerRadius = UDim.new(0, 4)
         oc.Parent = op
 
         op.MouseEnter:Connect(function() dv:Tween({BackgroundColor3 = Theme.Border}, op, 0.15) end)
         op.MouseLeave:Connect(function() dv:Tween({BackgroundColor3 = Theme.Secondary}, op, 0.15) end)
         op.MouseButton1Click:Connect(function()
             Btn.Text = txt
-            toggle()
+            toggle(false)
             pcall(onSelect, txt)
         end)
 
@@ -1363,7 +1393,7 @@ do
         dE.Draggable = library.settings.draggable
         getgenv().ClearTextBoxText = library.settings.clearText
         TitleInput.Text = library.CustomTitle or ""
-        TitleLabel.Text = library.CustomTitle or _CONFIGS.UI_NAME
+        TitleLabel.Text = library.CustomTitle or UI_NAME
         if library.updateTheme then library.updateTheme() end
         library:Notify({Title="已读取", Text="设置已从文件载入", Duration=3})
     end)
@@ -2418,7 +2448,7 @@ library:SetTheme(library.settings.theme or CurrentTheme)
 UIScaleObj.Scale = library.settings.uiScale or 1.0
 dE.Draggable = library.settings.draggable
 getgenv().ClearTextBoxText = library.settings.clearText
-TitleLabel.Text = library.CustomTitle or _CONFIGS.UI_NAME
+TitleLabel.Text = library.CustomTitle or UI_NAME
 
 -- 首次主题应用
 if library.updateTheme then
