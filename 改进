@@ -1,4 +1,4 @@
--- 完整的现代化UI系统（增强设置版 + 覆盖层修复 + 服务器名称更稳健判断 + 设置页下拉修复）
+-- 完整的现代化UI系统（增强设置版 + 覆盖层修复 + 服务器名称更稳健判断 + 下拉覆盖修复 + 缩放滚动修复）
 local a = {
     Plrs = "Players",
     LP = "LocalPlayer",
@@ -28,6 +28,13 @@ local dq = Instance.new
 local dr = function() end
 local ds = b.Players.LocalPlayer:GetMouse()
 local Http = b.HttpService
+
+-- 小工具：表克隆（避免依赖 table.clone）
+local function tclone(t)
+    local c = {}
+    for k, v in pairs(t) do c[k] = v end
+    return c
+end
 
 -- 主题系统（现代化配色）
 local Themes = {
@@ -388,6 +395,27 @@ dF.CornerRadius = dm(0, 8)
 dF.Name = "MainCorner"
 dF.Parent = dE
 
+-- Scroll 自适应（兼容 UIScale）
+local scrollRegistry = {}
+local function RegisterScroll(scroll, layout, extraBottom)
+    extraBottom = extraBottom or 0
+    local function recalc()
+        local scale = UIScaleObj and UIScaleObj.Scale or 1
+        local contentY = (layout.AbsoluteContentSize and layout.AbsoluteContentSize.Y) or 0
+        local target = math.max(0, math.ceil((contentY + extraBottom) / (scale > 0 and scale or 1)))
+        scroll.CanvasSize = UDim2.new(0, 0, 0, target)
+    end
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalc)
+    table.insert(scrollRegistry, recalc)
+    recalc()
+end
+
+UIScaleObj:GetPropertyChangedSignal("Scale"):Connect(function()
+    for _, recalc in ipairs(scrollRegistry) do
+        pcall(recalc)
+    end
+end)
+
 -- Header
 dG.Name = "Header"
 dG.Parent = dE
@@ -420,6 +448,12 @@ TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.TextTruncate = Enum.TextTruncate.AtEnd
 
 -- 个人主页按钮
+local player = b.Players.LocalPlayer
+local userId = player.UserId
+local thumbType = Enum.ThumbnailType.HeadShot
+local thumbSize = Enum.ThumbnailSize.Size420x420
+local content, isReady = b.Players:GetUserThumbnailAsync(userId, thumbType, thumbSize)
+
 ProfileButton.Name = "ProfileButton"
 ProfileButton.Parent = dG
 ProfileButton.Size = dn(0, 22, 0, 22)
@@ -427,11 +461,6 @@ ProfileButton.Position = dn(0, 5, 0.5, -11)
 ProfileButton.BackgroundColor3 = Theme.Tertiary
 ProfileButton.BorderSizePixel = 0
 ProfileButton.ZIndex = 2
-local player = b.Players.LocalPlayer
-local userId = player.UserId
-local thumbType = Enum.ThumbnailType.HeadShot
-local thumbSize = Enum.ThumbnailSize.Size420x420
-local content, isReady = b.Players:GetUserThumbnailAsync(userId, thumbType, thumbSize)
 if isReady then ProfileButton.Image = content end
 
 ProfileCorner.CornerRadius = dm(1, 0)
@@ -550,6 +579,9 @@ dN.Size = dn(0, 332, 0, 254)
 dO.CornerRadius = dm(0, 6)
 dO.Name = "TabHolderCorner"
 dO.Parent = dN
+
+-- 注册侧边栏滚动（缩放自适应）
+RegisterScroll(dK, dL, 12)
 
 -- 帮助: 递归设置ZIndex，确保覆盖层在最上层
 local function setZIndexRecursive(gui, z)
@@ -738,10 +770,6 @@ task.spawn(function()
     end)
 end)
 
-dL:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    dK.CanvasSize = dn(0, 0, 0, dL.AbsoluteContentSize.Y + 12)
-end)
-
 -- 覆盖层2：设置页（增强）
 local SettingsPage = dq("Frame")
 SettingsPage.Name = "SettingsPage"
@@ -804,11 +832,11 @@ SPad.PaddingTop = dm(0, 10)
 SPad.PaddingLeft = dm(0, 12)
 SPad.PaddingRight = dm(0, 12)
 SPad.PaddingBottom = dm(0, 10)
-SList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    SettingsScroll.CanvasSize = dn(0, 0, 0, SList.AbsoluteContentSize.Y + 20)
-end)
 
--- 标题自定义（沿用原设计）
+-- 注册设置页滚动（缩放自适应）
+RegisterScroll(SettingsScroll, SList, 20)
+
+-- 标题自定义
 local SetTitleLabel = dq("TextLabel")
 SetTitleLabel.Parent = SettingsScroll
 SetTitleLabel.BackgroundTransparency = 1
@@ -939,7 +967,7 @@ local function makeLeftLabel(parent, text)
     return lbl
 end
 
--- 简易下拉（用于设置页的主题、强调色）- 修复：撑开行高 + 提高ZIndex，避免被覆盖并可滚动到末尾
+-- 简易下拉（用于设置页的主题、强调色）- 修复：撑开行高 + 提高ZIndex + 缩放滚动自适应
 local function makeDropdown(parentRow, defaultText, options, onSelect)
     local row = parentRow
     local baseHeight = row.Size.Y.Offset > 0 and row.Size.Y.Offset or 32
@@ -988,9 +1016,8 @@ local function makeDropdown(parentRow, defaultText, options, onSelect)
     LPad.PaddingLeft = UDim.new(0, 6)
     LPad.PaddingRight = UDim.new(0, 6)
 
-    LLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        List.CanvasSize = UDim2.new(0, 0, 0, LLayout.AbsoluteContentSize.Y + 8)
-    end)
+    -- 注册下拉内部滚动（缩放自适应）
+    RegisterScroll(List, LLayout, 8)
 
     local isOpen = false
     local function toggle(open)
@@ -1055,7 +1082,7 @@ end
 do
     local row = makeRow(32)
     makeLeftLabel(row, "主题")
-    local ddl = makeDropdown(row, (library.settings.theme=="Dark" and "深色" or "浅色"), {"深色", "浅色"}, function(sel)
+    makeDropdown(row, (library.settings.theme=="Dark" and "深色" or "浅色"), {"深色", "浅色"}, function(sel)
         local t = (sel == "深色") and "Dark" or "Light"
         library:SetTheme(t)
         ThemeToggle.Text = (t == "Dark") and "☀" or "🌙"
@@ -1067,7 +1094,7 @@ do
     local row = makeRow(32)
     makeLeftLabel(row, "强调色")
     local names = {"蓝色","紫色","绿色","红色","橙色","青色","粉色"}
-    local ddl = makeDropdown(row, library.settings.accentName or "蓝色", names, function(sel)
+    makeDropdown(row, library.settings.accentName or "蓝色", names, function(sel)
         library.settings.accentName = sel
         library.AccentOverride = AccentPresets[sel] or AccentPresets["蓝色"]
         if library.updateTheme then library.updateTheme() end
@@ -1145,7 +1172,6 @@ do
         library.settings.animations = (not off)
         if library.settings.autoSave then SaveSettings() end
     end)
-    -- 初始值
     setter(not library.settings.animations)
 end
 
@@ -1439,7 +1465,7 @@ library.updateTheme = function()
     Theme = Themes[CurrentTheme]
     -- 应用 Accent 覆盖
     if library.AccentOverride then
-        Theme = table.clone(Theme)
+        Theme = tclone(Theme)
         Theme.Accent = library.AccentOverride
         Theme.SliderFill = library.AccentOverride
         Theme.ScrollBar = library.AccentOverride
@@ -1483,7 +1509,7 @@ SettingsButton.MouseButton1Click:Connect(function()
     dv:ShowOverlay("Settings")
 end)
 
--- 通知系统（保持原样）
+-- 通知系统
 local function createBaseNotifications()
     local pg = b.Players.LocalPlayer.PlayerGui
     if pg:FindFirstChild("NotificationHolder") then
@@ -1621,7 +1647,7 @@ notificationHolder = createBaseNotifications()
 notifAmount = 0
 removedPos = nil
 
-function library:SelectNotify(args) -- 保持原样
+function library:SelectNotify(args)
     args = args or {}
     args.TweenSpeed = args.TweenSpeed or 0.3
     args.Title = args.Title or "Title"
@@ -1704,7 +1730,7 @@ function library:SelectNotify(args) -- 保持原样
     end)
 end
 
-function library:Notify(args) -- 保持原样
+function library:Notify(args)
     args = args or {}
     args.TweenSpeed = args.TweenSpeed or 0.3
     args.Title = args.Title or "Title"
@@ -1773,7 +1799,7 @@ function library:Notify(args) -- 保持原样
     end)
 end
 
--- 创建标签页（与原逻辑一致）
+-- 创建标签页
 function library:CreateTab(tabName)
     local tabButton = dq("TextButton")
     local tabCorner = dq("UICorner")
@@ -1834,10 +1860,9 @@ function library:CreateTab(tabName)
     contentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
     contentLayout.Padding = dm(0, 6)
-    
-    contentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        tabContent.CanvasSize = dn(0, 0, 0, contentLayout.AbsoluteContentSize.Y + 12)
-    end)
+
+    -- 注册标签页内容滚动（缩放自适应）
+    RegisterScroll(tabContent, contentLayout, 12)
     
     tabButton.MouseButton1Click:Connect(function()
         dv:SwitchTab({tabContent, tabButton})
@@ -1865,7 +1890,6 @@ function library:CreateTab(tabName)
         end
     })
     
-    -- 下面是控件构建（与原来一致）
     function tabFunctions:NewSeparator()
         local sep = dq("Frame")
         sep.Size = dn(1, -12, 0, 1)
@@ -2288,6 +2312,9 @@ function library:CreateTab(tabName)
         listPadding.PaddingTop = dm(0, 4)
         listPadding.PaddingLeft = dm(0, 6)
         listPadding.PaddingRight = dm(0, 6)
+
+        -- 注册下拉内部滚动（缩放自适应）
+        RegisterScroll(list, listLayout, 8)
         
         local isOpen = false
         local optionsRef = options
