@@ -23,20 +23,27 @@ local dr = function()
 end
 local ds = b.Players.LocalPlayer:GetMouse()
 
--- 主题与圆角定义
+-- 柔和浅灰主题与圆角定义
 local THEME = {
-	WHITE = dp(255,255,255),
-	SHEET = dp(250,251,252),
-	INPUT = dp(236,239,244),
-	BAR = dp(230,234,240),
-	TEXT = dp(34,34,34),
-	SUBTEXT = dp(120,120,120),
-	ACCENT = dp(66,133,244),
-	GOOD = dp(53,201,95),
-	BAD = dp(234,67,53),
-	BORDER = dp(223,227,231),
-	GL1 = dp(210,210,210),
-	GL2 = dp(160,160,160),
+	-- 大面积底色与卡片色（避免纯白刺眼）
+	WHITE = dp(242, 244, 247),   -- 主容器/卡片
+	SHEET = dp(234, 237, 242),   -- 标题栏/侧栏
+	INPUT = dp(225, 229, 236),   -- 输入框/小控件底
+	BAR   = dp(206, 212, 222),   -- 滑条背景
+
+	-- 文本与描边
+	TEXT    = dp(28, 30, 33),
+	SUBTEXT = dp(105, 110, 120),
+	BORDER  = dp(204, 210, 220),
+
+	-- 强调/状态色（轻微降饱和）
+	ACCENT = dp(56, 126, 226),
+	GOOD   = dp(46, 160, 85),
+	BAD    = dp(214, 73, 60),
+
+	-- Tab 下划线渐变
+	GL1 = dp(176, 180, 190),
+	GL2 = dp(140, 146, 156),
 }
 local R = {
 	big = dm(0,12),
@@ -178,7 +185,7 @@ function()
 	dK.CanvasSize = dn(0, 0, 0, dL.AbsoluteContentSize.Y + 12)
 end)
 
--- 通知基础 UI
+-- 通知基础 UI（改为浅灰主题）
 function createBaseNotifications()
 	if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("NotificationHolder") then
 		return game:GetService("Players").LocalPlayer.PlayerGui.NotificationHolder
