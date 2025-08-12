@@ -66,8 +66,8 @@ THEME.CONTROL = {
 
 	-- 开关（渐变两端）
 	TOGGLE_OFF_START = dp(65, 105, 225),
-	TOGGLE_OFF_END   = dp(100, 149, 237),
-	TOGGLE_ON_START  = dp(100, 149, 237),
+	TOGGLE_OFF_END   = dp(206, 212, 222),
+	TOGGLE_ON_START  = dp(206, 212, 222),
 	TOGGLE_ON_END    = dp(240, 248, 255),
 
 	-- 图标/符号
