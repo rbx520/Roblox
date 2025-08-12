@@ -65,10 +65,10 @@ THEME.CONTROL = {
 	SLIDER_FILL   = dp(56, 126, 226),  -- 进度
 
 	-- 开关（渐变两端）
-	TOGGLE_OFF_START = dp(229, 231, 235)
-TOGGLE_OFF_END   = dp(209, 213, 219)
-TOGGLE_ON_START  = dp(52, 199, 89)
-TOGGLE_ON_END    = dp(48, 209, 88)
+	TOGGLE_OFF_START = dp(229, 231, 235),
+	TOGGLE_OFF_END   = dp(209, 213, 219),
+	TOGGLE_ON_START  = dp(52, 199, 89),
+	TOGGLE_ON_END    = dp(48, 209, 88),
 
 	-- 图标/符号
 	ICON_PRIMARY = dp(28, 30, 33),
