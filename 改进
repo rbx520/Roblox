@@ -29,7 +29,7 @@ local THEME = {}
 
 -- 表面层（大区域/容器）
 THEME.SURFACE = {
-	WINDOW   = dp(242, 244, 247), -- 主容器/窗体
+	WINDOW   = dp(234, 237, 242), -- 主容器/窗体
 	TITLEBAR = dp(234, 237, 242), -- 标题栏
 	SIDEBAR  = dp(234, 237, 242), -- 侧栏
 	PANEL    = dp(242, 244, 247), -- Tab 内容区
