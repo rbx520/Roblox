@@ -68,7 +68,7 @@ THEME.CONTROL = {
 	TOGGLE_OFF_START = dp(65, 105, 225),
 	TOGGLE_OFF_END   = dp(206, 212, 222),
 	TOGGLE_ON_START  = dp(206, 212, 222),
-	TOGGLE_ON_END    = dp(240, 248, 255),
+	TOGGLE_ON_END    = dp(206, 212, 222),
 
 	-- 图标/符号
 	ICON_PRIMARY = dp(28, 30, 33),
