@@ -273,2491 +273,81 @@
 		_warn('---------------')
     
     --<<  UI 部分, 不懂代码请勿修改 >>--
--- 完整的现代化UI系统（增强设置版 + 覆盖层修复 + 服务器名称更稳健判断 + 下拉覆盖修复 + 缩放滚动修复）
-local a = {
-    Plrs = "Players",
-    LP = "LocalPlayer",
-    RS = "ReplicatedStorage"
-}
 
-local b = setmetatable({}, {
-    __index = function(self, c)
-        return game:GetService(c)
-    end,
-    __call = function(self, c)
-        return game:GetService(c)
-    end
-})
-
--- UI 名称的安全兼容
-local UI_NAME = (_CONFIGS and _CONFIGS.UI_NAME) or "ModernUI"
-
-if b.CoreGui:FindFirstChild(UI_NAME) then
-    b.CoreGui[UI_NAME]:Destroy()
-end
-
-local dm = UDim.new
-local dn = UDim2.new
-local dp = Color3.fromRGB
-local dq = Instance.new
-local dr = function() end
-local ds = b.Players.LocalPlayer:GetMouse()
-local Http = b.HttpService
-
--- 小工具：表克隆（避免依赖 table.clone）
-local function tclone(t)
-    local c = {}
-    for k, v in pairs(t) do c[k] = v end
-    return c
-end
-
--- 主题系统（现代化配色）
-local Themes = {
-    Dark = {
-        Primary = dp(30, 30, 36),
-        Secondary = dp(35, 35, 42),
-        Tertiary = dp(40, 40, 48),
-        Accent = dp(100, 120, 255),
-        Success = dp(100, 255, 100),
-        Danger = dp(255, 100, 100),
-        Warning = dp(255, 200, 100),
-        Text = dp(255, 255, 255),
-        TextDim = dp(180, 180, 180),
-        TextMuted = dp(120, 120, 120),
-        Border = dp(50, 50, 58),
-        MinimizeBtn = dp(35, 35, 42),
-        MinimizeBorder = dp(50, 50, 58),
-        SliderFill = dp(100, 120, 255),
-        SliderHandle = dp(255, 255, 255),
-        ToggleOn = dp(100, 255, 100),
-        ToggleOff = dp(50, 50, 58),
-        MainBorder = dp(50, 50, 58),
-        ScrollBar = dp(100, 120, 255)
-    },
-    Light = {
-        Primary = dp(255, 255, 255),
-        Secondary = dp(245, 246, 250),
-        Tertiary = dp(235, 237, 242),
-        Accent = dp(88, 101, 242),
-        Success = dp(34, 197, 94),
-        Danger = dp(239, 68, 68),
-        Warning = dp(245, 158, 11),
-        Text = dp(17, 24, 39),
-        TextDim = dp(75, 85, 99),
-        TextMuted = dp(156, 163, 175),
-        Border = dp(229, 231, 235),
-        MinimizeBtn = dp(255, 255, 255),
-        MinimizeBorder = dp(229, 231, 235),
-        SliderFill = dp(34, 197, 94),
-        SliderHandle = dp(255, 255, 255),
-        ToggleOn = dp(34, 197, 94),
-        ToggleOff = dp(229, 231, 235),
-        MainBorder = dp(220, 220, 220),
-        ScrollBar = dp(88, 101, 242)
-    }
-}
-
--- Accent 预设
-local AccentPresets = {
-    ["蓝色"] = dp(88, 101, 242),
-    ["紫色"] = dp(155, 105, 245),
-    ["绿色"] = dp(34, 197, 94),
-    ["红色"] = dp(239, 68, 68),
-    ["橙色"] = dp(245, 158, 11),
-    ["青色"] = dp(56, 189, 248),
-    ["粉色"] = dp(236, 72, 153),
-}
-
--- 默认使用黑色主题
-local CurrentTheme = "Dark"
-local Theme = Themes[CurrentTheme]
-
--- 全局库
-getgenv().library = {
-    flags = {
-        GetState = function(dt, du)
-            return library.flags[du] and library.flags[du].State or nil
-        end
-    },
-    modules = {},
-    currentTab = nil,
-    isHomepageVisible = false, -- 兼容旧字段（实际由 activeOverlay 管）
-    theme = CurrentTheme,
-    activeOverlay = nil, -- nil / "Profile" / "Settings"
-    CustomTitle = nil,
-    settings = {
-        animations = true,
-        draggable = true,
-        clearText = false,
-        uiScale = 1.0,
-        theme = CurrentTheme,
-        accentName = "蓝色", -- 默认蓝色
-        autoSave = true
-    },
-    AccentOverride = AccentPresets["蓝色"]
-}
-
--- 文件保存辅助（根据环境自动探测）
-local SETTINGS_FILE = (UI_NAME) .. "_settings.json"
-
-local function hasFileAPI()
-    return type(isfile) == "function" and type(readfile) == "function" and type(writefile) == "function"
-end
-
-local function color3ToHex(c)
-    local r = math.clamp(math.floor(c.R * 255 + 0.5), 0, 255)
-    local g = math.clamp(math.floor(c.G * 255 + 0.5), 0, 255)
-    local b = math.clamp(math.floor(c.B * 255 + 0.5), 0, 255)
-    return string.format("#%02X%02X%02X", r, g, b)
-end
-
-local function hexToColor3(h)
-    if not h or type(h) ~= "string" then return nil end
-    h = h:gsub("#","")
-    if #h ~= 6 then return nil end
-    local r = tonumber(h:sub(1,2), 16)
-    local g = tonumber(h:sub(3,4), 16)
-    local b = tonumber(h:sub(5,6), 16)
-    if not r or not g or not b then return nil end
-    return Color3.fromRGB(r, g, b)
-end
-
-local function SaveSettings()
-    if not hasFileAPI() then return end
-    local data = {
-        theme = library.settings.theme,
-        accentName = library.settings.accentName,
-        accentHex = color3ToHex(library.AccentOverride or Theme.Accent),
-        uiScale = library.settings.uiScale,
-        draggable = library.settings.draggable,
-        clearText = library.settings.clearText,
-        animations = library.settings.animations,
-        autoSave = library.settings.autoSave,
-        customTitle = library.CustomTitle or ""
-    }
-    local ok, json = pcall(function() return Http:JSONEncode(data) end)
-    if ok then pcall(writefile, SETTINGS_FILE, json) end
-end
-
-local function LoadSettings()
-    if not hasFileAPI() or not isfile(SETTINGS_FILE) then return end
-    local ok, raw = pcall(readfile, SETTINGS_FILE)
-    if not ok then return end
-    local ok2, data = pcall(function() return Http:JSONDecode(raw) end)
-    if not ok2 or type(data) ~= "table" then return end
-
-    -- 主题
-    if data.theme and Themes[data.theme] then
-        library.settings.theme = data.theme
-        CurrentTheme = data.theme
-        Theme = Themes[CurrentTheme]
-    end
-
-    -- 强调色
-    local accent = hexToColor3(data.accentHex) or AccentPresets[data.accentName or ""] or AccentPresets["蓝色"]
-    library.AccentOverride = accent
-    library.settings.accentName = data.accentName or "蓝色"
-
-    -- 其它
-    library.settings.uiScale = tonumber(data.uiScale) or 1.0
-    library.settings.draggable = data.draggable ~= false
-    library.settings.clearText = data.clearText == true
-    library.settings.animations = data.animations ~= false
-    library.settings.autoSave = data.autoSave ~= false
-    library.CustomTitle = (data.customTitle and data.customTitle ~= "") and data.customTitle or nil
-end
-
--- UTF8 安全截断到最多 n 个字符（中文算 1 个）
-local function utf8SubMax(s, n)
-    s = tostring(s or "")
-    local ok, len = pcall(utf8.len, s)
-    if ok and len then
-        if len <= n then return s end
-        local offset = utf8.offset(s, n + 1)
-        if offset then
-            return string.sub(s, 1, offset - 1)
-        end
-        return s
-    else
-        local count, i = 0, 1
-        while i <= #s and count < n do
-            local c = s:byte(i)
-            local step = (c < 128 and 1) or (c < 224 and 2) or (c < 240 and 3) or (c < 248 and 4) or 1
-            i = i + step
-            count = count + 1
-        end
-        return s:sub(1, i-1)
-    end
-end
-
--- 切换主题
-function library:SetTheme(themeName)
-    if not Themes[themeName] then return end
-    CurrentTheme = themeName
-    Theme = Themes[themeName]
-    library.theme = themeName
-    library.settings.theme = themeName
-    if library.updateTheme then library.updateTheme() end
-    if library.settings.autoSave then SaveSettings() end
-end
-
-function library:UpdateToggle(du, be)
-    local be = be or library.flags:GetState(du)
-    if be == library.flags:GetState(du) then return end
-    library.flags[du]:SetState(be)
-end
-
-local dv = {}
-
--- Tween（支持关闭动画）
-function dv:Tween(props, object, duration, style, direction)
-    local animations = library.settings and library.settings.animations
-    if animations == false then
-        for k, v in pairs(props or {}) do
-            pcall(function() object[k] = v end)
-        end
-        return {Play=function() end}
-    end
-    local tween = b.TweenService:Create(
-        object,
-        TweenInfo.new(duration or 0.2, style or Enum.EasingStyle.Quad, direction or Enum.EasingDirection.Out),
-        props or {}
-    )
-    tween:Play()
-    return tween
-end
-
--- 统一覆盖层隐藏（修复：UIStroke 使用 Color）
-function dv:HideOverlay()
-    if library.activeOverlay == nil then return end
-    local guiHolder = b.CoreGui[UI_NAME]
-    if not guiHolder then return end
-    local gui = guiHolder.Main
-    local ProfilePage = gui.ProfilePage
-    local SettingsPage = gui.SettingsPage
-
-    if ProfilePage then ProfilePage.Visible = false end
-    if SettingsPage then SettingsPage.Visible = false end
-
-    library.activeOverlay = nil
-    library.isHomepageVisible = false
-
-    if gui.Header:FindFirstChild("ProfileButton") then
-        dv:Tween({Color = Theme.Secondary}, gui.Header.ProfileButton.ProfileStroke, 0.15)
-    end
-    if gui.Header:FindFirstChild("SettingsButton") then
-        dv:Tween({Color = Theme.Secondary}, gui.Header.SettingsButton.SettingsStroke, 0.15)
-    end
-
-    if library.currentTab then
-        library.currentTab[1].Visible = true
-        local glow = library.currentTab[2] and library.currentTab[2]:FindFirstChild("Glow")
-        if glow then dv:Tween({BackgroundTransparency = 0}, glow, 0.15) end
-    end
-end
-
--- 显示覆盖层（修复：UIStroke 使用 Color）
-function dv:ShowOverlay(which)
-    local guiHolder = b.CoreGui[UI_NAME]
-    if not guiHolder then return end
-    local gui = guiHolder.Main
-    local ProfilePage = gui.ProfilePage
-    local SettingsPage = gui.SettingsPage
-    local ProfileStroke = gui.Header.ProfileButton.ProfileStroke
-    local SettingsStroke = gui.Header.SettingsButton.SettingsStroke
-
-    if library.activeOverlay == which then
-        dv:HideOverlay()
-        return
-    end
-
-    dv:HideOverlay()
-
-    if library.currentTab then
-        library.currentTab[1].Visible = false
-        local glow = library.currentTab[2] and library.currentTab[2]:FindFirstChild("Glow")
-        if glow then dv:Tween({BackgroundTransparency = 1}, glow, 0.15) end
-    end
-
-    if ProfilePage then ProfilePage.Visible = false end
-    if SettingsPage then SettingsPage.Visible = false end
-
-    if which == "Profile" then
-        if ProfilePage then ProfilePage.Visible = true end
-        library.activeOverlay = "Profile"
-        library.isHomepageVisible = true
-        if ProfileStroke then dv:Tween({Color = library.AccentOverride or Theme.Accent}, ProfileStroke, 0.15) end
-        if SettingsStroke then dv:Tween({Color = Theme.Secondary}, SettingsStroke, 0.15) end
-    elseif which == "Settings" then
-        if SettingsPage then SettingsPage.Visible = true end
-        library.activeOverlay = "Settings"
-        library.isHomepageVisible = false
-        if ProfileStroke then dv:Tween({Color = Theme.Secondary}, ProfileStroke, 0.15) end
-        if SettingsStroke then dv:Tween({Color = library.AccentOverride or Theme.Accent}, SettingsStroke, 0.15) end
-    end
-end
-
--- 切换标签
-function dv:SwitchTab(newTab)
-    dv:HideOverlay()
-    local oldTab = library.currentTab
-    if oldTab == newTab then return end
-    library.currentTab = newTab
-    if oldTab then
-        local glow = oldTab[2] and oldTab[2]:FindFirstChild("Glow")
-        if glow then dv:Tween({BackgroundTransparency = 1}, glow, 0.15) end
-        oldTab[1].Visible = false
-    end
-    local glow = newTab[2] and newTab[2]:FindFirstChild("Glow")
-    if glow then dv:Tween({BackgroundTransparency = 0}, glow, 0.15) end
-    newTab[1].Visible = true
-end
-
--- 主界面
-local dD = dq("ScreenGui")
-local Open = dq("TextButton")
-local OpenCorner = dq("UICorner")
-local OpenBorder = dq("UIStroke")
-local dE = dq("Frame")
-local UIScaleObj = dq("UIScale")
-local dF = dq("UICorner")
-local MainBorder = dq("UIStroke")
-local dG = dq("TextLabel")
-local dH = dq("UICorner")
-local dI = dq("Frame")
-local dJ = dq("UICorner")
-local dK = dq("ScrollingFrame")
-local dL = dq("UIListLayout")
-local dM = dq("UIPadding")
-local dN = dq("Frame")
-local dO = dq("UICorner")
-
-local TitleLabel = dq("TextLabel")
-local ProfileButton = dq("ImageButton")
-local ProfileCorner = dq("UICorner")
-local ProfileStroke = dq("UIStroke")
-local SettingsButton = dq("TextButton")
-local SettingsCorner = dq("UICorner")
-local SettingsStroke = dq("UIStroke")
-local ThemeToggle = dq("TextButton")
-local ThemeCorner = dq("UICorner")
-
-dD.Name = UI_NAME
-dD.Parent = b.CoreGui
-dD.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
--- 主窗口
-dE.Name = "Main"
-dE.Parent = dD
-dE.BackgroundColor3 = Theme.Primary
-dE.BorderSizePixel = 0
-dE.Position = dn(0.5, 0, 0.5, 0)
-dE.Size = dn(0, 460, 0, 300)
-dE.AnchorPoint = Vector2.new(0.5, 0.5)
-dE.Active = true
-dE.Draggable = library.settings.draggable
-
-UIScaleObj.Parent = dE
-UIScaleObj.Scale = library.settings.uiScale
-
-MainBorder.Parent = dE
-MainBorder.Color = Theme.MainBorder
-MainBorder.Thickness = CurrentTheme == "Light" and 2 or 1
-MainBorder.Transparency = CurrentTheme == "Light" and 0 or 0.5
-MainBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-
-dF.CornerRadius = dm(0, 8)
-dF.Name = "MainCorner"
-dF.Parent = dE
-
--- Scroll 自适应（兼容 UIScale）
-local scrollRegistry = {}
-local function RegisterScroll(scroll, layout, extraBottom)
-    extraBottom = extraBottom or 0
-    local function recalc()
-        local scale = UIScaleObj and UIScaleObj.Scale or 1
-        local contentY = (layout.AbsoluteContentSize and layout.AbsoluteContentSize.Y) or 0
-        local target = math.max(0, math.ceil((contentY + extraBottom) / (scale > 0 and scale or 1)))
-        scroll.CanvasSize = UDim2.new(0, 0, 0, target)
-    end
-    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalc)
-    table.insert(scrollRegistry, recalc)
-    recalc()
-end
-
-UIScaleObj:GetPropertyChangedSignal("Scale"):Connect(function()
-    for _, recalc in ipairs(scrollRegistry) do
-        pcall(recalc)
-    end
-end)
-
--- Header
-dG.Name = "Header"
-dG.Parent = dE
-dG.BackgroundColor3 = Theme.Secondary
-dG.BorderSizePixel = 0
-dG.Position = dn(0, 6, 0, 6)
-dG.Size = dn(1, -12, 0, 28)
-dG.Font = Enum.Font.SourceSansBold
-dG.Text = ""
-dG.TextColor3 = Theme.Text
-dG.TextSize = 15
-dG.TextXAlignment = Enum.TextXAlignment.Left
-dG.ClipsDescendants = true
-
-dH.CornerRadius = dm(0, 6)
-dH.Name = "TextLabelCorner"
-dH.Parent = dG
-
--- 标题文本
-TitleLabel.Name = "Title"
-TitleLabel.Parent = dG
-TitleLabel.BackgroundTransparency = 1
-TitleLabel.Position = dn(0, 34, 0, 0)
-TitleLabel.Size = dn(1, -120, 1, 0)
-TitleLabel.Font = Enum.Font.SourceSansBold
-TitleLabel.Text = library.CustomTitle or UI_NAME
-TitleLabel.TextColor3 = Theme.Text
-TitleLabel.TextSize = 15
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.TextTruncate = Enum.TextTruncate.AtEnd
-
--- 个人主页按钮
-local player = b.Players.LocalPlayer
-local userId = player.UserId
-local thumbType = Enum.ThumbnailType.HeadShot
-local thumbSize = Enum.ThumbnailSize.Size420x420
-local content, isReady = b.Players:GetUserThumbnailAsync(userId, thumbType, thumbSize)
-
-ProfileButton.Name = "ProfileButton"
-ProfileButton.Parent = dG
-ProfileButton.Size = dn(0, 22, 0, 22)
-ProfileButton.Position = dn(0, 5, 0.5, -11)
-ProfileButton.BackgroundColor3 = Theme.Tertiary
-ProfileButton.BorderSizePixel = 0
-ProfileButton.ZIndex = 2
-if isReady then ProfileButton.Image = content end
-
-ProfileCorner.CornerRadius = dm(1, 0)
-ProfileCorner.Parent = ProfileButton
-ProfileStroke.Name = "ProfileStroke"
-ProfileStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-ProfileStroke.Color = Theme.Secondary
-ProfileStroke.Thickness = 1.5
-ProfileStroke.Parent = ProfileButton
-
--- 设置按钮
-SettingsButton.Name = "SettingsButton"
-SettingsButton.Parent = dG
-SettingsButton.Size = dn(0, 22, 0, 22)
-SettingsButton.Position = dn(1, -55, 0.5, -11)
-SettingsButton.BackgroundColor3 = Theme.Tertiary
-SettingsButton.BorderSizePixel = 0
-SettingsButton.Text = "⚙"
-SettingsButton.TextSize = 14
-SettingsButton.TextColor3 = Theme.Text
-SettingsButton.Font = Enum.Font.SourceSansBold
-SettingsButton.AutoButtonColor = false
-
-SettingsCorner.CornerRadius = dm(0, 6)
-SettingsCorner.Parent = SettingsButton
-SettingsStroke.Name = "SettingsStroke"
-SettingsStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-SettingsStroke.Color = Theme.Secondary
-SettingsStroke.Thickness = 1.5
-SettingsStroke.Parent = SettingsButton
-
--- 主题切换按钮
-ThemeToggle.Name = "ThemeToggle"
-ThemeToggle.Parent = dG
-ThemeToggle.BackgroundColor3 = Theme.Tertiary
-ThemeToggle.Position = dn(1, -30, 0.5, -10)
-ThemeToggle.Size = dn(0, 20, 0, 20)
-ThemeToggle.Text = CurrentTheme == "Dark" and "☀" or "🌙"
-ThemeToggle.TextColor3 = Theme.Text
-ThemeToggle.TextSize = 12
-ThemeToggle.BorderSizePixel = 0
-ThemeToggle.Font = Enum.Font.SourceSans
-
-ThemeCorner.CornerRadius = dm(0, 4)
-ThemeCorner.Parent = ThemeToggle
-
--- 隐藏/显示按钮
-Open.Name = "Open"
-Open.Parent = dD
-Open.BackgroundColor3 = Theme.MinimizeBtn
-Open.Position = dn(0.84, 0, 0, 10)
-Open.BorderSizePixel = 0
-Open.Size = dn(0, 60, 0, 28)
-Open.Font = Enum.Font.SourceSansBold
-Open.Text = "隐藏"
-Open.TextColor3 = CurrentTheme == "Dark" and dp(255, 255, 255) or dp(17, 24, 39)
-Open.TextSize = 14
-Open.Active = true
-Open.Draggable = true
-
-OpenCorner.CornerRadius = dm(0, 6)
-OpenCorner.Parent = Open
-
-OpenBorder.Parent = Open
-OpenBorder.Color = Theme.MinimizeBorder
-OpenBorder.Thickness = 1
-OpenBorder.Transparency = CurrentTheme == "Dark" and 0.5 or 0
-OpenBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-
-local TOGGLE = true
-Open.MouseButton1Click:Connect(function()
-    TOGGLE = not TOGGLE
-    dE.Visible = TOGGLE
-    Open.Text = TOGGLE and "隐藏" or "显示"
-end)
-
--- 侧边栏
-dI.Name = "Sidebar"
-dI.Parent = dE
-dI.BackgroundColor3 = Theme.Secondary
-dI.BorderSizePixel = 0
-dI.Position = dn(0, 6, 0, 40)
-dI.Size = dn(0, 110, 0, 254)
-
-dJ.CornerRadius = dm(0, 6)
-dJ.Name = "SidebarCorner"
-dJ.Parent = dI
-
--- 标签按钮容器
-dK.Name = "TabButtons"
-dK.Parent = dI
-dK.Active = true
-dK.BackgroundColor3 = dp(255, 255, 255)
-dK.BackgroundTransparency = 1
-dK.BorderSizePixel = 0
-dK.Size = dn(1, 0, 1, 0)
-dK.ScrollBarThickness = 3
-dK.ScrollBarImageColor3 = Theme.ScrollBar
-
-dL.Parent = dK
-dL.HorizontalAlignment = Enum.HorizontalAlignment.Center
-dL.SortOrder = Enum.SortOrder.LayoutOrder
-dL.Padding = dm(0, 6)
-
-dM.Parent = dK
-dM.PaddingTop = dm(0, 6)
-
--- 内容区域
-dN.Name = "TabHolder"
-dN.Parent = dE
-dN.BackgroundColor3 = Theme.Secondary
-dN.BorderSizePixel = 0
-dN.Position = dn(0, 122, 0, 40)
-dN.Size = dn(0, 332, 0, 254)
-
-dO.CornerRadius = dm(0, 6)
-dO.Name = "TabHolderCorner"
-dO.Parent = dN
-
--- 注册侧边栏滚动（缩放自适应）
-RegisterScroll(dK, dL, 12)
-
--- 帮助: 递归设置ZIndex，确保覆盖层在最上层
-local function setZIndexRecursive(gui, z)
-    if gui:IsA("GuiObject") then gui.ZIndex = z end
-    for _, c in ipairs(gui:GetChildren()) do
-        setZIndexRecursive(c, z)
-    end
-end
-
--- 覆盖层1：个人主页
-local ProfilePage = dq("Frame")
-ProfilePage.Name = "ProfilePage"
-ProfilePage.Parent = dE
-ProfilePage.BackgroundColor3 = Theme.Secondary
-ProfilePage.BorderSizePixel = 0
-ProfilePage.Position = dN.Position
-ProfilePage.Size = dN.Size
-ProfilePage.Visible = false
-setZIndexRecursive(ProfilePage, 50)
-
-local ProfilePageCorner = dq("UICorner")
-ProfilePageCorner.CornerRadius = dm(0, 6)
-ProfilePageCorner.Parent = ProfilePage
-
--- 个人主页内容
-local ProfileAvatar = dq("ImageLabel")
-ProfileAvatar.Name = "ProfileAvatar"
-ProfileAvatar.Parent = ProfilePage
-ProfileAvatar.Size = dn(0, 100, 0, 100)
-ProfileAvatar.Position = dn(0, 20, 0.5, -50)
-ProfileAvatar.AnchorPoint = Vector2.new(0, 0.5)
-ProfileAvatar.BackgroundColor3 = Theme.Tertiary
-ProfileAvatar.Image = content
-local AvatarCorner = dq("UICorner")
-AvatarCorner.CornerRadius = dm(0, 8)
-AvatarCorner.Parent = ProfileAvatar
-
-local InfoContainer = dq("Frame")
-InfoContainer.Name = "InfoContainer"
-InfoContainer.Parent = ProfilePage
-InfoContainer.BackgroundTransparency = 1
-InfoContainer.Position = dn(0, 140, 0, 20)
-InfoContainer.Size = dn(1, -160, 1, -40)
-
-local InfoLayout = dq("UIListLayout")
-InfoLayout.Parent = InfoContainer
-InfoLayout.Padding = dm(0, 8)
-InfoLayout.FillDirection = Enum.FillDirection.Vertical
-InfoLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-local function createInfoLabel(parent, labelText, valueText, isAccent)
-    local frame = dq("Frame")
-    frame.Parent = parent
-    frame.BackgroundTransparency = 1
-    frame.Size = dn(1, 0, 0, 16)
-    
-    local label = dq("TextLabel")
-    label.Parent = frame
-    label.BackgroundTransparency = 1
-    label.Size = dn(0.4, 0, 1, 0)
-    label.Font = Enum.Font.SourceSans
-    label.Text = labelText .. ":"
-    label.TextColor3 = Theme.TextDim
-    label.TextSize = 14
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    
-    local value = dq("TextLabel")
-    value.Name = "ValueLabel"
-    value.Parent = frame
-    value.BackgroundTransparency = 1
-    value.Position = dn(0.4, 5, 0, 0)
-    value.Size = dn(0.6, -5, 1, 0)
-    value.Font = Enum.Font.SourceSansBold
-    value.Text = tostring(valueText)
-    value.TextColor3 = isAccent and (library.AccentOverride or Theme.Accent) or Theme.Text
-    value.TextSize = 14
-    value.TextXAlignment = Enum.TextXAlignment.Left
-
-    table.insert(library.modules, {
-        update = function()
-            label.TextColor3 = Theme.TextDim
-            value.TextColor3 = isAccent and (library.AccentOverride or Theme.Accent) or Theme.Text
-        end
-    })
-    
-    return value
-end
-
--- 服务器名称：更稳检测 + 重试
-local function detectServerType()
-    local rs = b.RunService
-    if rs:IsStudio() then
-        return "Studio", nil
-    end
-    local psId = tostring(game.PrivateServerId or "")
-    local ownerId = tonumber(game.PrivateServerOwnerId)
-    if psId ~= "" then
-        if ownerId and ownerId > 0 then
-            return "PrivateWithOwner", ownerId
-        else
-            return "Reserved", nil
-        end
-    else
-        return "Public", nil
-    end
-end
-
-local function getOwnerNameSafe(ownerId)
-    local ok, name = pcall(function()
-        return b.Players:GetNameFromUserIdAsync(ownerId)
-    end)
-    if ok and name and name ~= "" then
-        return name
-    end
-    return tostring(ownerId or "?")
-end
-
--- 个人主页信息
-createInfoLabel(InfoContainer, "用户名", player.Name, false).Parent.Parent.LayoutOrder = 1
-createInfoLabel(InfoContainer, "显示名称", player.DisplayName, false).Parent.Parent.LayoutOrder = 2
-createInfoLabel(InfoContainer, "用户 ID", player.UserId, false).Parent.Parent.LayoutOrder = 3
-createInfoLabel(InfoContainer, "账号年龄", player.AccountAge, false).Parent.Parent.LayoutOrder = 4
-
-local separator = dq("Frame")
-separator.Parent = InfoContainer
-separator.BackgroundColor3 = Theme.Border
-separator.Size = dn(1, 0, 0, 1)
-separator.LayoutOrder = 5
-table.insert(library.modules, { update = function() separator.BackgroundColor3 = Theme.Border end })
-
--- 服务器名称（带重试）
-local serverNameValue = createInfoLabel(InfoContainer, "服务器名称", "检测中…", false)
-serverNameValue.Parent.Parent.LayoutOrder = 6
-
-local function refreshServerName()
-    local kind, ownerId = detectServerType()
-    if kind == "Studio" then
-        serverNameValue.Text = "测试服务器（Studio）"
-    elseif kind == "PrivateWithOwner" and ownerId then
-        serverNameValue.Text = "私人服务器@" .. getOwnerNameSafe(ownerId)
-    elseif kind == "Reserved" then
-        serverNameValue.Text = "保留服务器"
-    else
-        serverNameValue.Text = "公共服务器"
-    end
-end
-
-refreshServerName()
-task.spawn(function()
-    for i = 1, 10 do
-        task.wait(0.5)
-        refreshServerName()
-    end
-end)
-
--- 实时服务器人数
-local playerCountLabel = createInfoLabel(InfoContainer, "服务器人数", "", false)
-playerCountLabel.Parent.Parent.LayoutOrder = 7
-local function updatePlayerCount()
-    local currentPlayers = #b.Players:GetPlayers()
-    local maxPlayers = b.Players.MaxPlayers
-    playerCountLabel.Text = string.format("%d / %d", currentPlayers, maxPlayers)
-end
-updatePlayerCount()
-b.Players.PlayerAdded:Connect(updatePlayerCount)
-b.Players.PlayerRemoving:Connect(updatePlayerCount)
-
-local pingLabel = createInfoLabel(InfoContainer, "延迟", "N/A", true)
-pingLabel.Parent.Parent.LayoutOrder = 8
-local fpsLabel = createInfoLabel(InfoContainer, "帧率", "N/A", true)
-fpsLabel.Parent.Parent.LayoutOrder = 9
-createInfoLabel(InfoContainer, "服务器 ID", game.JobId:sub(1, 18) .. "...", false).Parent.Parent.LayoutOrder = 10
-createInfoLabel(InfoContainer, "地图 ID", game.PlaceId, false).Parent.Parent.LayoutOrder = 11
-
--- Ping 和 FPS 的实时更新
-task.spawn(function()
-    local lastUpdate = 0
-    b.RunService.RenderStepped:Connect(function(dt)
-        if tick() - lastUpdate > 0.5 then
-            lastUpdate = tick()
-            local pingItem = b.Stats.Network.ServerStatsItem["Data Ping"]
-            local ping = pingItem and pingItem:GetValue() or 0
-            pingLabel.Text = math.floor(ping) .. " ms"
-            fpsLabel.Text = tostring(math.floor(1 / dt))
-        end
-    end)
-end)
-
--- 覆盖层2：设置页（增强）
-local SettingsPage = dq("Frame")
-SettingsPage.Name = "SettingsPage"
-SettingsPage.Parent = dE
-SettingsPage.BackgroundColor3 = Theme.Secondary
-SettingsPage.BorderSizePixel = 0
-SettingsPage.Position = dN.Position
-SettingsPage.Size = dN.Size
-SettingsPage.Visible = false
-setZIndexRecursive(SettingsPage, 50)
-
-local SettingsPageCorner = dq("UICorner")
-SettingsPageCorner.CornerRadius = dm(0, 6)
-SettingsPageCorner.Parent = SettingsPage
-
--- 设置页 UI 构建
-local function makeSectionTitle(parent, text, order)
-    local lbl = dq("TextLabel")
-    lbl.Parent = parent
-    lbl.BackgroundTransparency = 1
-    lbl.Size = dn(1, -24, 0, 18)
-    lbl.Position = dn(0, 12, 0, 0)
-    lbl.Font = Enum.Font.SourceSansBold
-    lbl.Text = text
-    lbl.TextColor3 = Theme.Text
-    lbl.TextSize = 14
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.LayoutOrder = order or 0
-    return lbl
-end
-
-local function makeSeparator(parent, order)
-    local sep = dq("Frame")
-    sep.Parent = parent
-    sep.BackgroundColor3 = Theme.Border
-    sep.Size = dn(1, -24, 0, 1)
-    sep.Position = dn(0, 12, 0, 0)
-    sep.LayoutOrder = order or 0
-    table.insert(library.modules, {update = function() sep.BackgroundColor3 = Theme.Border end})
-    return sep
-end
-
--- 滚动容器（设置页）
-local SettingsScroll = dq("ScrollingFrame")
-SettingsScroll.Name = "SettingsScroll"
-SettingsScroll.Parent = SettingsPage
-SettingsScroll.BackgroundTransparency = 1
-SettingsScroll.Position = dn(0, 0, 0, 0)
-SettingsScroll.Size = dn(1, 0, 1, 0)
-SettingsScroll.Active = true -- 确保可滚动
-SettingsScroll.ScrollBarThickness = 3
-SettingsScroll.ScrollBarImageColor3 = Theme.ScrollBar
-local SList = dq("UIListLayout")
-SList.Parent = SettingsScroll
-SList.Padding = dm(0, 10)
-SList.SortOrder = Enum.SortOrder.LayoutOrder
-local SPad = dq("UIPadding")
-SPad.Parent = SettingsScroll
-SPad.PaddingTop = dm(0, 10)
-SPad.PaddingLeft = dm(0, 12)
-SPad.PaddingRight = dm(0, 12)
-SPad.PaddingBottom = dm(0, 10)
-
--- 注册设置页滚动（缩放自适应）
-RegisterScroll(SettingsScroll, SList, 20)
-
--- 标题自定义
-local SetTitleLabel = dq("TextLabel")
-SetTitleLabel.Parent = SettingsScroll
-SetTitleLabel.BackgroundTransparency = 1
-SetTitleLabel.Size = dn(1, -24, 0, 20)
-SetTitleLabel.Font = Enum.Font.SourceSansBold
-SetTitleLabel.Text = "自定义脚本标题（最多6个字）"
-SetTitleLabel.TextColor3 = Theme.Text
-SetTitleLabel.TextSize = 14
-SetTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-SetTitleLabel.LayoutOrder = 1
-
-local TitleRow = dq("Frame")
-TitleRow.Parent = SettingsScroll
-TitleRow.BackgroundTransparency = 1
-TitleRow.Size = dn(1, -24, 0, 28)
-TitleRow.LayoutOrder = 2
-
-local TitleInput = dq("TextBox")
-TitleInput.Parent = TitleRow
-TitleInput.BackgroundColor3 = Theme.Tertiary
-TitleInput.BorderSizePixel = 0
-TitleInput.Position = dn(0, 0, 0, 0)
-TitleInput.Size = dn(1, -120, 1, 0)
-TitleInput.Font = Enum.Font.SourceSans
-TitleInput.PlaceholderText = "输入标题..."
-TitleInput.PlaceholderColor3 = Theme.TextMuted
-TitleInput.Text = library.CustomTitle or ""
-TitleInput.TextColor3 = Theme.Text
-TitleInput.TextSize = 14
-local TitleInputCorner = dq("UICorner")
-TitleInputCorner.CornerRadius = dm(0, 6)
-TitleInputCorner.Parent = TitleInput
-
-local ApplyBtn = dq("TextButton")
-ApplyBtn.Parent = TitleRow
-ApplyBtn.BackgroundColor3 = library.AccentOverride or Theme.Accent
-ApplyBtn.BorderSizePixel = 0
-ApplyBtn.Position = dn(1, -96, 0, 2)
-ApplyBtn.Size = dn(0, 36, 0, 24)
-ApplyBtn.Font = Enum.Font.SourceSansBold
-ApplyBtn.Text = "应用"
-ApplyBtn.TextColor3 = dp(255, 255, 255)
-ApplyBtn.TextSize = 14
-local ApplyBtnCorner = dq("UICorner")
-ApplyBtnCorner.CornerRadius = dm(0, 6)
-ApplyBtnCorner.Parent = ApplyBtn
-
-local ResetBtn = dq("TextButton")
-ResetBtn.Parent = TitleRow
-ResetBtn.BackgroundColor3 = Theme.Danger
-ResetBtn.BorderSizePixel = 0
-ResetBtn.Position = dn(1, -56, 0, 2)
-ResetBtn.Size = dn(0, 44, 0, 24)
-ResetBtn.Font = Enum.Font.SourceSansBold
-ResetBtn.Text = "重置"
-ResetBtn.TextColor3 = dp(255, 255, 255)
-ResetBtn.TextSize = 14
-local ResetBtnCorner = dq("UICorner")
-ResetBtnCorner.CornerRadius = dm(0, 6)
-ResetBtnCorner.Parent = ResetBtn
-
-local TipLabel = dq("TextLabel")
-TipLabel.Parent = SettingsScroll
-TipLabel.BackgroundTransparency = 1
-TipLabel.Size = dn(1, -24, 0, 18)
-TipLabel.Font = Enum.Font.SourceSans
-TipLabel.Text = "提示：超出6个字将自动截断。"
-TipLabel.TextColor3 = Theme.TextDim
-TipLabel.TextSize = 13
-TipLabel.TextXAlignment = Enum.TextXAlignment.Left
-TipLabel.LayoutOrder = 3
-
-local function applyCustomTitle(text)
-    local trimmed = utf8SubMax(text or "", 6)
-    TitleInput.Text = trimmed
-    library.CustomTitle = trimmed ~= "" and trimmed or nil
-    local finalTitle = library.CustomTitle or UI_NAME
-    TitleLabel.Text = finalTitle
-    if library.settings.autoSave then SaveSettings() end
-end
-
-TitleInput:GetPropertyChangedSignal("Text"):Connect(function()
-    local trimmed = utf8SubMax(TitleInput.Text, 6)
-    if TitleInput.Text ~= trimmed then
-        TitleInput.Text = trimmed
-        TitleInput.CursorPosition = #TitleInput.Text + 1
-    end
-end)
-TitleInput.FocusLost:Connect(function(enter)
-    if enter then applyCustomTitle(TitleInput.Text) end
-end)
-ApplyBtn.MouseButton1Click:Connect(function()
-    applyCustomTitle(TitleInput.Text)
-end)
-ResetBtn.MouseButton1Click:Connect(function()
-    TitleInput.Text = ""
-    applyCustomTitle("")
-end)
-
-makeSeparator(SettingsScroll, 4)
-
--- 外观设置
-makeSectionTitle(SettingsScroll, "外观", 5)
-
--- 行构建工具
-local function makeRow(height)
-    local row = dq("Frame")
-    row.Parent = SettingsScroll
-    row.BackgroundTransparency = 1
-    row.Size = dn(1, -24, 0, height or 32)
-    row.LayoutOrder = (SList.AbsoluteContentSize.Y or 0) + 1
-    return row
-end
-
--- 通用文字
-local function makeLeftLabel(parent, text)
-    local lbl = dq("TextLabel")
-    lbl.Parent = parent
-    lbl.BackgroundTransparency = 1
-    lbl.Position = dn(0, 0, 0, 0)
-    lbl.Size = dn(0.55, 0, 1, 0)
-    lbl.Font = Enum.Font.SourceSans
-    lbl.Text = text
-    lbl.TextColor3 = Theme.Text
-    lbl.TextSize = 14
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    table.insert(library.modules, {update = function() lbl.TextColor3 = Theme.Text end})
-    return lbl
-end
-
--- 简易下拉（用于设置页的主题、强调色）- 修复：撑开行高 + 提高ZIndex + 缩放滚动自适应
-local function makeDropdown(parentRow, defaultText, options, onSelect)
-    local row = parentRow
-    local baseHeight = row.Size.Y.Offset > 0 and row.Size.Y.Offset or 32
-
-    local Holder = Instance.new("Frame")
-    Holder.Name = "DropdownHolder"
-    Holder.Parent = row
-    Holder.BackgroundTransparency = 1
-    Holder.Position = UDim2.new(0.56, 0, 0, 4)
-    Holder.Size = UDim2.new(0.44, 0, 0, 24)
-    Holder.ZIndex = 60
-    Holder.ClipsDescendants = false
-
-    local Btn = Instance.new("TextButton")
-    Btn.Parent = Holder
-    Btn.BackgroundColor3 = Theme.Tertiary
-    Btn.BorderSizePixel = 0
-    Btn.Size = UDim2.new(1, 0, 0, 24)
-    Btn.Font = Enum.Font.SourceSans
-    Btn.Text = defaultText
-    Btn.TextColor3 = Theme.Text
-    Btn.TextSize = 14
-    Btn.ZIndex = 61
-    local BtnCorner = Instance.new("UICorner")
-    BtnCorner.CornerRadius = UDim.new(0, 6)
-    BtnCorner.Parent = Btn
-
-    local List = Instance.new("ScrollingFrame")
-    List.Parent = Holder
-    List.BackgroundColor3 = Theme.Secondary
-    List.BorderSizePixel = 0
-    List.Position = UDim2.new(0, 0, 0, 28)
-    List.Size = UDim2.new(1, 0, 0, 0) -- 初始关闭
-    List.Visible = false
-    List.ScrollBarThickness = 2
-    List.ScrollBarImageColor3 = library.AccentOverride or Theme.Accent
-    List.ZIndex = 70
-    List.ClipsDescendants = true
-
-    local LLayout = Instance.new("UIListLayout")
-    LLayout.Parent = List
-    LLayout.Padding = UDim.new(0, 4)
-    local LPad = Instance.new("UIPadding")
-    LPad.Parent = List
-    LPad.PaddingTop = UDim.new(0, 4)
-    LPad.PaddingLeft = UDim.new(0, 6)
-    LPad.PaddingRight = UDim.new(0, 6)
-
-    -- 注册下拉内部滚动（缩放自适应）
-    RegisterScroll(List, LLayout, 8)
-
-    local isOpen = false
-    local function toggle(open)
-        if open == nil then open = not isOpen end
-        isOpen = open
-        local target = isOpen and math.min(#options * 26 + 8, 140) or 0
-
-        List.Visible = isOpen
-        dv:Tween({Size = UDim2.new(1, 0, 0, target)}, List, 0.2)
-        -- 关键：把整行的高度一起拉大，这样滚动区域会更新，不会被盖/滚不到
-        dv:Tween({Size = UDim2.new(1, -24, 0, baseHeight + (isOpen and (target + 4) or 0))}, row, 0.2)
-
-        -- 展开时让这一行的层级更高，避免与同页其它控件互盖
-        row.ZIndex = isOpen and 65 or 50
-    end
-    Btn.MouseButton1Click:Connect(toggle)
-
-    local function addOption(txt)
-        local op = Instance.new("TextButton")
-        op.Parent = List
-        op.BackgroundColor3 = Theme.Secondary
-        op.BorderSizePixel = 0
-        op.Size = UDim2.new(1, -12, 0, 22)
-        op.Font = Enum.Font.SourceSans
-        op.Text = txt
-        op.TextColor3 = Theme.TextDim
-        op.TextSize = 13
-        op.ZIndex = 71
-        local oc = Instance.new("UICorner")
-        oc.CornerRadius = UDim.new(0, 4)
-        oc.Parent = op
-
-        op.MouseEnter:Connect(function() dv:Tween({BackgroundColor3 = Theme.Border}, op, 0.15) end)
-        op.MouseLeave:Connect(function() dv:Tween({BackgroundColor3 = Theme.Secondary}, op, 0.15) end)
-        op.MouseButton1Click:Connect(function()
-            Btn.Text = txt
-            toggle(false)
-            pcall(onSelect, txt)
-        end)
-
-        table.insert(library.modules, {
-            update = function()
-                op.BackgroundColor3 = Theme.Secondary
-                op.TextColor3 = Theme.TextDim
-            end
-        })
-    end
-
-    for _, t in ipairs(options) do addOption(t) end
-    table.insert(library.modules, {
-        update = function()
-            Btn.BackgroundColor3 = Theme.Tertiary
-            Btn.TextColor3 = Theme.Text
-            List.BackgroundColor3 = Theme.Secondary
-            List.ScrollBarImageColor3 = library.AccentOverride or Theme.Accent
-        end
-    })
-    return Btn
-end
-
--- 主题
-do
-    local row = makeRow(32)
-    makeLeftLabel(row, "主题")
-    makeDropdown(row, (library.settings.theme=="Dark" and "深色" or "浅色"), {"深色", "浅色"}, function(sel)
-        local t = (sel == "深色") and "Dark" or "Light"
-        library:SetTheme(t)
-        ThemeToggle.Text = (t == "Dark") and "☀" or "🌙"
-    end)
-end
-
--- 强调色
-do
-    local row = makeRow(32)
-    makeLeftLabel(row, "强调色")
-    local names = {"蓝色","紫色","绿色","红色","橙色","青色","粉色"}
-    makeDropdown(row, library.settings.accentName or "蓝色", names, function(sel)
-        library.settings.accentName = sel
-        library.AccentOverride = AccentPresets[sel] or AccentPresets["蓝色"]
-        if library.updateTheme then library.updateTheme() end
-        if library.settings.autoSave then SaveSettings() end
-    end)
-end
-
--- 动画开关
-local function makeToggle(parent, text, init, onChange)
-    local holder = dq("TextButton")
-    holder.Parent = parent
-    holder.BackgroundColor3 = Theme.Tertiary
-    holder.AutoButtonColor = false
-    holder.BorderSizePixel = 0
-    holder.Size = dn(1, -24, 0, 32)
-    local corner = dq("UICorner")
-    corner.CornerRadius = dm(0, 6)
-    corner.Parent = holder
-
-    local lbl = dq("TextLabel")
-    lbl.Parent = holder
-    lbl.BackgroundTransparency = 1
-    lbl.Position = dn(0, 8, 0, 0)
-    lbl.Size = dn(0.7, 0, 1, 0)
-    lbl.Font = Enum.Font.SourceSansSemibold
-    lbl.Text = text
-    lbl.TextColor3 = Theme.Text
-    lbl.TextSize = 14
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-
-    local bg = dq("Frame")
-    bg.Parent = holder
-    bg.BackgroundColor3 = init and Theme.ToggleOn or Theme.ToggleOff
-    bg.Position = dn(1, -45, 0.5, -9)
-    bg.Size = dn(0, 38, 0, 18)
-    local bgc = dq("UICorner")
-    bgc.CornerRadius = dm(0, 9)
-    bgc.Parent = bg
-
-    local dot = dq("Frame")
-    dot.Parent = bg
-    dot.BackgroundColor3 = dp(255, 255, 255)
-    dot.Position = init and dn(1, -18, 0.5, -7) or dn(0, 3, 0.5, -7)
-    dot.Size = dn(0, 14, 0, 14)
-    local dc = dq("UICorner")
-    dc.CornerRadius = dm(0, 7)
-    dc.Parent = dot
-
-    local state = init and true or false
-    local function setState(s)
-        state = s
-        dv:Tween({Position = s and dn(1, -18, 0.5, -7) or dn(0, 3, 0.5, -7)}, dot, 0.15)
-        dv:Tween({BackgroundColor3 = s and Theme.ToggleOn or Theme.ToggleOff}, bg, 0.15)
-        if onChange then pcall(onChange, state) end
-    end
-    holder.MouseButton1Click:Connect(function() setState(not state) end)
-
-    holder.MouseEnter:Connect(function() dv:Tween({BackgroundColor3 = Theme.Border}, holder, 0.15) end)
-    holder.MouseLeave:Connect(function() dv:Tween({BackgroundColor3 = Theme.Tertiary}, holder, 0.15) end)
-
-    table.insert(library.modules, {
-        update = function()
-            holder.BackgroundColor3 = Theme.Tertiary
-            lbl.TextColor3 = Theme.Text
-            bg.BackgroundColor3 = state and Theme.ToggleOn or Theme.ToggleOff
-        end
-    })
-    return setState
-end
-
-do
-    local row = makeRow(32)
-    makeLeftLabel(row, "关闭动画（更省性能）")
-    local setter = makeToggle(row, "", not library.settings.animations, function(off)
-        library.settings.animations = (not off)
-        if library.settings.autoSave then SaveSettings() end
-    end)
-    setter(not library.settings.animations)
-end
-
--- UI 缩放（滑块）
-local function makeSlider(parent, text, min, max, default, onChange)
-    local slider = dq("Frame")
-    slider.Parent = parent
-    slider.BackgroundColor3 = Theme.Tertiary
-    slider.Size = dn(1, -24, 0, 48)
-    local corner = dq("UICorner")
-    corner.CornerRadius = dm(0, 6)
-    corner.Parent = slider
-
-    local title = dq("TextLabel")
-    title.Parent = slider
-    title.BackgroundTransparency = 1
-    title.Position = dn(0, 8, 0, 5)
-    title.Size = dn(0.6, 0, 0, 16)
-    title.Font = Enum.Font.SourceSansSemibold
-    title.Text = text
-    title.TextColor3 = Theme.Text
-    title.TextSize = 14
-    title.TextXAlignment = Enum.TextXAlignment.Left
-
-    local value = dq("TextBox")
-    value.Parent = slider
-    value.BackgroundColor3 = Theme.Secondary
-    value.Position = dn(1, -55, 0, 5)
-    value.Size = dn(0, 48, 0, 18)
-    value.Font = Enum.Font.SourceSansBold
-    value.Text = tostring(default)
-    value.TextColor3 = Theme.SliderFill
-    value.TextSize = 13
-    value.ClearTextOnFocus = false
-    local vCorner = dq("UICorner")
-    vCorner.CornerRadius = dm(0, 4)
-    vCorner.Parent = value
-
-    local bar = dq("Frame")
-    bar.Parent = slider
-    bar.BackgroundColor3 = Theme.Border
-    bar.Position = dn(0, 8, 0, 28)
-    bar.Size = dn(1, -16, 0, 8)
-    local barc = dq("UICorner")
-    barc.CornerRadius = dm(0, 4)
-    barc.Parent = bar
-
-    local fill = dq("Frame")
-    fill.Parent = bar
-    fill.BackgroundColor3 = library.AccentOverride or Theme.SliderFill
-    fill.Size = dn(0, 0, 1, 0)
-    local fillc = dq("UICorner")
-    fillc.CornerRadius = dm(0, 4)
-    fillc.Parent = fill
-
-    local knob = dq("Frame")
-    knob.Parent = bar
-    knob.BackgroundColor3 = Theme.SliderHandle
-    knob.Size = dn(0, 12, 0, 12)
-    knob.Position = dn(0, -6, 0.5, -6)
-    knob.ZIndex = 2
-    local knbc = dq("UICorner")
-    knbc.CornerRadius = dm(0, 6)
-    knbc.Parent = knob
-
-    local function setVal(val)
-        val = math.clamp(val, min, max)
-        value.Text = tostring(val)
-        local percent = (val - min)/(max-min)
-        fill.Size = dn(percent, 0, 1, 0)
-        knob.Position = dn(percent, -6, 0.5, -6)
-        if onChange then pcall(onChange, val) end
-    end
-    setVal(default)
-
-    local dragging = false
-    local function updateByMouse()
-        local mousePos = ds.X
-        local barPos = bar.AbsolutePosition.X
-        local barSize = bar.AbsoluteSize.X
-        local percent = math.clamp((mousePos - barPos)/barSize, 0, 1)
-        local val = tonumber(string.format("%.2f", min + (max-min)*percent))
-        setVal(val)
-    end
-    bar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            updateByMouse()
-        end
-    end)
-    knob.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            updateByMouse()
-        end
-    end)
-    b.UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-        end
-    end)
-    b.RunService.RenderStepped:Connect(function()
-        if dragging then updateByMouse() end
-    end)
-
-    value.FocusLost:Connect(function(enter)
-        local v = tonumber(value.Text)
-        if v then setVal(v) else value.Text = tostring(default) end
-    end)
-
-    table.insert(library.modules, {
-        update = function()
-            slider.BackgroundColor3 = Theme.Tertiary
-            title.TextColor3 = Theme.Text
-            value.BackgroundColor3 = Theme.Secondary
-            value.TextColor3 = library.AccentOverride or Theme.SliderFill
-            bar.BackgroundColor3 = Theme.Border
-            fill.BackgroundColor3 = library.AccentOverride or Theme.SliderFill
-            knob.BackgroundColor3 = Theme.SliderHandle
-        end
-    })
-    return setVal
-end
-
-do
-    local row = makeRow(48)
-    local setter = makeSlider(row, "UI缩放（0.8~1.3）", 0.8, 1.3, library.settings.uiScale, function(val)
-        UIScaleObj.Scale = val
-        library.settings.uiScale = val
-        if library.settings.autoSave then SaveSettings() end
-    end)
-    setter(library.settings.uiScale or 1.0)
-end
-
-makeSeparator(SettingsScroll)
-
--- 行为设置
-makeSectionTitle(SettingsScroll, "行为", 0)
-
--- 窗口可拖动
-do
-    local row = makeRow(32)
-    makeLeftLabel(row, "窗口可拖动")
-    local setter = makeToggle(row, "", library.settings.draggable, function(v)
-        library.settings.draggable = v
-        dE.Draggable = v
-        if library.settings.autoSave then SaveSettings() end
-    end)
-    setter(library.settings.draggable)
-end
-
--- 重置窗口位置
-do
-    local row = makeRow(30)
-    local btn = dq("TextButton")
-    btn.Parent = row
-    btn.BackgroundColor3 = library.AccentOverride or Theme.Accent
-    btn.BorderSizePixel = 0
-    btn.Size = dn(0, 120, 0, 26)
-    btn.Text = "重置窗口位置"
-    btn.Font = Enum.Font.SourceSansBold
-    btn.TextSize = 14
-    btn.TextColor3 = dp(255,255,255)
-    local c = dq("UICorner"); c.CornerRadius = dm(0,6); c.Parent = btn
-    btn.MouseButton1Click:Connect(function()
-        dE.Position = dn(0.5, 0, 0.5, 0)
-    end)
-    table.insert(library.modules, {update=function() btn.BackgroundColor3 = library.AccentOverride or Theme.Accent end})
-end
-
--- 输入后清空文本框（影响 tabs 的 NewBox）
-do
-    local row = makeRow(32)
-    makeLeftLabel(row, "输入后清空文本框（仅对脚本内文本框生效）")
-    local setter = makeToggle(row, "", library.settings.clearText, function(v)
-        library.settings.clearText = v
-        getgenv().ClearTextBoxText = v
-        if library.settings.autoSave then SaveSettings() end
-    end)
-    setter(library.settings.clearText)
-end
-
-makeSeparator(SettingsScroll)
-
--- 配置
-makeSectionTitle(SettingsScroll, "配置", 0)
-
--- 自动保存
-do
-    local row = makeRow(32)
-    makeLeftLabel(row, "自动保存设置")
-    local setter = makeToggle(row, "", library.settings.autoSave, function(v)
-        library.settings.autoSave = v
-        if v then SaveSettings() end
-    end)
-    setter(library.settings.autoSave)
-end
-
--- 保存/读取
-do
-    local row = makeRow(30)
-    local saveBtn = dq("TextButton")
-    saveBtn.Parent = row
-    saveBtn.BackgroundColor3 = library.AccentOverride or Theme.Accent
-    saveBtn.BorderSizePixel = 0
-    saveBtn.Size = dn(0, 80, 0, 26)
-    saveBtn.Text = "保存"
-    saveBtn.Font = Enum.Font.SourceSansBold
-    saveBtn.TextSize = 14
-    saveBtn.TextColor3 = dp(255,255,255)
-    local c1 = dq("UICorner"); c1.CornerRadius = dm(0,6); c1.Parent = saveBtn
-
-    local loadBtn = dq("TextButton")
-    loadBtn.Parent = row
-    loadBtn.BackgroundColor3 = Theme.Tertiary
-    loadBtn.BorderSizePixel = 0
-    loadBtn.Position = dn(0, 90, 0, 0)
-    loadBtn.Size = dn(0, 80, 0, 26)
-    loadBtn.Text = "读取"
-    loadBtn.Font = Enum.Font.SourceSansBold
-    loadBtn.TextSize = 14
-    loadBtn.TextColor3 = Theme.Text
-    local c2 = dq("UICorner"); c2.CornerRadius = dm(0,6); c2.Parent = loadBtn
-
-    saveBtn.MouseButton1Click:Connect(function()
-        if not hasFileAPI() then
-            library:Notify({Title="提示", Text="当前环境不支持读写文件（保存功能不可用）", Duration=4})
-            return
-        end
-        SaveSettings()
-        library:Notify({Title="已保存", Text="设置已保存到文件", Duration=3})
-    end)
-
-    loadBtn.MouseButton1Click:Connect(function()
-        if not hasFileAPI() then
-            library:Notify({Title="提示", Text="当前环境不支持读写文件（读取功能不可用）", Duration=4})
-            return
-        end
-        LoadSettings()
-        -- 应用载入的设置到UI
-        library:SetTheme(library.settings.theme or CurrentTheme)
-        ThemeToggle.Text = (library.settings.theme == "Dark") and "☀" or "🌙"
-        library.AccentOverride = AccentPresets[library.settings.accentName or "蓝色"] or library.AccentOverride
-        UIScaleObj.Scale = library.settings.uiScale or 1.0
-        dE.Draggable = library.settings.draggable
-        getgenv().ClearTextBoxText = library.settings.clearText
-        TitleInput.Text = library.CustomTitle or ""
-        TitleLabel.Text = library.CustomTitle or UI_NAME
-        if library.updateTheme then library.updateTheme() end
-        library:Notify({Title="已读取", Text="设置已从文件载入", Duration=3})
-    end)
-
-    table.insert(library.modules, {
-        update = function()
-            saveBtn.BackgroundColor3 = library.AccentOverride or Theme.Accent
-            loadBtn.BackgroundColor3 = Theme.Tertiary
-            loadBtn.TextColor3 = Theme.Text
-        end
-    })
-end
-
--- 主题更新函数（支持 AccentOverride）
-local themeElements = {
-    {dE, "BackgroundColor3", "Primary"},
-    {dG, "BackgroundColor3", "Secondary"},
-    {dI, "BackgroundColor3", "Secondary"},
-    {dN, "BackgroundColor3", "Secondary"},
-    {Open, "BackgroundColor3", "MinimizeBtn"},
-    {OpenBorder, "Color", "MinimizeBorder"},
-    {ThemeToggle, "BackgroundColor3", "Tertiary"},
-    {ThemeToggle, "TextColor3", "Text"},
-    {MainBorder, "Color", "MainBorder"},
-    {dK, "ScrollBarImageColor3", "ScrollBar"},
-    {TitleLabel, "TextColor3", "Text"},
-    {SettingsButton, "BackgroundColor3", "Tertiary"},
-    {SettingsButton, "TextColor3", "Text"},
-    {ProfileButton, "BackgroundColor3", "Tertiary"},
-    {ProfilePage, "BackgroundColor3", "Secondary"},
-    {ProfileAvatar, "BackgroundColor3", "Tertiary"},
-    {SettingsPage, "BackgroundColor3", "Secondary"},
-    {TitleInput, "BackgroundColor3", "Tertiary"},
-    {TitleInput, "TextColor3", "Text"},
-    {SetTitleLabel, "TextColor3", "Text"},
-    {TipLabel, "TextColor3", "TextDim"},
-    {ApplyBtn, "BackgroundColor3", "Accent"},
-    {ResetBtn, "BackgroundColor3", "Danger"},
-    {SettingsScroll, "ScrollBarImageColor3", "Accent"},
-}
-
-library.updateTheme = function()
-    Theme = Themes[CurrentTheme]
-    -- 应用 Accent 覆盖
-    if library.AccentOverride then
-        Theme = tclone(Theme)
-        Theme.Accent = library.AccentOverride
-        Theme.SliderFill = library.AccentOverride
-        Theme.ScrollBar = library.AccentOverride
-    end
-
-    for _, element in pairs(themeElements) do
-        local inst, prop, key = element[1], element[2], element[3]
-        if inst and prop and key and inst[prop] ~= nil and Theme[key] then
-            inst[prop] = Theme[key]
-        end
-    end
-
-    ThemeToggle.Text = CurrentTheme == "Dark" and "☀" or "🌙"
-    Open.TextColor3 = CurrentTheme == "Dark" and dp(255, 255, 255) or dp(17, 24, 39)
-    MainBorder.Thickness = CurrentTheme == "Light" and 2 or 1
-    MainBorder.Transparency = CurrentTheme == "Light" and 0 or 0.5
-    OpenBorder.Transparency = CurrentTheme == "Dark" and 0.5 or 0
-
-    ProfileStroke.Color = (library.activeOverlay == "Profile") and (library.AccentOverride or Theme.Accent) or Theme.Secondary
-    SettingsStroke.Color = (library.activeOverlay == "Settings") and (library.AccentOverride or Theme.Accent) or Theme.Secondary
-
-    for _, module in pairs(library.modules) do
-        if module.update then
-            module.update()
-        end
-    end
-end
-
--- 主题切换按钮事件（快捷）
-ThemeToggle.MouseButton1Click:Connect(function()
-    library:SetTheme(CurrentTheme == "Dark" and "Light" or "Dark")
-end)
-
--- 个人主页按钮
-ProfileButton.MouseButton1Click:Connect(function()
-    dv:ShowOverlay("Profile")
-end)
-
--- 设置按钮
-SettingsButton.MouseButton1Click:Connect(function()
-    dv:ShowOverlay("Settings")
-end)
-
--- 通知系统
-local function createBaseNotifications()
-    local pg = b.Players.LocalPlayer.PlayerGui
-    if pg:FindFirstChild("NotificationHolder") then
-        return pg.NotificationHolder
-    end
-
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "NotificationHolder"
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    
-    local ToggleNotif = Instance.new("Frame")
-    ToggleNotif.Name = "ToggleNotif"
-    ToggleNotif.ZIndex = 5
-    ToggleNotif.AnchorPoint = Vector2.new(1, 1)
-    ToggleNotif.Visible = false
-    ToggleNotif.Size = UDim2.new(0, 300, 0, 70)
-    ToggleNotif.Position = UDim2.new(1, 0, 1, 0)
-    ToggleNotif.BackgroundColor3 = Theme.Primary
-    ToggleNotif.Parent = ScreenGui
-    
-    local UiCorner = Instance.new("UICorner")
-    UiCorner.CornerRadius = dm(0, 8)
-    UiCorner.Parent = ToggleNotif
-    
-    local NotifBorder = Instance.new("UIStroke")
-    NotifBorder.Parent = ToggleNotif
-    NotifBorder.Color = Theme.Border
-    NotifBorder.Thickness = 1
-    NotifBorder.Transparency = 0.5
-    
-    local Title = Instance.new("TextLabel")
-    Title.Name = "Title"
-    Title.Size = UDim2.new(0.7, 0, 0, 25)
-    Title.BackgroundTransparency = 1
-    Title.Position = UDim2.new(0, 10, 0, 5)
-    Title.TextColor3 = Theme.Text
-    Title.Font = Enum.Font.SourceSansBold
-    Title.TextSize = 14
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-    Title.Parent = ToggleNotif
-    
-    local Paragraph = Instance.new("TextLabel")
-    Paragraph.Name = "Paragraph"
-    Paragraph.Size = UDim2.new(0.7, -10, 0, 40)
-    Paragraph.BackgroundTransparency = 1
-    Paragraph.Position = UDim2.new(0, 10, 0, 25)
-    Paragraph.TextColor3 = Theme.TextDim
-    Paragraph.Font = Enum.Font.SourceSans
-    Paragraph.TextSize = 13
-    Paragraph.TextXAlignment = Enum.TextXAlignment.Left
-    Paragraph.TextYAlignment = Enum.TextYAlignment.Top
-    Paragraph.TextWrapped = true
-    Paragraph.Parent = ToggleNotif
-    
-    local True = Instance.new("TextButton")
-    True.Name = "True"
-    True.Size = UDim2.new(0, 70, 0, 28)
-    True.Position = UDim2.new(0.76, 0, 0, 8)
-    True.BackgroundColor3 = Theme.Success
-    True.TextColor3 = dp(255, 255, 255)
-    True.Font = Enum.Font.SourceSansBold
-    True.TextSize = 13
-    True.Text = "Yes"
-    True.Parent = ToggleNotif
-    
-    local TrueCorner = Instance.new("UICorner")
-    TrueCorner.CornerRadius = dm(0, 6)
-    TrueCorner.Parent = True
-    
-    local False = Instance.new("TextButton")
-    False.Name = "False"
-    False.Size = UDim2.new(0, 70, 0, 28)
-    False.Position = UDim2.new(0.76, 0, 0, 38)
-    False.BackgroundColor3 = Theme.Danger
-    False.TextColor3 = dp(255, 255, 255)
-    False.Font = Enum.Font.SourceSansBold
-    False.TextSize = 13
-    False.Text = "No"
-    False.Parent = ToggleNotif
-    
-    local FalseCorner = Instance.new("UICorner")
-    FalseCorner.CornerRadius = dm(0, 6)
-    FalseCorner.Parent = False
-    
-    local DefaultNotif = Instance.new("Frame")
-    DefaultNotif.Name = "DefaultNotif"
-    DefaultNotif.ZIndex = 5
-    DefaultNotif.AnchorPoint = Vector2.new(1, 1)
-    DefaultNotif.Visible = false
-    DefaultNotif.Size = UDim2.new(0, 300, 0, 60)
-    DefaultNotif.Position = UDim2.new(1, 0, 1, 0)
-    DefaultNotif.BackgroundColor3 = Theme.Primary
-    DefaultNotif.Parent = ScreenGui
-    
-    local UiCorner1 = Instance.new("UICorner")
-    UiCorner1.CornerRadius = dm(0, 8)
-    UiCorner1.Parent = DefaultNotif
-    
-    local NotifBorder1 = Instance.new("UIStroke")
-    NotifBorder1.Parent = DefaultNotif
-    NotifBorder1.Color = Theme.Border
-    NotifBorder1.Thickness = 1
-    NotifBorder1.Transparency = 0.5
-    
-    local Title1 = Instance.new("TextLabel")
-    Title1.Name = "Title"
-    Title1.Size = UDim2.new(1, -20, 0, 25)
-    Title1.BackgroundTransparency = 1
-    Title1.Position = UDim2.new(0, 10, 0, 5)
-    Title1.TextColor3 = Theme.Text
-    Title1.Font = Enum.Font.SourceSansBold
-    Title1.TextSize = 14
-    Title1.TextXAlignment = Enum.TextXAlignment.Left
-    Title1.Parent = DefaultNotif
-    
-    local Paragraph1 = Instance.new("TextLabel")
-    Paragraph1.Name = "Paragraph"
-    Paragraph1.Size = UDim2.new(1, -20, 0, 30)
-    Paragraph1.BackgroundTransparency = 1
-    Paragraph1.Position = UDim2.new(0, 10, 0, 25)
-    Paragraph1.TextColor3 = Theme.TextDim
-    Paragraph1.Font = Enum.Font.SourceSans
-    Paragraph1.TextSize = 13
-    Paragraph1.TextXAlignment = Enum.TextXAlignment.Left
-    Paragraph1.TextYAlignment = Enum.TextYAlignment.Top
-    Paragraph1.TextWrapped = true
-    Paragraph1.Parent = DefaultNotif
-    
-    if syn and syn.protect_gui then syn.protect_gui(ScreenGui) end
-    ScreenGui.Parent = b.Players.LocalPlayer.PlayerGui
-    return ScreenGui
-end
-
-notificationHolder = createBaseNotifications()
-notifAmount = 0
-removedPos = nil
-
-function library:SelectNotify(args)
-    args = args or {}
-    args.TweenSpeed = args.TweenSpeed or 0.3
-    args.Title = args.Title or "Title"
-    args.Text = args.Text or "Text"
-    args.TrueText = args.TrueText or "Yes"
-    args.FalseText = args.FalseText or "No"
-    args.Duration = args.Duration or 5
-    args.Callback = args.Callback or function() end
-    
-    notifAmount = notifAmount + 1
-    local track = notifAmount
-    local notifNum = notifAmount
-    local doesExist = true
-    local notif = notificationHolder.ToggleNotif:Clone()
-    local removed = false
-    
-    notif.Parent = notificationHolder
-    notif.Visible = true
-    notif.Position = UDim2.new(1.2, 0, 1, -5)
-    notif.BackgroundColor3 = Theme.Primary
-    
-    if notif:FindFirstChild("UIStroke") then
-        notif.UIStroke.Color = Theme.Border
-    end
-    
-    notif.Title.TextColor3 = Theme.Text
-    notif.Paragraph.TextColor3 = Theme.TextDim
-    notif.True.BackgroundColor3 = Theme.Success
-    notif.False.BackgroundColor3 = Theme.Danger
-    notif.True.Text = args.TrueText
-    notif.False.Text = args.FalseText
-    notif.Paragraph.Text = args.Text
-    notif.Title.Text = args.Title
-    
-    task.spawn(function()
-        task.wait(args.Duration)
-        doesExist = false
-    end)
-    
-    notif.True.MouseButton1Click:Connect(function()
-        doesExist = false
-        removed = true
-        notifAmount = notifAmount - 1
-        removedPos = notif.Position.Y.Offset
-        pcall(args.Callback, true)
-    end)
-    
-    notif.False.MouseButton1Click:Connect(function()
-        doesExist = false
-        removed = true
-        notifAmount = notifAmount - 1
-        removedPos = notif.Position.Y.Offset
-        pcall(args.Callback, false)
-    end)
-    
-    dv:Tween({Position = UDim2.new(1, -5, 1, -5 - (75 * (notifNum - 1)))}, notif, args.TweenSpeed)
-    
-    task.spawn(function()
-        while doesExist and task.wait() do
-            if notifAmount > track then
-                dv:Tween({Position = UDim2.new(1, -5, 1, -5 - (75 * (notifAmount - notifNum)))}, notif, 0.2)
-                track = track + 1
-            elseif notifAmount < track then
-                if removedPos and removedPos > notif.Position.Y.Offset then
-                    dv:Tween({Position = UDim2.new(1, -5, 1, -5 - (75 * (notifAmount - notifNum)))}, notif, 0.2)
-                else
-                    notifNum = notifNum - 1
-                end
-                track = track - 1
-            end
-        end
-        
-        if not removed then
-            notifAmount = notifAmount - 1
-        end
-        
-        dv:Tween({Position = UDim2.new(1.2, 0, 1, notif.Position.Y.Offset)}, notif, args.TweenSpeed)
-        task.wait(args.TweenSpeed)
-        notif:Destroy()
-    end)
-end
-
-function library:Notify(args)
-    args = args or {}
-    args.TweenSpeed = args.TweenSpeed or 0.3
-    args.Title = args.Title or "Title"
-    args.Text = args.Text or "Text"
-    args.Duration = args.Duration or 5
-    
-    notifAmount = notifAmount + 1
-    local track = notifAmount
-    local notifNum = notifAmount
-    local removed = false
-    local doesExist = true
-    local notif = notificationHolder.DefaultNotif:Clone()
-    
-    notif.Parent = notificationHolder
-    notif.Visible = true
-    notif.Position = UDim2.new(1.2, 0, 1, -5)
-    notif.BackgroundColor3 = Theme.Primary
-    
-    if notif:FindFirstChild("UIStroke") then
-        notif.UIStroke.Color = Theme.Border
-    end
-    
-    notif.Title.TextColor3 = Theme.Text
-    notif.Paragraph.TextColor3 = Theme.TextDim
-    notif.Paragraph.Text = args.Text
-    notif.Title.Text = args.Title
-    
-    notif.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            doesExist = false
-            removed = true
-            notifAmount = notifAmount - 1
-            removedPos = notif.Position.Y.Offset
-        end
-    end)
-    
-    task.spawn(function()
-        task.wait(args.Duration)
-        doesExist = false
-    end)
-    
-    dv:Tween({Position = UDim2.new(1, -5, 1, -5 - (65 * (notifNum - 1)))}, notif, args.TweenSpeed)
-    
-    task.spawn(function()
-        while doesExist and task.wait() do
-            if notifAmount > track then
-                dv:Tween({Position = UDim2.new(1, -5, 1, -5 - (65 * (notifAmount - notifNum)))}, notif, 0.2)
-                track = track + 1
-            elseif notifAmount < track then
-                if removedPos and removedPos > notif.Position.Y.Offset then
-                    dv:Tween({Position = UDim2.new(1, -5, 1, -5 - (65 * (notifAmount - notifNum)))}, notif, 0.2)
-                else
-                    notifNum = notifNum - 1
-                end
-                track = track - 1
-            end
-        end
-        
-        if not removed then
-            notifAmount = notifAmount - 1
-        end
-        
-        dv:Tween({Position = UDim2.new(1.2, 0, 1, notif.Position.Y.Offset)}, notif, args.TweenSpeed)
-        task.wait(args.TweenSpeed)
-        notif:Destroy()
-    end)
-end
-
--- 创建标签页
-function library:CreateTab(tabName)
-    local tabButton = dq("TextButton")
-    local tabCorner = dq("UICorner")
-    local tabGlow = dq("Frame")
-    local glowCorner = dq("UICorner")
-    local tabContent = dq("ScrollingFrame")
-    local contentPadding = dq("UIPadding")
-    local contentLayout = dq("UIListLayout")
-    
-    tabButton.Name = "TabButton"
-    tabButton.Parent = dK
-    tabButton.BackgroundColor3 = Theme.Tertiary
-    tabButton.BorderSizePixel = 0
-    tabButton.Size = dn(0, 98, 0, 30)
-    tabButton.AutoButtonColor = false
-    tabButton.Font = Enum.Font.SourceSansSemibold
-    tabButton.Text = tabName
-    tabButton.TextColor3 = Theme.Text
-    tabButton.TextSize = 14
-    
-    tabCorner.CornerRadius = dm(0, 6)
-    tabCorner.Parent = tabButton
-    
-    tabGlow.Name = "Glow"
-    tabGlow.Parent = tabButton
-    tabGlow.BackgroundColor3 = library.AccentOverride or Theme.SliderFill
-    tabGlow.BorderSizePixel = 0
-    tabGlow.Position = dn(0, 0, 1, -2)
-    tabGlow.Size = dn(1, 0, 0, 2)
-    tabGlow.BackgroundTransparency = 1
-    
-    glowCorner.CornerRadius = dm(0, 6)
-    glowCorner.Parent = tabGlow
-    
-    tabContent.Name = "Tab"
-    tabContent.Parent = dN
-    tabContent.Active = true
-    tabContent.BackgroundColor3 = dp(255, 255, 255)
-    tabContent.BackgroundTransparency = 1
-    tabContent.BorderSizePixel = 0
-    tabContent.Size = dn(1, 0, 1, 0)
-    tabContent.ScrollBarThickness = 3
-    tabContent.ScrollBarImageColor3 = library.AccentOverride or Theme.ScrollBar
-    tabContent.Visible = false
-    
-    if library.currentTab == nil then
-        library.currentTab = {tabContent, tabButton}
-        tabGlow.BackgroundTransparency = 0
-        tabContent.Visible = true
-    end
-    
-    contentPadding.Parent = tabContent
-    contentPadding.PaddingTop = dm(0, 6)
-    contentPadding.PaddingLeft = dm(0, 6)
-    contentPadding.PaddingRight = dm(0, 6)
-    
-    contentLayout.Parent = tabContent
-    contentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    contentLayout.Padding = dm(0, 6)
-
-    -- 注册标签页内容滚动（缩放自适应）
-    RegisterScroll(tabContent, contentLayout, 12)
-    
-    tabButton.MouseButton1Click:Connect(function()
-        dv:SwitchTab({tabContent, tabButton})
-    end)
-    
-    local tabFunctions = {}
-    local tabElements = {
-        {tabButton, "BackgroundColor3", "Tertiary"},
-        {tabButton, "TextColor3", "Text"},
-        {tabGlow, "BackgroundColor3", "SliderFill"},
-        {tabContent, "ScrollBarImageColor3", "ScrollBar"}
-    }
-    
-    table.insert(library.modules, {
-        elements = tabElements,
-        update = function()
-            for _, elem in pairs(tabElements) do
-                if elem[1] and elem[2] and elem[3] then
-                    local inst, prop, key = elem[1], elem[2], elem[3]
-                    if inst and inst[prop] ~= nil and Theme[key] then
-                        inst[prop] = (key == "SliderFill" or key=="ScrollBar") and (library.AccentOverride or Theme[key]) or Theme[key]
-                    end
-                end
-            end
-        end
-    })
-    
-    function tabFunctions:NewSeparator()
-        local sep = dq("Frame")
-        sep.Size = dn(1, -12, 0, 1)
-        sep.BorderSizePixel = 0
-        sep.BackgroundColor3 = Theme.Border
-        sep.Parent = tabContent
-        table.insert(tabElements, {sep, "BackgroundColor3", "Border"})
-    end
-    
-    function tabFunctions:NewButton(text, callback)
-        local callback = callback or dr
-        local button = dq("TextButton")
-        local corner = dq("UICorner")
-        button.Name = "BtnModule"
-        button.Parent = tabContent
-        button.BackgroundColor3 = Theme.Tertiary
-        button.BorderSizePixel = 0
-        button.Size = dn(1, -12, 0, 32)
-        button.AutoButtonColor = false
-        button.Font = Enum.Font.SourceSansSemibold
-        button.Text = "  " .. text
-        button.TextColor3 = Theme.Text
-        button.TextSize = 14
-        button.TextXAlignment = Enum.TextXAlignment.Left
-        corner.CornerRadius = dm(0, 6)
-        corner.Parent = button
-        button.MouseButton1Click:Connect(callback)
-        button.MouseEnter:Connect(function() dv:Tween({BackgroundColor3 = Theme.Border}, button, 0.15) end)
-        button.MouseLeave:Connect(function() dv:Tween({BackgroundColor3 = Theme.Tertiary}, button, 0.15) end)
-        table.insert(tabElements, {button, "BackgroundColor3", "Tertiary"})
-        table.insert(tabElements, {button, "TextColor3", "Text"})
-    end
-    
-    function tabFunctions:NewToggle(text, flag, default, callback)
-        local callback = callback or dr
-        local default = default or false
-        local toggle = dq("TextButton")
-        local corner = dq("UICorner")
-        local toggleBg = dq("Frame")
-        local bgCorner = dq("UICorner")
-        local toggleDot = dq("Frame")
-        local dotCorner = dq("UICorner")
-        
-        library.flags[flag or text] = {
-            State = false,
-            Callback = callback,
-            SetState = function(self, state)
-                state = state ~= nil and state or not library.flags:GetState(flag)
-                library.flags[flag].State = state
-                task.spawn(function() library.flags[flag].Callback(state) end)
-                if state then
-                    dv:Tween({Position = dn(1, -18, 0.5, -7)}, toggleDot, 0.15)
-                    dv:Tween({BackgroundColor3 = Theme.ToggleOn}, toggleBg, 0.15)
-                else
-                    dv:Tween({Position = dn(0, 3, 0.5, -7)}, toggleDot, 0.15)
-                    dv:Tween({BackgroundColor3 = Theme.ToggleOff}, toggleBg, 0.15)
-                end
-            end
+        -- 将 _CONFIGS 暴露给 UI
+        getgenv()._CONFIGS = _CONFIGS
+
+        -- 远程 UI 加载（多候选URL，任一成功即可）
+        local UI_URLS = {
+            -- 正确 raw 分支路径
+            "https://raw.githubusercontent.com/rbx520/Roblox/main/%E6%94%B9%E8%BF%9B/ModernUI.lua",
+            "https://raw.githubusercontent.com/rbx520/Roblox/main/%E6%94%B9%E8%BF%9B.lua",
+
+            -- 国内镜像
+            "https://fastly.jsdelivr.net/gh/rbx520/Roblox@main/%E6%94%B9%E8%BF%9B/ModernUI.lua",
+            "https://ghp.ci/https://raw.githubusercontent.com/rbx520/Roblox/main/%E6%94%B9%E8%BF%9B/ModernUI.lua",
+            "https://github.moeyy.xyz/https://raw.githubusercontent.com/rbx520/Roblox/main/%E6%94%B9%E8%BF%9B/ModernUI.lua",
+
+            -- 原作者的 refs/heads 旧写法保留为兜底（大多 404）
+            "https://raw.githubusercontent.com/rbx520/Roblox/refs/heads/main/%E6%94%B9%E8%BF%9B/ModernUI.lua",
+            "https://raw.githubusercontent.com/rbx520/Roblox/refs/heads/main/%E6%94%B9%E8%BF%9B.lua",
+            "https://raw.githubusercontent.com/rbx520/Roblox/refs/heads/main/%E6%94%B9%E8%BF%9B/ModernUI.txt",
         }
-        
-        toggle.Name = "ToggleModule"
-        toggle.Parent = tabContent
-        toggle.BackgroundColor3 = Theme.Tertiary
-        toggle.BorderSizePixel = 0
-        toggle.Size = dn(1, -12, 0, 32)
-        toggle.AutoButtonColor = false
-        toggle.Font = Enum.Font.SourceSansSemibold
-        toggle.Text = "  " .. text
-        toggle.TextColor3 = Theme.Text
-        toggle.TextSize = 14
-        toggle.TextXAlignment = Enum.TextXAlignment.Left
-        
-        corner.CornerRadius = dm(0, 6)
-        corner.Parent = toggle
-        
-        toggleBg.Parent = toggle
-        toggleBg.BackgroundColor3 = Theme.ToggleOff
-        toggleBg.Position = dn(1, -45, 0.5, -9)
-        toggleBg.Size = dn(0, 38, 0, 18)
-        
-        bgCorner.CornerRadius = dm(0, 9)
-        bgCorner.Parent = toggleBg
-        
-        toggleDot.Parent = toggleBg
-        toggleDot.BackgroundColor3 = dp(255, 255, 255)
-        toggleDot.Position = dn(0, 3, 0.5, -7)
-        toggleDot.Size = dn(0, 14, 0, 14)
-        
-        dotCorner.CornerRadius = dm(0, 7)
-        dotCorner.Parent = toggleDot
-        
-        toggle.MouseButton1Click:Connect(function()
-            library.flags[flag or text]:SetState()
-        end)
-        
-        if default then
-            library.flags[flag or text]:SetState(default)
-        end
-        
-        table.insert(tabElements, {toggle, "BackgroundColor3", "Tertiary"})
-        table.insert(tabElements, {toggle, "TextColor3", "Text"})
-        table.insert(tabElements, {toggleBg, "BackgroundColor3", library.flags[flag].State and "ToggleOn" or "ToggleOff"})
-    end
-    
-    function tabFunctions:NewBind(text, default, callback)
-        local callback = callback or dr
-        local blacklist = {Return=true,Space=true,Tab=true,Backquote=true,CapsLock=true,Escape=true,Unknown=true}
-        local shortNames = {RightControl="RCtrl",LeftControl="LCtrl",LeftShift="LShift",RightShift="RShift",RightAlt="RAlt",LeftAlt="LAlt",MouseButton1="M1",MouseButton2="M2",MouseButton3="M3"}
-        local currentKey = default and Enum.KeyCode[default] or nil
-        local keyText = currentKey and (shortNames[currentKey.Name] or currentKey.Name) or "None"
-        
-        local bind = dq("Frame")
-        local corner = dq("UICorner")
-        local label = dq("TextLabel")
-        local keyButton = dq("TextButton")
-        local keyCorner = dq("UICorner")
-        local bindConnection = nil
-        local listening = false
-        
-        bind.Name = "KeybindModule"
-        bind.Parent = tabContent
-        bind.BackgroundColor3 = Theme.Tertiary
-        bind.Size = dn(1, -12, 0, 32)
-        corner.CornerRadius = dm(0, 6)
-        corner.Parent = bind
-        
-        label.Parent = bind
-        label.BackgroundTransparency = 1
-        label.Position = dn(0, 8, 0, 0)
-        label.Size = dn(0.7, 0, 1, 0)
-        label.Font = Enum.Font.SourceSansSemibold
-        label.Text = text
-        label.TextColor3 = Theme.Text
-        label.TextSize = 14
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        
-        keyButton.Parent = bind
-        keyButton.BackgroundColor3 = Theme.Secondary
-        keyButton.BorderSizePixel = 0
-        keyButton.Position = dn(1, -75, 0.5, -10)
-        keyButton.Size = dn(0, 68, 0, 20)
-        keyButton.AutoButtonColor = false
-        keyButton.Font = Enum.Font.SourceSansBold
-        keyButton.Text = keyText
-        keyButton.TextColor3 = Theme.TextDim
-        keyButton.TextSize = 13
-        keyCorner.CornerRadius = dm(0, 4)
-        keyCorner.Parent = keyButton
-        
-        local function setupKeyListener()
-            if bindConnection then bindConnection:Disconnect() end
-            bindConnection = b.UserInputService.InputBegan:Connect(function(input, processed)
-                if processed then return end
-                if not currentKey then return end
-                if input.KeyCode == currentKey then pcall(callback, currentKey.Name) end
-            end)
-        end
-        if currentKey then setupKeyListener() end
-        
-        keyButton.MouseButton1Click:Connect(function()
-            if listening then return end
-            listening = true
-            keyButton.Text = "..."
-            keyButton.TextColor3 = library.AccentOverride or Theme.Accent
-            if bindConnection then bindConnection:Disconnect() end
-            local tempConnection
-            tempConnection = b.UserInputService.InputBegan:Connect(function(input, processed)
-                if processed and input.KeyCode ~= Enum.KeyCode.Escape then return end
-                local newKeyText = "None"
-                if input.UserInputType == Enum.UserInputType.Keyboard then
-                    local keyName = input.KeyCode.Name
-                    if keyName == "Escape" then
-                        currentKey = nil
-                        newKeyText = "None"
-                    elseif not blacklist[keyName] then
-                        currentKey = input.KeyCode
-                        newKeyText = shortNames[keyName] or keyName
-                    else
-                        newKeyText = keyText
-                    end
-                elseif input.UserInputType == Enum.UserInputType.MouseButton1 then currentKey = Enum.KeyCode.MouseButton1; newKeyText="M1"
-                elseif input.UserInputType == Enum.UserInputType.MouseButton2 then currentKey = Enum.KeyCode.MouseButton2; newKeyText="M2"
-                elseif input.UserInputType == Enum.UserInputType.MouseButton3 then currentKey = Enum.KeyCode.MouseButton3; newKeyText="M3"
-                end
-                keyText = newKeyText
-                keyButton.Text = newKeyText
-                keyButton.TextColor3 = Theme.TextDim
-                if currentKey then setupKeyListener() end
-                listening = false
-                tempConnection:Disconnect()
-            end)
-            task.spawn(function()
-                task.wait(5)
-                if listening then
-                    listening = false
-                    keyButton.Text = keyText
-                    keyButton.TextColor3 = Theme.TextDim
-                    if tempConnection then tempConnection:Disconnect() end
-                    if currentKey then setupKeyListener() end
-                end
-            end)
-        end)
-        
-        bind.MouseEnter:Connect(function() dv:Tween({BackgroundColor3 = Theme.Border}, bind, 0.15) end)
-        bind.MouseLeave:Connect(function() dv:Tween({BackgroundColor3 = Theme.Tertiary}, bind, 0.15) end)
-        
-        table.insert(tabElements, {bind, "BackgroundColor3", "Tertiary"})
-        table.insert(tabElements, {label, "TextColor3", "Text"})
-        table.insert(tabElements, {keyButton, "BackgroundColor3", "Secondary"})
-        table.insert(tabElements, {keyButton, "TextColor3", "TextDim"})
-    end
-    
-    function tabFunctions:NewSlider(text, flag, default, min, max, float, callback)
-        local default = default or min
-        local callback = callback or dr
-        local slider = dq("Frame")
-        local corner = dq("UICorner")
-        local title = dq("TextLabel")
-        local value = dq("TextBox")
-        local valueCorner = dq("UICorner")
-        local sliderBar = dq("Frame")
-        local barCorner = dq("UICorner")
-        local sliderFill = dq("Frame")
-        local fillCorner = dq("UICorner")
-        local sliderButton = dq("Frame")
-        local buttonCorner = dq("UICorner")
-        
-        library.flags[flag] = {
-            State = default,
-            SetValue = function(self, val)
-                local percent
-                if val then
-                    val = math.clamp(val, min, max)
-                    percent = (val - min) / (max - min)
-                else
-                    local mousePos = ds.X
-                    local barPos = sliderBar.AbsolutePosition.X
-                    local barSize = sliderBar.AbsoluteSize.X
-                    percent = math.clamp((mousePos - barPos) / barSize, 0, 1)
-                    if float then
-                        val = tonumber(string.format("%.1f", min + (max - min) * percent))
-                    else
-                        val = math.floor(min + (max - min) * percent)
-                    end
-                end
-                library.flags[flag].State = tonumber(val)
-                value.Text = tostring(val)
-                sliderFill.Size = dn(percent, 0, 1, 0)
-                sliderButton.Position = dn(percent, -6, 0.5, -6)
-                pcall(callback, tonumber(val))
-            end
-        }
-        
-        slider.Name = "SliderModule"
-        slider.Parent = tabContent
-        slider.BackgroundColor3 = Theme.Tertiary
-        slider.Size = dn(1, -12, 0, 48)
-        corner.CornerRadius = dm(0, 6); corner.Parent = slider
-        
-        title.Parent = slider
-        title.BackgroundTransparency = 1
-        title.Position = dn(0, 8, 0, 5)
-        title.Size = dn(0.6, 0, 0, 16)
-        title.Font = Enum.Font.SourceSansSemibold
-        title.Text = text
-        title.TextColor3 = Theme.Text
-        title.TextSize = 14
-        title.TextXAlignment = Enum.TextXAlignment.Left
-        
-        value.Parent = slider
-        value.BackgroundColor3 = Theme.Secondary
-        value.Position = dn(1, -55, 0, 5)
-        value.Size = dn(0, 48, 0, 18)
-        value.Font = Enum.Font.SourceSansBold
-        value.Text = tostring(default)
-        value.TextColor3 = library.AccentOverride or Theme.SliderFill
-        value.TextSize = 13
-        value.ClearTextOnFocus = false
-        valueCorner.CornerRadius = dm(0, 4)
-        valueCorner.Parent = value
-        
-        sliderBar.Parent = slider
-        sliderBar.BackgroundColor3 = Theme.Border
-        sliderBar.Position = dn(0, 8, 0, 28)
-        sliderBar.Size = dn(1, -16, 0, 8)
-        barCorner.CornerRadius = dm(0, 4); barCorner.Parent = sliderBar
-        
-        sliderFill.Parent = sliderBar
-        sliderFill.BackgroundColor3 = library.AccentOverride or Theme.SliderFill
-        sliderFill.Size = dn(0, 0, 1, 0)
-        fillCorner.CornerRadius = dm(0, 4); fillCorner.Parent = sliderFill
-        
-        sliderButton.Parent = sliderBar
-        sliderButton.BackgroundColor3 = Theme.SliderHandle
-        sliderButton.Size = dn(0, 12, 0, 12)
-        sliderButton.Position = dn(0, -6, 0.5, -6)
-        sliderButton.ZIndex = 2
-        buttonCorner.CornerRadius = dm(0, 6)
-        buttonCorner.Parent = sliderButton
-        
-        library.flags[flag]:SetValue(default)
-        
-        local dragging = false
-        local dragConnection = nil
-        sliderBar.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-                library.flags[flag]:SetValue()
-            end
-        end)
-        sliderButton.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-                if dragConnection then dragConnection:Disconnect() end
-                dragConnection = b.RunService.RenderStepped:Connect(function()
-                    if dragging then library.flags[flag]:SetValue() end
-                end)
-            end
-        end)
-        b.UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = false
-                if dragConnection then dragConnection:Disconnect(); dragConnection = nil end
-            end
-        end)
-        value.FocusLost:Connect(function(enter)
-            local inputVal = tonumber(value.Text)
-            if inputVal then library.flags[flag]:SetValue(inputVal) else value.Text = tostring(library.flags[flag].State) end
-        end)
-        local decrease = dq("TextButton")
-        decrease.Parent = slider
-        decrease.BackgroundTransparency = 1
-        decrease.Position = dn(0.65, 0, 0, 3)
-        decrease.Size = dn(0, 20, 0, 20)
-        decrease.Font = Enum.Font.SourceSansBold
-        decrease.Text = "-"
-        decrease.TextColor3 = Theme.TextDim
-        decrease.TextSize = 18
-        local increase = dq("TextButton")
-        increase.Parent = slider
-        increase.BackgroundTransparency = 1
-        increase.Position = dn(0.75, 0, 0, 3)
-        increase.Size = dn(0, 20, 0, 20)
-        increase.Font = Enum.Font.SourceSansBold
-        increase.Text = "+"
-        increase.TextColor3 = Theme.TextDim
-        increase.TextSize = 18
-        decrease.MouseButton1Click:Connect(function()
-            local current = library.flags[flag].State
-            library.flags[flag]:SetValue(current - (float and 0.1 or 1))
-        end)
-        increase.MouseButton1Click:Connect(function()
-            local current = library.flags[flag].State
-            library.flags[flag]:SetValue(current + (float and 0.1 or 1))
-        end)
-        
-        table.insert(tabElements, {slider, "BackgroundColor3", "Tertiary"})
-        table.insert(tabElements, {title, "TextColor3", "Text"})
-        table.insert(tabElements, {value, "BackgroundColor3", "Secondary"})
-        table.insert(tabElements, {value, "TextColor3", "SliderFill"})
-        table.insert(tabElements, {sliderBar, "BackgroundColor3", "Border"})
-        table.insert(tabElements, {sliderFill, "BackgroundColor3", "SliderFill"})
-        table.insert(tabElements, {sliderButton, "BackgroundColor3", "SliderHandle"})
-        table.insert(tabElements, {decrease, "TextColor3", "TextDim"})
-        table.insert(tabElements, {increase, "TextColor3", "TextDim"})
-    end
-    
-    function tabFunctions:NewDropdown(text, flag, options, callback)
-        local callback = callback or dr
-        library.flags[flag] = { State = options[1] }
-        
-        local dropdown = dq("Frame")
-        local corner = dq("UICorner")
-        local button = dq("TextButton")
-        local arrow = dq("TextLabel")
-        local list = dq("ScrollingFrame")
-        local listLayout = dq("UIListLayout")
-        local listPadding = dq("UIPadding")
-        
-        dropdown.Name = "DropdownModule"
-        dropdown.Parent = tabContent
-        dropdown.BackgroundColor3 = Theme.Tertiary
-        dropdown.Size = dn(1, -12, 0, 32)
-        dropdown.ClipsDescendants = true
-        
-        corner.CornerRadius = dm(0, 6)
-        corner.Parent = dropdown
-        
-        button.Parent = dropdown
-        button.BackgroundTransparency = 1
-        button.Size = dn(1, 0, 0, 32)
-        button.Font = Enum.Font.SourceSansSemibold
-        button.Text = "  " .. text .. " - " .. options[1]
-        button.TextColor3 = Theme.Text
-        button.TextSize = 14
-        button.TextXAlignment = Enum.TextXAlignment.Left
-        
-        arrow.Parent = button
-        arrow.BackgroundTransparency = 1
-        arrow.Position = dn(1, -25, 0, 0)
-        arrow.Size = dn(0, 25, 1, 0)
-        arrow.Font = Enum.Font.SourceSansBold
-        arrow.Text = "v"
-        arrow.TextColor3 = Theme.TextDim
-        arrow.TextSize = 14
-        
-        list.Parent = dropdown
-        list.BackgroundTransparency = 1
-        list.Position = dn(0, 0, 0, 32)
-        list.Size = dn(1, 0, 0, 0)
-        list.ScrollBarThickness = 2
-        list.ScrollBarImageColor3 = library.AccentOverride or Theme.Accent
-        list.Visible = false
-        
-        listLayout.Parent = list
-        listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        listLayout.Padding = dm(0, 4)
-        
-        listPadding.Parent = list
-        listPadding.PaddingTop = dm(0, 4)
-        listPadding.PaddingLeft = dm(0, 6)
-        listPadding.PaddingRight = dm(0, 6)
 
-        -- 注册下拉内部滚动（缩放自适应）
-        RegisterScroll(list, listLayout, 8)
-        
-        local isOpen = false
-        local optionsRef = options
-        
-        local function toggle()
-            isOpen = not isOpen
-            list.Visible = isOpen
-            local targetSize = isOpen and math.min(#optionsRef * 28 + 12, 140) or 0
-            dv:Tween({Size = dn(1, -12, 0, 32 + targetSize)}, dropdown, 0.2)
-            dv:Tween({Rotation = isOpen and 180 or 0}, arrow, 0.2)
-            if isOpen then list.Size = dn(1, 0, 0, targetSize) end
-        end
-        
-        button.MouseButton1Click:Connect(toggle)
-        
-        local function makeOption(option)
-            local optionBtn = dq("TextButton")
-            local optionCorner = dq("UICorner")
-            optionBtn.Parent = list
-            optionBtn.BackgroundColor3 = Theme.Secondary
-            optionBtn.Size = dn(1, -12, 0, 24)
-            optionBtn.Font = Enum.Font.SourceSans
-            optionBtn.Text = option
-            optionBtn.TextColor3 = Theme.TextDim
-            optionBtn.TextSize = 13
-            optionCorner.CornerRadius = dm(0, 4)
-            optionCorner.Parent = optionBtn
-            
-            optionBtn.MouseButton1Click:Connect(function()
-                button.Text = "  " .. text .. " - " .. option
-                library.flags[flag].State = option
-                toggle()
-                callback(option)
-            end)
-            optionBtn.MouseEnter:Connect(function() dv:Tween({BackgroundColor3 = Theme.Border}, optionBtn, 0.15) end)
-            optionBtn.MouseLeave:Connect(function() dv:Tween({BackgroundColor3 = Theme.Secondary}, optionBtn, 0.15) end)
-            
-            table.insert(tabElements, {optionBtn, "BackgroundColor3", "Secondary"})
-            table.insert(tabElements, {optionBtn, "TextColor3", "TextDim"})
-        end
-        
-        library.flags[flag].SetOptions = function(self, newOptions)
-            optionsRef = newOptions
-            for _, child in pairs(list:GetChildren()) do
-                if child:IsA("TextButton") then child:Destroy() end
-            end
-            for _, option in pairs(newOptions) do makeOption(option) end
-            list.CanvasSize = dn(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
-        end
-        
-        library.flags[flag].ClearOptions = function(self)
-            optionsRef = {}
-            for _, child in pairs(list:GetChildren()) do
-                if child:IsA("TextButton") then child:Destroy() end
-            end
-            list.CanvasSize = dn(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
-        end
-        
-        library.flags[flag].AddOption = function(self, option)
-            table.insert(optionsRef, option)
-            makeOption(option)
-            list.CanvasSize = dn(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
-        end
-        
-        library.flags[flag].RemoveOption = function(self, option)
-            for i, v in ipairs(optionsRef) do
-                if v == option then table.remove(optionsRef, i) break end
-            end
-            for _, child in pairs(list:GetChildren()) do
-                if child:IsA("TextButton") and child.Text == option then child:Destroy() break end
-            end
-            list.CanvasSize = dn(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
-        end
-        
-        library.flags[flag]:SetOptions(options)
-        
-        table.insert(tabElements, {dropdown, "BackgroundColor3", "Tertiary"})
-        table.insert(tabElements, {button, "TextColor3", "Text"})
-        table.insert(tabElements, {arrow, "TextColor3", "TextDim"})
-        table.insert(tabElements, {list, "ScrollBarImageColor3", "Accent"})
-    end
-    
-    function tabFunctions:NewBox(text, placeholder, callback)
-        local callback = callback or dr
-        local box = dq("Frame")
-        local corner = dq("UICorner")
-        local label = dq("TextLabel")
-        local textBox = dq("TextBox")
-        local boxCorner = dq("UICorner")
-        
-        box.Name = "BoxModule"
-        box.Parent = tabContent
-        box.BackgroundColor3 = Theme.Tertiary
-        box.Size = dn(1, -12, 0, 32)
-        corner.CornerRadius = dm(0, 6)
-        corner.Parent = box
-        
-        label.Parent = box
-        label.BackgroundTransparency = 1
-        label.Position = dn(0, 8, 0, 0)
-        label.Size = dn(0.5, 0, 1, 0)
-        label.Font = Enum.Font.SourceSansSemibold
-        label.Text = text
-        label.TextColor3 = Theme.Text
-        label.TextSize = 14
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        
-        textBox.Parent = box
-        textBox.BackgroundColor3 = Theme.Secondary
-        textBox.Position = dn(0.5, 0, 0.5, -10)
-        textBox.Size = dn(0.47, 0, 0, 20)
-        textBox.Font = Enum.Font.SourceSans
-        textBox.PlaceholderText = placeholder
-        textBox.PlaceholderColor3 = Theme.TextMuted
-        textBox.Text = ""
-        textBox.TextColor3 = Theme.Text
-        textBox.TextSize = 13
-        textBox.ClearTextOnFocus = false
-        
-        boxCorner.CornerRadius = dm(0, 4)
-        boxCorner.Parent = textBox
-        
-        textBox.FocusLost:Connect(function(enter)
-            if enter then
-                callback(textBox.Text)
-                if getgenv().ClearTextBoxText then
-                    task.wait(0.1)
-                    textBox.Text = ""
+        local function fetch(url)
+            local req =
+                (syn and syn.request)
+                or (http and http.request)
+                or http_request
+                or request
+                or (fluxus and fluxus.request)
+                or (krnl and krnl.request)
+                or (krnl_request)
+
+            if req then
+                local ok, res = pcall(req, { Url = url, Method = "GET", Headers = { ["User-Agent"] = "Roblox/HttpService" } })
+                if ok and res and (res.StatusCode == 200 or res.StatusCode == 201) and type(res.Body) == "string" and #res.Body > 0 then
+                    return res.Body, url
                 end
             end
-        end)
-        
-        table.insert(tabElements, {box, "BackgroundColor3", "Tertiary"})
-        table.insert(tabElements, {label, "TextColor3", "Text"})
-        table.insert(tabElements, {textBox, "BackgroundColor3", "Secondary"})
-        table.insert(tabElements, {textBox, "TextColor3", "Text"})
-        table.insert(tabElements, {textBox, "PlaceholderColor3", "TextMuted"})
-    end
-    
-    return tabFunctions
-end
-
--- 设置UI名称（重定向到 TitleLabel）
-setmetatable(getgenv().library, {
-    __newindex = function(self, i, v)
-        if i == 'Name' then
-            TitleLabel.Text = tostring(v)
-            return true
+            local ok2, body = pcall(game.HttpGet, game, url)
+            if ok2 and type(body) == "string" and #body > 0 then
+                return body, url
+            end
+            return nil, url
         end
-        rawset(self, i, v)
-    end
-})
 
--- 载入配置（若有）
-LoadSettings()
--- 应用载入的主题和外观
-library:SetTheme(library.settings.theme or CurrentTheme)
-UIScaleObj.Scale = library.settings.uiScale or 1.0
-dE.Draggable = library.settings.draggable
-getgenv().ClearTextBoxText = library.settings.clearText
-TitleLabel.Text = library.CustomTitle or UI_NAME
+        local ui_code, picked_url
+        local cacheFile = "ModernUI.lua"
+        if isfile and readfile and isfile(cacheFile) then
+            local ok, content = pcall(readfile, cacheFile)
+            if ok and type(content) == "string" and #content > 0 then
+                ui_code = content
+                picked_url = "local://" .. cacheFile
+            end
+        end
 
--- 首次主题应用
-if library.updateTheme then
-    library.updateTheme()
-end
+        if not ui_code then
+            for _, url in ipairs(UI_URLS) do
+                local code = select(1, fetch(url))
+                if code then
+                    ui_code = code
+                    picked_url = url
+                    if writefile then pcall(writefile, cacheFile, code) end
+                    break
+                end
+                warn("[UI] 下载失败: " .. url)
+            end
+        end
 
-return library
+        if not ui_code then
+            error("UI 下载失败：检查文件是否存在、网络是否能访问 raw/jsdelivr/代理，或将 ModernUI.lua 放到本地同目录。")
+        end
+
+        local library = assert(loadstring(ui_code), "UI 解析失败")()
+        -- 可选：自定义标题（如果需要）
+        -- library.Name = _CONFIGS.UI_NAME
+
 		--<< 游戏功能部分 >>
 		
 		--↓ 以下请勿修改
@@ -2768,7 +358,10 @@ return library
 			HONG.LP.Character.Humanoid.HipHeight = _CONFIGS["悬浮高度"]
 			HONG.WKSPC.Gravity = _CONFIGS["重力"]
 			HONG.LP.CameraMaxZoomDistance = _CONFIGS["相机焦距"]
-			HONG.WKSPC.Camera.FieldOfView = _CONFIGS["广角"]
+			-- 修正为 CurrentCamera
+			if HONG.WKSPC.CurrentCamera then
+				HONG.WKSPC.CurrentCamera.FieldOfView = _CONFIGS["广角"]
+			end
 		end)
 	end)
 	
@@ -3097,7 +690,8 @@ return library
 			speed = 0
 			bg:Destroy()
 			bv:Destroy()
-			HONG.LP.Charactder.Humanoid.PlatformStand = false
+			-- 修复 Character 拼写
+			HONG.LP.Character.Humanoid.PlatformStand = false
 			HONG.LP.Character.Animate.Disabled = false
 			tpwalking = false
 		end
@@ -3544,7 +1138,7 @@ return library
 				return
 		    end
 		    
-			local Item
+			local ltem
 			for i, v in next, HONG.WKSPC.Stores:children() do
 				if v.Name == "ShopItems" and v:FindFirstChild"Box" then
 					for j, k in next, v:children() do
@@ -3567,7 +1161,6 @@ return library
 				newDragModel(ltem, HONG.WKSPC.Stores[name].Counter.CFrame + Vector3.new(0, .6, 0))
 				HONG:Teleport(ltem.Main.CFrame + Vector3.new(0, 1, 5))
 				task.wait(0.2)
-	            --print((ltem.Main.Position - HONG.WKSPC.Stores[name].Counter.Position).Magnitude)
 			until (ltem.Main.Position - HONG.WKSPC.Stores[name].Counter.Position).Magnitude < 5;
 			task.wait(0.4)
 			HONG:Teleport(HONG.WKSPC.Stores[name].Counter.CFrame + Vector3.new(0, 5, 5))
@@ -3881,12 +1474,6 @@ return library
 		if item == "4/4x1 木楔 80$" then
 			BluePrintStore = "Wedge1_Thin"
 		end
-		if item == "4/4木楔 80$" then
-			BluePrintStore = "Wedge1"
-		end
-		if item == "4/4x1 木楔 80$" then
-			BluePrintStore = "Wedge1_Thin"
-		end
 		if item == "3/4木楔 80$" then
 			BluePrintStore = "Wedge2"
 		end
@@ -3896,13 +1483,13 @@ return library
 		if item == "2/4木楔 80$" then
 			BluePrintStore = "Wedge3"
 		end
-		if item == "2/4x1 木楔 80$" then
+		if item == "2/4x1木楔 80$" then
 			BluePrintStore = "Wedge3_Thin"
 		end
 		if item == "1/4木楔 80$" then
 			BluePrintStore = "Wedge4"
 		end
-		if item == "1/4x1 木楔 80$" then
+		if item == "1/4x1木楔 80$" then
 			BluePrintStore = "Wedge4_Thin"
 		end
 		if item == "3/3木楔 80$" then
@@ -3914,31 +1501,31 @@ return library
 		if item == "2/3木楔 80$" then
 			BluePrintStore = "Wedge6"
 		end
-		if item == "2/3x1 木楔 80$" then
+		if item == "2/3x1木楔 80$" then
 			BluePrintStore = "Wedge6_Thin"
 		end
 		if item == "1/3木楔 80$" then
 			BluePrintStore = "Wedge7"
 		end
-		if item == "1/3x1 木楔 80$" then
+		if item == "1/3x1木楔 80$" then
 			BluePrintStore = "Wedge7_Thin"
 		end
 		if item == "2/2木楔 80$" then
 			BluePrintStore = "Wedge8"
 		end
-		if item == "2/2x1 木楔 80$" then
+		if item == "2/2x1木楔 80$" then
 			BluePrintStore = "Wedge8_Thin"
 		end
 		if item == "1/2木楔 80$" then
 			BluePrintStore = "Wedge9"
 		end
-		if item == "1/2x1 木楔 80$" then
+		if item == "1/2x1木楔 80$" then
 			BluePrintStore = "Wedge9_Thin"
 		end
 		if item == "1/1木楔 80$" then
 			BluePrintStore = "Wedge10"
 		end
-		if item == "1/1x1 木楔 80$" then
+		if item == "1/1x1木楔 80$" then
 			BluePrintStore = "Wedge10_Thin"
 		end
 	end)
@@ -4400,9 +1987,7 @@ return library
 		end
 		local bbb = {}
 		for i, v in next, axes do
-		 --   print("iv=", i,v)
 			local damage
-		--	print(tree)
 			if v.ToolName.Value == "EndTimesAxe" and tree == "LoneCave" then
 				damage = 10000000;
 				return v
@@ -4858,11 +2443,6 @@ return library
 			end)
 		end)
 		
-	-- local UserInputService = game:GetService("UserInputService")
-		-- local delta = UserInputService:GetMouseDelta()
-		
-	
-	
 		repeat
 			task.wait()
 		until wood ~= nil and sawmill ~= nil;
@@ -4878,12 +2458,10 @@ return library
 			if v.Name == "WoodSection" then
 				index = index + 1
 				local selection = Instance.new("SelectionBox")
-	                  -->selection.Color3=Color3.new(95,95,95)
 				selection.Parent = v
 				selection.Adornee = selection.Parent
 				if v:WaitForChild("ID") then
 					if v.ID.Value == index then
-	                     --    HONG:Teleport(v.CFrame + Vector3.new(0, 5, 5))
 						HONG.LP.Character:MoveTo(v.CFrame.p)
 						repeat
 							cutTree({
@@ -4892,10 +2470,8 @@ return library
 								Tool = getAxe(v.Parent.TreeClass.Value);
 								Height = v.Size.y;
 							})         
-	                            -- HONG.RS.Heartbeat:wait()
 							task.wait()
 						until v:FindFirstChild("Tree Weld") == nil
-	                        --warn("砍完", index)
 						task.wait()
 						if v:FindFirstChild("SelectionBox") then
 							v:FindFirstChild("SelectionBox"):Destroy()
@@ -5174,8 +2750,6 @@ return library
 	
 	
 	
-	
-	
 	Page4:NewButton("无眼球砍幻影", function(bool)
 		local wood = nil
 		local oldpos = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame;
@@ -5191,7 +2765,6 @@ return library
 				end
 			end
 		end
-		
 		
 		if wood == nil then
 			return HONG:NOTIFY("错误!", "幻影木没有了", 4)
@@ -5476,9 +3049,10 @@ return library
 	HONG.GS("Players").PlayerRemoving:Connect(function(player)  
 	    if getgenv()["玩家们"] ~= nil and #getgenv()["玩家们"] >= 1 then
 	        pcall(table.remove, getgenv()["玩家们"], table.find(player.Name))
-	        
-	        plr:refresh(getgenv()["玩家们"])
-	        library.flags["player_tp1"]:RemoveOption(player.Name)
+	        -- 修正下拉项删除的 flag key
+	        if library.flags and library.flags["player_tp"] and library.flags["player_tp"].RemoveOption then
+	        	pcall(function() library.flags["player_tp"]:RemoveOption(player.Name) end)
+	        end
 	    end
 	    HONG:NOTIFY("玩家离开", ("%s离开了服务器"):format(player.Name), 4);
 	end)
@@ -5488,7 +3062,9 @@ return library
 	        if not table.find(getgenv()["玩家们"], tostring(player.Name)) then
 	            table.insert(getgenv()["玩家们"], player.Name);
 	        end        
-	        library.flags["player_tp"]:AddOption(player.Name)
+	        if library.flags and library.flags["player_tp"] and library.flags["player_tp"].AddOption then
+	        	pcall(function() library.flags["player_tp"]:AddOption(player.Name) end)
+	        end
 	    end
 	    HONG:NOTIFY("玩家加入", ("%s加入了服务器"):format(player.Name), 4);
 	end)
@@ -5770,19 +3346,11 @@ return library
 	Page7:NewSeparator();
 	
 	function cooperAxeDupe()
-	            -- get cooper
 	    local cooper = game.Players.LocalPlayer
-	    
-	    -- can relod functin
 	    local canRelod = function()
-	        -- This script was generated by coopers's RemoteSpy: https://github.com/Upbolt/Hydroxide
-	    
-	    local ohInstance1 = cooper
-	    
-	    return game:GetService("ReplicatedStorage").LoadSaveRequests.ClientMayLoad:InvokeServer(ohInstance1)
+	        local ohInstance1 = cooper
+	        return game:GetService("ReplicatedStorage").LoadSaveRequests.ClientMayLoad:InvokeServer(ohInstance1)
 	    end
-	    
-	    -- dup ax
 	    function dupAx()
 	        if cooper.CurrentSaveSlot.Value == -1 then
 	            return HONG:NOTIFY("错误","请加载存档",4)
@@ -5793,17 +3361,16 @@ return library
 	            repeat
 	                task.wait()
 	            until canRelod()
-	            -- This script was generated by coopers's RemoteSpy: https://github.com/Upbolt/Hydroxide
-	    local ohNumber1 = cooper.CurrentSaveSlot.Value
-	    local ohInstance2 = cooper
+	            local ohNumber1 = cooper.CurrentSaveSlot.Value
+	            local ohInstance2 = cooper
 	    
-	    task.spawn(function()
-	        game:GetService("ReplicatedStorage").LoadSaveRequests.RequestLoad:InvokeServer(ohNumber1, ohInstance2)
-	    end)
-	        task.wait()
-	        cooper.Character.Head:Destroy()
-	        HONG:NOTIFY("复制斧头","复制中...",4)
-	        return true
+	            task.spawn(function()
+	                game:GetService("ReplicatedStorage").LoadSaveRequests.RequestLoad:InvokeServer(ohNumber1, ohInstance2)
+	            end)
+	            task.wait()
+	            cooper.Character.Head:Destroy()
+	            HONG:NOTIFY("复制斧头","复制中...",4)
+	            return true
 	        end
 	    end
 	    dupAx()
@@ -6096,23 +3663,26 @@ return library
 	end
 
 end)("走马观花 X")  --> 脚本名字, 双引号里面的中文可以改
+
+-- 兼容新版UI标题彩虹效果（Main.Header.Title）
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 
--- 获取目标TextLabel
-local screenGui = CoreGui:FindFirstChild("走马观花 X")
-if not screenGui then return end
+-- 通过全局 _CONFIGS 定位 UI 名称
+local uiName = (getgenv()._CONFIGS and getgenv()._CONFIGS.UI_NAME) or "走马观花 X"
+local screenGui = CoreGui:FindFirstChild(uiName)
+if not screenGui or not screenGui:FindFirstChild("Main") then return end
 
-local textLabel = screenGui.Main:FindFirstChild("TextLabel")
+local header = screenGui.Main:FindFirstChild("Header")
+local textLabel = header and header:FindFirstChild("Title")
+if not textLabel then
+    textLabel = screenGui.Main:FindFirstChild("TextLabel") or screenGui.Main:FindFirstChildWhichIsA("TextLabel", true)
+end
 if not textLabel then return end
 
--- 彩虹颜色参数
-local hue = 0
-local saturation = 1
-local value = 1
-local speed = 0.35-- 颜色变化速度（越大越快）
+local hue, saturation, value = 0, 1, 1
+local speed = 0.35 -- 颜色变化速度
 
--- 创建颜色渐变循环
 RunService.Heartbeat:Connect(function(deltaTime)
     hue = (hue + deltaTime * speed) % 1
     textLabel.TextColor3 = Color3.fromHSV(hue, saturation, value)
