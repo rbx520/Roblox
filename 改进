@@ -1,4 +1,4 @@
--- 完整的现代化UI系统（重新修复版本）
+-- 完整的现代化UI系统（修复阴影问题版本 + 标题栏设置 + 覆盖层管理 + 服务器名称修复）
 local a = {
     Plrs = "Players",
     LP = "LocalPlayer", 
@@ -151,26 +151,25 @@ function dv:Tween(props, object, duration, style, direction)
     return tween
 end
 
--- 统一覆盖层隐藏
+-- 统一覆盖层隐藏（修复：UIStroke 使用 Color）
 function dv:HideOverlay()
+    if library.activeOverlay == nil then return end
     local gui = b.CoreGui[_CONFIGS.UI_NAME].Main
     local ProfilePage = gui.ProfilePage
     local SettingsPage = gui.SettingsPage
 
-    -- 隐藏所有覆盖层
     if ProfilePage then ProfilePage.Visible = false end
     if SettingsPage then SettingsPage.Visible = false end
 
-    -- 重置状态
     library.activeOverlay = nil
     library.isHomepageVisible = false
 
-    -- 取消按钮高亮
+    -- 取消按钮高亮（修复属性名）
     if gui.Header:FindFirstChild("ProfileButton") then
-        dv:Tween({BorderColor3 = Theme.Secondary}, gui.Header.ProfileButton.ProfileStroke, 0.15)
+        dv:Tween({Color = Theme.Secondary}, gui.Header.ProfileButton.ProfileStroke, 0.15)
     end
     if gui.Header:FindFirstChild("SettingsButton") then
-        dv:Tween({BorderColor3 = Theme.Secondary}, gui.Header.SettingsButton.SettingsStroke, 0.15)
+        dv:Tween({Color = Theme.Secondary}, gui.Header.SettingsButton.SettingsStroke, 0.15)
     end
 
     -- 恢复当前标签页
@@ -182,7 +181,7 @@ function dv:HideOverlay()
     end
 end
 
--- 显示某个覆盖层（Profile/Settings）
+-- 显示某个覆盖层（Profile/Settings）（修复：UIStroke 使用 Color）
 function dv:ShowOverlay(which)
     local gui = b.CoreGui[_CONFIGS.UI_NAME].Main
     local ProfilePage = gui.ProfilePage
@@ -190,13 +189,16 @@ function dv:ShowOverlay(which)
     local ProfileStroke = gui.Header.ProfileButton.ProfileStroke
     local SettingsStroke = gui.Header.SettingsButton.SettingsStroke
 
-    -- 如果已经在该页则关闭
+    -- 已经在该页则关闭
     if library.activeOverlay == which then
         dv:HideOverlay()
         return
     end
 
-    -- 隐藏当前标签页内容
+    -- 切换前先隐藏
+    dv:HideOverlay()
+
+    -- 隐藏标签页内容
     if library.currentTab then
         library.currentTab[1].Visible = false
         if library.currentTab[2] and library.currentTab[2]:FindFirstChild("Glow") then
@@ -204,41 +206,31 @@ function dv:ShowOverlay(which)
         end
     end
 
-    -- 隐藏所有覆盖层
-    if ProfilePage then ProfilePage.Visible = false end
-    if SettingsPage then SettingsPage.Visible = false end
-    
-    -- 重置所有按钮边框
-    dv:Tween({BorderColor3 = Theme.Secondary}, ProfileStroke, 0.15)
-    dv:Tween({BorderColor3 = Theme.Secondary}, SettingsStroke, 0.15)
-
-    -- 显示对应覆盖层
     if which == "Profile" then
         if ProfilePage then ProfilePage.Visible = true end
         library.activeOverlay = "Profile"
         library.isHomepageVisible = true
-        dv:Tween({BorderColor3 = Theme.Accent}, ProfileStroke, 0.15)
+        dv:Tween({Color = Theme.Accent}, ProfileStroke, 0.15)
+        dv:Tween({Color = Theme.Secondary}, SettingsStroke, 0.15)
     elseif which == "Settings" then
         if SettingsPage then SettingsPage.Visible = true end
         library.activeOverlay = "Settings"
         library.isHomepageVisible = false
-        dv:Tween({BorderColor3 = Theme.Accent}, SettingsStroke, 0.15)
+        dv:Tween({Color = Theme.Secondary}, ProfileStroke, 0.15)
+        dv:Tween({Color = Theme.Accent}, SettingsStroke, 0.15)
     end
 end
 
 -- 切换标签
 function dv:SwitchTab(newTab)
-    -- 如果有覆盖层显示，先隐藏
-    if library.activeOverlay then
-        dv:HideOverlay()
-    end
+    -- 切换标签时，确保覆盖层隐藏
+    dv:HideOverlay()
     
     local oldTab = library.currentTab
     if oldTab == newTab then return end
     
     library.currentTab = newTab
     
-    -- 隐藏旧标签
     if oldTab then
         if oldTab[2] and oldTab[2]:FindFirstChild("Glow") then
             dv:Tween({BackgroundTransparency = 1}, oldTab[2].Glow, 0.15)
@@ -246,7 +238,6 @@ function dv:SwitchTab(newTab)
         oldTab[1].Visible = false
     end
     
-    -- 显示新标签
     if newTab[2] and newTab[2]:FindFirstChild("Glow") then
         dv:Tween({BackgroundTransparency = 0}, newTab[2].Glow, 0.15)
     end
@@ -558,25 +549,21 @@ local function createInfoLabel(parent, labelText, valueText, isAccent)
     return value
 end
 
--- 服务器名称判断（修复版）
+-- 服务器名称修复：公共/私人(VIP)/保留
 local function getServerName()
     local psId = game.PrivateServerId
     local ownerId = game.PrivateServerOwnerId
-    
-    if psId ~= nil and psId ~= "" and psId ~= "0" then
-        if ownerId ~= nil and tonumber(ownerId) and tonumber(ownerId) > 0 then
-            -- VIP/私人服务器
+    if type(psId) == "string" and psId ~= "" then
+        if ownerId and ownerId ~= 0 then
             local ownerName = "未知"
             pcall(function()
                 ownerName = b.Players:GetNameFromUserIdAsync(ownerId)
             end)
             return "私人服务器@" .. ownerName
         else
-            -- 保留服务器
             return "保留服务器"
         end
     end
-    -- 公共服务器
     return "公共服务器"
 end
 
@@ -791,7 +778,7 @@ library.updateTheme = function()
     MainBorder.Transparency = CurrentTheme == "Light" and 0 or 0.5
     OpenBorder.Transparency = CurrentTheme == "Dark" and 0.5 or 0
 
-    -- 覆盖层按钮边框高亮
+    -- 覆盖层按钮边框高亮（已使用 Color）
     ProfileStroke.Color = (library.activeOverlay == "Profile") and Theme.Accent or Theme.Secondary
     SettingsStroke.Color = (library.activeOverlay == "Settings") and Theme.Accent or Theme.Secondary
 
@@ -818,7 +805,7 @@ SettingsButton.MouseButton1Click:Connect(function()
     dv:ShowOverlay("Settings")
 end)
 
--- 通知系统（原样保持不变，省略以节省空间）
+-- 通知系统（原样）
 function createBaseNotifications()
     if b.Players.LocalPlayer.PlayerGui:FindFirstChild("NotificationHolder") then
         return b.Players.LocalPlayer.PlayerGui.NotificationHolder
@@ -1111,7 +1098,7 @@ function library:Notify(args)
     end)
 end
 
--- 创建标签页（后面的代码与原来相同，继续...）
+-- 创建标签页
 function library:CreateTab(tabName)
     local tabButton = dq("TextButton")
     local tabCorner = dq("UICorner")
@@ -1502,9 +1489,6 @@ function library:CreateTab(tabName)
         table.insert(tabElements, {keyButton, "BackgroundColor3", "Secondary"})
         table.insert(tabElements, {keyButton, "TextColor3", "TextDim"})
     end
-    
-    -- 后续的滑块、下拉菜单、文本框等控件代码与原来相同...
-    -- [为节省空间，其余代码省略，保持原样即可]
     
     -- 滑块
     function tabFunctions:NewSlider(text, flag, default, min, max, float, callback)
