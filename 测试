@@ -1,0 +1,437 @@
+-- 仅学习用途，仅供参考👿
+-- UI配置
+_CONFIGS = {
+    UI_NAME = "多功能游戏脚本"
+}
+
+-- UI库
+loadstring(game:HttpGet("https://raw.githubusercontent.com/rbx520/Roblox/refs/heads/main/%E6%94%B9%E8%BF%9B"))()
+
+-- 全局变量
+getgenv().ScriptSettings = {
+    AutoClick = false,
+    AutoFarm = false,
+    Speed = 16,
+    JumpPower = 50,
+    ClickSpeed = 0.1,
+    TargetPlayer = "",
+    Noclip = false,
+    Fly = false,
+    InfiniteJump = false
+}
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+
+-- 主要功能
+local mainTab = library:CreateTab("主要功能")
+
+-- 自动点击
+mainTab:NewToggle("自动点击", "auto_click", false, function(state)
+    getgenv().ScriptSettings.AutoClick = state
+    
+    if state then
+        library:Notify({
+            Title = "功能启用",
+            Text = "自动点击已开启",
+            Duration = 3
+        })
+        
+        spawn(function()
+            while getgenv().ScriptSettings.AutoClick do
+                mouse1click()
+                wait(getgenv().ScriptSettings.ClickSpeed)
+            end
+        end)
+    else
+        library:Notify({
+            Title = "功能关闭",
+            Text = "自动点击已关闭",
+            Duration = 3
+        })
+    end
+end)
+
+-- 点击速度
+mainTab:NewSlider("点击速度", "click_speed", 10, 1, 50, false, function(value)
+    getgenv().ScriptSettings.ClickSpeed = value / 100
+    library:Notify({
+        Title = "设置更新",
+        Text = "点击间隔: " .. getgenv().ScriptSettings.ClickSpeed .. "秒",
+        Duration = 2
+    })
+end)
+
+-- 自动nigger
+mainTab:NewToggle("自动农场", "auto_farm", false, function(state)
+    getgenv().ScriptSettings.AutoFarm = state
+    
+    if state then
+        library:Notify({
+            Title = "功能启用",
+            Text = "自动农场已开启",
+            Duration = 3
+        })
+        
+        spawn(function()
+            while getgenv().ScriptSettings.AutoFarm do
+                -- 这里添加您的农场逻辑
+                -- 例如：寻找最近的敌人、物品等
+                wait(1)
+            end
+        end)
+    end
+end)
+
+-- 重置角色
+mainTab:NewButton("重置角色", function()
+    library:SelectNotify({
+        Title = "确认操作",
+        Text = "确定要重置角色吗？",
+        TrueText = "确定",
+        FalseText = "取消",
+        Duration = 10,
+        Callback = function(choice)
+            if choice then
+                LocalPlayer.Character:BreakJoints()
+                library:Notify({
+                    Title = "操作完成",
+                    Text = "角色已重置",
+                    Duration = 3
+                })
+            end
+        end
+    })
+end)
+
+-- 个人
+local playerTab = library:CreateTab("角色功能")
+
+-- 移动速度
+playerTab:NewSlider("移动速度", "walk_speed", 16, 16, 200, false, function(value)
+    getgenv().ScriptSettings.Speed = value
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = value
+    end
+    
+    library:Notify({
+        Title = "设置更新",
+        Text = "移动速度: " .. value,
+        Duration = 2
+    })
+end)
+
+-- 跳跃力度
+playerTab:NewSlider("跳跃力度", "jump_power", 50, 50, 200, false, function(value)
+    getgenv().ScriptSettings.JumpPower = value
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.JumpPower = value
+    end
+    
+    library:Notify({
+        Title = "设置更新",
+        Text = "跳跃力度: " .. value,
+        Duration = 2
+    })
+end)
+
+-- 无限跳跃
+playerTab:NewToggle("无限跳跃", "infinite_jump", false, function(state)
+    getgenv().ScriptSettings.InfiniteJump = state
+    
+    if state then
+        library:Notify({
+            Title = "功能启用",
+            Text = "无限跳跃已开启，按住空格键",
+            Duration = 3
+        })
+    end
+end)
+
+-- 穿墙
+playerTab:NewToggle("穿墙", "noclip", false, function(state)
+    getgenv().ScriptSettings.Noclip = state
+    
+    if state then
+        library:Notify({
+            Title = "功能启用",
+            Text = "穿墙已开启",
+            Duration = 3
+        })
+        
+        spawn(function()
+            while getgenv().ScriptSettings.Noclip do
+                if LocalPlayer.Character then
+                    for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                        if part:IsA("BasePart") and part.CanCollide then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+                wait()
+            end
+        end)
+    else
+        if LocalPlayer.Character then
+            for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
+    end
+end)
+
+-- 飞行
+playerTab:NewToggle("飞行", "fly", false, function(state)
+    getgenv().ScriptSettings.Fly = state
+    
+    if state then
+        library:Notify({
+            Title = "功能启用",
+            Text = "飞行已开启，使用WASD和空格/左Shift控制",
+            Duration = 3
+        })
+        
+        -- 飞行代码
+        local bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        bodyVelocity.Parent = LocalPlayer.Character.HumanoidRootPart
+        
+        spawn(function()
+            while getgenv().ScriptSettings.Fly and bodyVelocity do
+                local moveVector = Vector3.new(0, 0, 0)
+                
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                    moveVector = moveVector + (workspace.CurrentCamera.CFrame.LookVector)
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                    moveVector = moveVector - (workspace.CurrentCamera.CFrame.LookVector)
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+                    moveVector = moveVector - (workspace.CurrentCamera.CFrame.RightVector)
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+                    moveVector = moveVector + (workspace.CurrentCamera.CFrame.RightVector)
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                    moveVector = moveVector + Vector3.new(0, 1, 0)
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+                    moveVector = moveVector - Vector3.new(0, 1, 0)
+                end
+                
+                bodyVelocity.Velocity = moveVector * 50
+                wait()
+            end
+            
+            if bodyVelocity then
+                bodyVelocity:Destroy()
+            end
+        end)
+    else
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local bodyVel = LocalPlayer.Character.HumanoidRootPart:FindFirstChild("BodyVelocity")
+            if bodyVel then
+                bodyVel:Destroy()
+            end
+        end
+    end
+end)
+
+-- 按键绑定
+local keybindTab = library:CreateTab("按键绑定")
+
+-- 切换UI显示
+keybindTab:NewBind("切换UI", "X", function()
+    -- UI切换逻辑已内置
+end)
+
+-- 快速重置
+keybindTab:NewBind("快速重置", "R", function()
+    LocalPlayer.Character:BreakJoints()
+    library:Notify({
+        Title = "快捷操作",
+        Text = "角色已重置 (按键: R)",
+        Duration = 2
+    })
+end)
+
+-- 切换飞行
+keybindTab:NewBind("切换飞行", "F", function()
+    local currentState = library.flags:GetState("fly")
+    library:UpdateToggle("fly", not currentState)
+end)
+
+-- 切换穿墙
+keybindTab:NewBind("切换穿墙", "N", function()
+    local currentState = library.flags:GetState("noclip")
+    library:UpdateToggle("noclip", not currentState)
+end)
+
+-- 切换自动点击
+keybindTab:NewBind("切换自动点击", "C", function()
+    local currentState = library.flags:GetState("auto_click")
+    library:UpdateToggle("auto_click", not currentState)
+end)
+
+-- 游戏功能
+local gameTab = library:CreateTab("游戏功能")
+
+-- 目标玩家
+gameTab:NewBox("目标玩家", "输入玩家名称", function(playerName)
+    getgenv().ScriptSettings.TargetPlayer = playerName
+    library:Notify({
+        Title = "目标设置",
+        Text = "目标玩家: " .. playerName,
+        Duration = 3
+    })
+end)
+
+-- 传送到玩家
+gameTab:NewButton("传送到目标", function()
+    if getgenv().ScriptSettings.TargetPlayer ~= "" then
+        local targetPlayer = Players:FindFirstChild(getgenv().ScriptSettings.TargetPlayer)
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
+            library:Notify({
+                Title = "传送成功",
+                Text = "已传送到 " .. getgenv().ScriptSettings.TargetPlayer,
+                Duration = 3
+            })
+        else
+            library:Notify({
+                Title = "传送失败",
+                Text = "找不到目标玩家",
+                Duration = 3
+            })
+        end
+    else
+        library:Notify({
+            Title = "错误",
+            Text = "请先设置目标玩家",
+            Duration = 3
+        })
+    end
+end)
+
+-- 观察玩家
+gameTab:NewButton("观察目标", function()
+    if getgenv().ScriptSettings.TargetPlayer ~= "" then
+        local targetPlayer = Players:FindFirstChild(getgenv().ScriptSettings.TargetPlayer)
+        if targetPlayer then
+            workspace.CurrentCamera.CameraSubject = targetPlayer.Character.Humanoid
+            library:Notify({
+                Title = "观察模式",
+                Text = "正在观察 " .. getgenv().ScriptSettings.TargetPlayer,
+                Duration = 3
+            })
+        end
+    end
+end)
+
+-- 重置视角
+gameTab:NewButton("重置视角", function()
+    workspace.CurrentCamera.CameraSubject = LocalPlayer.Character.Humanoid
+    library:Notify({
+        Title = "视角重置",
+        Text = "视角已重置到自己",
+        Duration = 2
+    })
+end)
+
+-- 设置
+local settingsTab = library:CreateTab("设置")
+
+-- 清除文本框设置
+settingsTab:NewToggle("清除输入框", "clear_textbox", true, function(state)
+    getgenv().ClearTextBoxText = state
+    library:Notify({
+        Title = "设置更新",
+        Text = state and "输入后将清除文本框" or "输入后保留文本",
+        Duration = 2
+    })
+end)
+
+-- 通知测试
+settingsTab:NewButton("测试通知", function()
+    library:Notify({
+        Title = "测试通知",
+        Text = "这是一个测试通知，用来检查通知系统是否正常工作。",
+        Duration = 5
+    })
+end)
+
+-- 选择通知测试
+settingsTab:NewButton("测试选择通知", function()
+    library:SelectNotify({
+        Title = "选择测试",
+        Text = "这是一个选择性通知测试，请选择一个选项。",
+        TrueText = "好的",
+        FalseText = "取消",
+        Duration = 10,
+        Callback = function(choice)
+            library:Notify({
+                Title = "你的选择",
+                Text = choice and "你选择了: 好的" or "你选择了: 取消",
+                Duration = 3
+            })
+        end
+    })
+end)
+
+-- 保存配置
+settingsTab:NewButton("保存配置", function()
+    -- 这里可以添加配置保存逻辑
+    library:Notify({
+        Title = "配置保存",
+        Text = "当前配置已保存（功能演示）",
+        Duration = 3
+    })
+end)
+
+-- ============ 功能循环和事件 ============
+
+-- 无限跳跃功能
+UserInputService.JumpRequest:Connect(function()
+    if getgenv().ScriptSettings.InfiniteJump and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+-- 角色重生时重新应用设置
+LocalPlayer.CharacterAdded:Connect(function(character)
+    Character = character
+    Humanoid = character:WaitForChild("Humanoid")
+    
+    wait(1) -- 等待角色完全加载
+    
+    -- 重新应用速度和跳跃力度
+    Humanoid.WalkSpeed = getgenv().ScriptSettings.Speed
+    Humanoid.JumpPower = getgenv().ScriptSettings.JumpPower
+    
+    library:Notify({
+        Title = "角色重生",
+        Text = "设置已重新应用",
+        Duration = 2
+    })
+end)
+
+-- 设置UI标题
+library.Name = "多功能游戏脚本 v1.0"
+
+-- 启动消息
+library:Notify({
+    Title = "脚本加载完成",
+    Text = "欢迎使用多功能游戏脚本！按X键可以切换UI显示。",
+    Duration = 5
+})
+
+print("脚本加载完成！")
