@@ -273,411 +273,1168 @@
 		_warn('---------------')
     
     --<<  UI 部分, 不懂代码请勿修改 >>--
-
-        -- 将 _CONFIGS 暴露给 UI
-        getgenv()._CONFIGS = _CONFIGS
-
-        --====================================================--
-        -- 离线内置简易 UI 库（远程失败时兜底，不依赖网络）
-        --====================================================--
-        local function BuildFallbackUILibrary(name)
-            local Players = game:GetService("Players")
-            local StarterGui = game:GetService("StarterGui")
-            local CoreGui = game:GetService("CoreGui")
-
-            local gui = Instance.new("ScreenGui")
-            gui.Name = name
-            gui.IgnoreGuiInset = true
-            gui.ResetOnSpawn = false
-            gui.Parent = CoreGui
-
-            local Main = Instance.new("Frame")
-            Main.Name = "Main"
-            Main.Size = UDim2.new(0, 680, 0, 460)
-            Main.Position = UDim2.new(0.5, -340, 0.5, -230)
-            Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
-            Main.BorderSizePixel = 0
-            Main.Parent = gui
-            local corner = Instance.new("UICorner", Main) corner.CornerRadius = UDim.new(0, 8)
-
-            local Header = Instance.new("Frame")
-            Header.Name = "Header"
-            Header.Size = UDim2.new(1, 0, 0, 42)
-            Header.BackgroundColor3 = Color3.fromRGB(35,35,35)
-            Header.BorderSizePixel = 0
-            Header.Parent = Main
-
-            local Title = Instance.new("TextLabel")
-            Title.Name = "Title"
-            Title.BackgroundTransparency = 1
-            Title.Position = UDim2.new(0, 12, 0.5, 0)
-            Title.AnchorPoint = Vector2.new(0, 0.5)
-            Title.Size = UDim2.new(1, -24, 1, -8)
-            Title.TextXAlignment = Enum.TextXAlignment.Left
-            Title.Font = Enum.Font.GothamBold
-            Title.TextSize = 16
-            Title.TextColor3 = Color3.new(1,1,1)
-            Title.Text = name
-            Title.Parent = Header
-
-            local TabBar = Instance.new("Frame")
-            TabBar.Size = UDim2.new(0, 160, 1, -42)
-            TabBar.Position = UDim2.new(0, 0, 0, 42)
-            TabBar.BackgroundColor3 = Color3.fromRGB(30,30,30)
-            TabBar.BorderSizePixel = 0
-            TabBar.Parent = Main
-            local tabList = Instance.new("UIListLayout", TabBar)
-            tabList.Padding = UDim.new(0, 6)
-            tabList.SortOrder = Enum.SortOrder.LayoutOrder
-            local tabPad = Instance.new("UIPadding", TabBar)
-            tabPad.Top = UDim.new(0, 8)
-            tabPad.Left = UDim.new(0, 8)
-            tabPad.Right = UDim.new(0, 8)
-
-            local Pages = Instance.new("Frame")
-            Pages.Size = UDim2.new(1, -160, 1, -42)
-            Pages.Position = UDim2.new(0, 160, 0, 42)
-            Pages.BackgroundColor3 = Color3.fromRGB(20,20,20)
-            Pages.BorderSizePixel = 0
-            Pages.Parent = Main
-            local pagesFolder = Instance.new("Folder", Pages)
-            pagesFolder.Name = "Pages"
-
-            local library = { flags = {}, Name = name }
-
-            function library:Notify(info)
-                StarterGui:SetCore("SendNotification", {
-                    Title = info.Title or "通知",
-                    Text = info.Text or "",
-                    Duration = info.Duration or 3
-                })
-            end
-
-            function library:CreateTab(tabName)
-                local tabBtn = Instance.new("TextButton")
-                tabBtn.Size = UDim2.new(1, 0, 0, 28)
-                tabBtn.BackgroundColor3 = Color3.fromRGB(45,45,45)
-                tabBtn.AutoButtonColor = true
-                tabBtn.BorderSizePixel = 0
-                tabBtn.Text = tabName
-                tabBtn.TextColor3 = Color3.new(1,1,1)
-                tabBtn.Font = Enum.Font.Gotham
-                tabBtn.TextSize = 14
-                tabBtn.Parent = TabBar
-
-                local page = Instance.new("ScrollingFrame")
-                page.Name = tabName
-                page.Size = UDim2.new(1, -16, 1, -16)
-                page.Position = UDim2.new(0, 8, 0, 8)
-                page.BackgroundTransparency = 1
-                page.BorderSizePixel = 0
-                page.ScrollBarThickness = 4
-                page.Visible = false
-                page.Parent = pagesFolder
-                local layout = Instance.new("UIListLayout", page)
-                layout.Padding = UDim.new(0, 6)
-                layout.SortOrder = Enum.SortOrder.LayoutOrder
-
-                local function select()
-                    for _, p in ipairs(pagesFolder:GetChildren()) do p.Visible = false end
-                    page.Visible = true
-                    for _, b in ipairs(TabBar:GetChildren()) do
-                        if b:IsA("TextButton") then b.BackgroundColor3 = Color3.fromRGB(45,45,45) end
-                    end
-                    tabBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
-                end
-                tabBtn.MouseButton1Click:Connect(select)
-                if #pagesFolder:GetChildren() == 1 then select() end
-
-                local TabAPI = {}
-
-                local function container(h)
-                    local f = Instance.new("Frame")
-                    f.Size = UDim2.new(1, -12, 0, h or 34)
-                    f.BackgroundColor3 = Color3.fromRGB(28,28,28)
-                    f.BorderSizePixel = 0
-                    f.Parent = page
-                    local pad = Instance.new("UIPadding", f)
-                    pad.Left = UDim.new(0, 8); pad.Right = UDim.new(0,8); pad.Top = UDim.new(0,6); pad.Bottom = UDim.new(0,6)
-                    return f
-                end
-
-                function TabAPI:NewSeparator()
-                    local sep = Instance.new("Frame")
-                    sep.Size = UDim2.new(1, -12, 0, 1)
-                    sep.BackgroundColor3 = Color3.fromRGB(60,60,60)
-                    sep.BorderSizePixel = 0
-                    sep.Parent = page
-                    return sep
-                end
-
-                function TabAPI:NewButton(text, callback)
-                    local f = container(34)
-                    local btn = Instance.new("TextButton")
-                    btn.Size = UDim2.new(1, 0, 1, 0)
-                    btn.BackgroundTransparency = 1
-                    btn.Text = text
-                    btn.TextColor3 = Color3.new(1,1,1)
-                    btn.Font = Enum.Font.Gotham
-                    btn.TextXAlignment = Enum.TextXAlignment.Left
-                    btn.TextSize = 14
-                    btn.Parent = f
-                    btn.MouseButton1Click:Connect(function() pcall(callback) end)
-                    return btn
-                end
-
-                function TabAPI:NewToggle(text, key, default, callback)
-                    local f = container(34)
-                    local label = Instance.new("TextLabel")
-                    label.BackgroundTransparency = 1
-                    label.Size = UDim2.new(1, -60, 1, 0)
-                    label.Text = text
-                    label.TextXAlignment = Enum.TextXAlignment.Left
-                    label.TextColor3 = Color3.new(1,1,1)
-                    label.Font = Enum.Font.Gotham
-                    label.TextSize = 14
-                    label.Parent = f
-
-                    local t = Instance.new("TextButton")
-                    t.Size = UDim2.new(0, 50, 0, 24)
-                    t.Position = UDim2.new(1, -56, 0.5, -12)
-                    t.TextColor3 = Color3.new(1,1,1)
-                    t.Font = Enum.Font.GothamBold
-                    t.TextSize = 12
-                    t.BorderSizePixel = 0
-                    t.Parent = f
-
-                    local state = default == true
-                    local function apply()
-                        t.Text = state and "ON" or "OFF"
-                        t.BackgroundColor3 = state and Color3.fromRGB(50,120,70) or Color3.fromRGB(100,50,50)
-                        if callback then pcall(callback, state) end
-                    end
-                    t.MouseButton1Click:Connect(function() state = not state; apply() end)
-                    apply()
-                    return { Set = function(v) state = v and true or false; apply() end, Get = function() return state end }
-                end
-
-                function TabAPI:NewSlider(text, key, default, min, max, precise, callback)
-                    min = tonumber(min) or 0; max = tonumber(max) or 100
-                    local value = tonumber(default) or min
-                    local f = container(52)
-
-                    local title = Instance.new("TextLabel")
-                    title.BackgroundTransparency = 1
-                    title.Size = UDim2.new(1, 0, 0, 20)
-                    title.Text = ("%s (%d)"):format(text, value)
-                    title.TextXAlignment = Enum.TextXAlignment.Left
-                    title.TextColor3 = Color3.new(1,1,1)
-                    title.Font = Enum.Font.Gotham
-                    title.TextSize = 14
-                    title.Parent = f
-
-                    local row = Instance.new("Frame")
-                    row.BackgroundTransparency = 1
-                    row.Size = UDim2.new(1, 0, 0, 22)
-                    row.Position = UDim2.new(0, 0, 0, 24)
-                    row.Parent = f
-
-                    local minus = Instance.new("TextButton")
-                    minus.Size = UDim2.new(0, 30, 1, 0)
-                    minus.Text = "-"
-                    minus.Font = Enum.Font.GothamBold
-                    minus.TextSize = 14
-                    minus.Parent = row
-
-                    local plus = Instance.new("TextButton")
-                    plus.Size = UDim2.new(0, 30, 1, 0)
-                    plus.Position = UDim2.new(1, -30, 0, 0)
-                    plus.Text = "+"
-                    plus.Font = Enum.Font.GothamBold
-                    plus.TextSize = 14
-                    plus.Parent = row
-
-                    local bar = Instance.new("Frame")
-                    bar.Size = UDim2.new(1, -70, 1, -8)
-                    bar.Position = UDim2.new(0, 35, 0, 4)
-                    bar.BackgroundColor3 = Color3.fromRGB(60,60,60)
-                    bar.BorderSizePixel = 0
-                    bar.Parent = row
-
-                    local fill = Instance.new("Frame")
-                    fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
-                    fill.BackgroundColor3 = Color3.fromRGB(120,180,120)
-                    fill.BorderSizePixel = 0
-                    fill.Parent = bar
-
-                    local function set(v)
-                        v = math.clamp(math.floor(v + 0.5), min, max)
-                        value = v
-                        title.Text = ("%s (%d)"):format(text, value)
-                        fill.Size = UDim2.new((value - min) / math.max(1, max - min), 0, 1, 0)
-                        if callback then pcall(callback, value) end
-                    end
-                    minus.MouseButton1Click:Connect(function() set(value - 1) end)
-                    plus.MouseButton1Click:Connect(function() set(value + 1) end)
-                    bar.InputBegan:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                            local cx = (input.Position.X - bar.AbsolutePosition.X) / math.max(1, bar.AbsoluteSize.X)
-                            set(min + cx * (max - min))
-                        end
-                    end)
-                    set(value)
-                    return { Set = set, Get = function() return value end }
-                end
-
-                function TabAPI:NewDropdown(text, key, options, callback)
-                    options = type(options) == "table" and options or {}
-                    local f = container(34)
-                    local btn = Instance.new("TextButton")
-                    btn.Size = UDim2.new(1, 0, 1, 0)
-                    btn.BackgroundTransparency = 1
-                    btn.TextXAlignment = Enum.TextXAlignment.Left
-                    btn.Font = Enum.Font.Gotham
-                    btn.TextSize = 14
-                    btn.TextColor3 = Color3.new(1,1,1)
-                    btn.Text = text .. " ▾"
-                    btn.Parent = f
-
-                    local list = Instance.new("Frame")
-                    list.Size = UDim2.new(1, -12, 0, 0)
-                    list.BackgroundColor3 = Color3.fromRGB(26,26,26)
-                    list.BorderSizePixel = 0
-                    list.Visible = false
-                    list.Parent = page
-                    local ll = Instance.new("UIListLayout", list)
-                    ll.Padding = UDim.new(0, 2)
-
-                    local function rebuild()
-                        for _, c in ipairs(list:GetChildren()) do if c:IsA("TextButton") then c:Destroy() end end
-                        local count = #options
-                        for _, opt in ipairs(options) do
-                            local o = Instance.new("TextButton")
-                            o.Size = UDim2.new(1, 0, 0, 24)
-                            o.Text = tostring(opt)
-                            o.Font = Enum.Font.Gotham
-                            o.TextSize = 13
-                            o.TextColor3 = Color3.new(1,1,1)
-                            o.BackgroundColor3 = Color3.fromRGB(40,40,40)
-                            o.BorderSizePixel = 0
-                            o.Parent = list
-                            o.MouseButton1Click:Connect(function()
-                                btn.Text = text .. " : " .. tostring(opt) .. " ▾"
-                                if callback then pcall(callback, opt) end
-                                list.Visible = false
-                            end)
-                        end
-                        list.Size = UDim2.new(1, -12, 0, math.min(6, count) * 26 + 6)
-                    end
-
-                    btn.MouseButton1Click:Connect(function()
-                        list.Visible = not list.Visible
-                        list.Position = UDim2.new(0, 8, 0, f.AbsolutePosition.Y - page.AbsolutePosition.Y + f.AbsoluteSize.Y + 4)
-                    end)
-
-                    rebuild()
-
-                    local api = {
-                        AddOption = function(opt) table.insert(options, opt); rebuild() end,
-                        RemoveOption = function(opt)
-                            for i, v in ipairs(options) do if v == opt then table.remove(options, i) break end end
-                            rebuild()
-                        end
-                    }
-                    if key then library.flags[key] = api end
-                    return api
-                end
-
-                return TabAPI
-            end
-
-            return library
-        end
-        --====================================================--
-
-        -- 远程 UI 加载（多候选URL，任一成功即可）
-        local UI_URLS = {
-            -- 正确 raw 分支路径
-            "https://raw.githubusercontent.com/rbx520/Roblox/main/%E6%94%B9%E8%BF%9B/ModernUI.lua",
-            "https://raw.githubusercontent.com/rbx520/Roblox/main/%E6%94%B9%E8%BF%9B.lua",
-
-            -- 国内镜像
-            "https://fastly.jsdelivr.net/gh/rbx520/Roblox@main/%E6%94%B9%E8%BF%9B/ModernUI.lua",
-            "https://ghp.ci/https://raw.githubusercontent.com/rbx520/Roblox/main/%E6%94%B9%E8%BF%9B/ModernUI.lua",
-            "https://github.moeyy.xyz/https://raw.githubusercontent.com/rbx520/Roblox/main/%E6%94%B9%E8%BF%9B/ModernUI.lua",
-
-            -- 旧写法兜底（多数 404）
-            "https://raw.githubusercontent.com/rbx520/Roblox/refs/heads/main/%E6%94%B9%E8%BF%9B/ModernUI.lua",
-            "https://raw.githubusercontent.com/rbx520/Roblox/refs/heads/main/%E6%94%B9%E8%BF%9B.lua",
-            "https://raw.githubusercontent.com/rbx520/Roblox/refs/heads/main/%E6%94%B9%E8%BF%9B/ModernUI.txt",
-        }
-
-        local function fetch(url)
-            local req =
-                (syn and syn.request)
-                or (http and http.request)
-                or http_request
-                or request
-                or (fluxus and fluxus.request)
-                or (krnl and krnl.request)
-                or (krnl_request)
-
-            if req then
-                local ok, res = pcall(req, { Url = url, Method = "GET", Headers = { ["User-Agent"] = "Roblox/HttpService" } })
-                if ok and res and (res.StatusCode == 200 or res.StatusCode == 201) and type(res.Body) == "string" and #res.Body > 0 then
-                    return res.Body
-                end
-            end
-            local ok2, body = pcall(game.HttpGet, game, url)
-            if ok2 and type(body) == "string" and #body > 0 then
-                return body
-            end
-            return nil
-        end
-
-        local ui_code
-        local cacheFile = "ModernUI.lua"
-        if isfile and readfile and isfile(cacheFile) then
-            local ok, content = pcall(readfile, cacheFile)
-            if ok and type(content) == "string" and #content > 0 then
-                ui_code = content
-            end
-        end
-
-        if not ui_code then
-            for _, url in ipairs(UI_URLS) do
-                local code = fetch(url)
-                if code then
-                    ui_code = code
-                    if writefile then pcall(writefile, cacheFile, code) end
-                    break
-                end
-                warn("[UI] 下载失败: " .. url)
-            end
-        end
-
-        local library
-        if not ui_code then
-            warn("[UI] 所有来源均获取失败，使用内置简易 UI（离线模式）。")
-            library = BuildFallbackUILibrary(_CONFIGS.UI_NAME)
-        else
-            local ok, lib = pcall(loadstring(ui_code))
-            if ok then
-                local ok2, obj = pcall(lib)
-                if ok2 and type(obj) == "table" then
-                    library = obj
-                else
-                    warn("[UI] 远程 UI 脚本执行失败，使用内置简易 UI。")
-                    library = BuildFallbackUILibrary(_CONFIGS.UI_NAME)
-                end
-            else
-                warn("[UI] 远程 UI 解析失败，使用内置简易 UI。")
-                library = BuildFallbackUILibrary(_CONFIGS.UI_NAME)
-            end
-        end
-        -- 可选：自定义标题（如果需要）
-        -- library.Name = _CONFIGS.UI_NAME
-
+		local a = {
+			Plrs = "Players",
+			LP = "LocalPlayer",
+			RS = "ReplicatedStorage"
+		}
+		local b = setmetatable({}, {
+			__index = function(self, c)
+				return game.GetService(game, c)
+			end,
+			__call = function(self, c)
+				return game.GetService(game, c)
+			end
+		})
+		if b.CoreGui:FindFirstChild(_CONFIGS.UI_NAME) then
+			b.CoreGui[_CONFIGS.UI_NAME]:Destroy()
+		end
+		local dm = UDim.new
+		local dn = UDim2.new
+		local dp = Color3.fromRGB
+		local dq = Instance.new
+		local dr = function()
+		end
+		local ds = b.Players.LocalPlayer:GetMouse()
+		getgenv().library = {
+			flags = {
+				GetState = function(dt, du)
+					return library.flags[du].State
+				end
+			},
+			modules = {},
+			currentTab = nil
+		}
+		function library:UpdateToggle(du, be)
+			local be = be or library.flags:GetState(du)
+			if be == library.flags:GetState(du) then
+				return
+			end
+			library.flags[du]:SetState(be)
+		end
+		local dv = {}
+		function dv:Tween(dw, dx, dy, dz, dA)
+			return b.TweenService:Create(
+	dx, TweenInfo.new(dy or 0.25, Enum.EasingStyle[dz or "Linear"], Enum.EasingDirection[dA or "InOut"]), dw)
+		end
+		function dv:SwitchTab(dB)
+			local dC = library.currentTab
+			if dC == dB then
+				return
+			end
+			library.currentTab = dB
+			dv:Tween({
+				Transparency = 1
+			}, dC[2].Glow):Play()
+			dv:Tween({
+				Transparency = 0
+			}, dB[2].Glow):Play()
+			dC[1].Visible = false
+			dB[1].Visible = true
+		end
+		local dD = dq("ScreenGui")
+		local Open = dq("TextButton")
+		local dE = dq("Frame")
+		local dF = dq("UICorner")
+		local dG = dq("TextLabel")
+		local dH = dq("UICorner")
+		local dI = dq("Frame")
+		local dJ = dq("UICorner")
+		local dK = dq("ScrollingFrame")
+		local dL = dq("UIListLayout")
+		local dM = dq("UIPadding")
+		local dN = dq("Frame")
+		local dO = dq("UICorner")
+		dD.Name = _CONFIGS.UI_NAME
+		dD.Parent = b.CoreGui
+		dE.Name = "Main"
+		dE.Parent = dD
+		dE.BackgroundColor3 = dp(52, 62, 72)
+		dE.BorderSizePixel = 0
+		dE.Position = dn(0.5, 0, 0.5, 0)
+		dE.Size = dn(0, 448, 0, 280)
+		dE.AnchorPoint = Vector2.new(0.5, 0.5)
+		dE.Active = true
+		dE.Draggable = true
+		dF.CornerRadius = dm(0, 6)
+		dF.Name = "MainCorner"
+		dF.Parent = dE
+		dG.Parent = dE
+		dG.BackgroundColor3 = dp(58, 69, 80)
+		dG.BorderSizePixel = 0
+		dG.Position = dn(0, 6, 0, 6)
+		dG.Size = dn(0, 436, 0, 24)
+		dG.Font = Enum.Font.GothamBold
+		dG.Text = "  " .. _CONFIGS.UI_NAME;
+		dG.TextColor3 = dp(255, 255, 255)
+		dG.TextSize = 14.000
+		dG.TextXAlignment = Enum.TextXAlignment.Left
+		Open.Name = "Open"
+		Open.Parent = dD
+		Open.BackgroundColor3 = dE.BackgroundColor3;
+		Open.Position = UDim2.new(0.839879155, 0, - 0.0123076923, 0)
+		Open.BorderSizePixel = 2
+		Open.BorderColor3 = dG.BackgroundColor3
+		Open.Size = UDim2.new(0, 55, 0, 25)
+		Open.Font = Enum.Font.SourceSans
+		Open.Text = "隐藏"
+		Open.TextColor3 = Color3.fromRGB(255, 255, 255)
+		Open.TextSize = 14.000
+		Open.Active = true
+		Open.Draggable = true
+		local TOGGLE = true;
+		Open.MouseButton1Down:connect(function()
+			TOGGLE = not TOGGLE
+			dE.Visible = TOGGLE
+			Open.Text = (TOGGLE and "隐藏" or "打开");
+		end)
+		dH.CornerRadius = dm(0, 6)
+		dH.Name = "TextLabelCorner"
+		dH.Parent = dG
+		dI.Name = "Sidebar"
+		dI.Parent = dE
+		dI.BackgroundColor3 = dp(58, 69, 80)
+		dI.BorderSizePixel = 0
+		dI.Position = dn(0, 6, 0, 36)
+		dI.Size = dn(0, 106, 0, 238)
+		dJ.CornerRadius = dm(0, 6)
+		dJ.Name = "SidebarCorner"
+		dJ.Parent = dI
+		dK.Name = "TabButtons"
+		dK.Parent = dI
+		dK.Active = true
+		dK.BackgroundColor3 = dp(255, 255, 255)
+		dK.BackgroundTransparency = 1.000
+		dK.BorderSizePixel = 0
+		dK.Size = dn(0, 106, 0, 238)
+		dK.ScrollBarThickness = 0
+		dL.Parent = dK
+		dL.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		dL.SortOrder = Enum.SortOrder.LayoutOrder
+		dL.Padding = dm(0, 5)
+		dM.Parent = dK
+		dM.PaddingTop = dm(0, 6)
+		dN.Name = "TabHolder"
+		dN.Parent = dE
+		dN.BackgroundColor3 = dp(58, 69, 80)
+		dN.BorderSizePixel = 0
+		dN.Position = dn(0, 118, 0, 36)
+		dN.Size = dn(0, 324, 0, 238)
+		dO.CornerRadius = dm(0, 6)
+		dO.Name = "TabHolderCorner"
+		dO.Parent = dN
+		dL:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(
+	function()
+			dK.CanvasSize = dn(0, 0, 0, dL.AbsoluteContentSize.Y + 12)
+		end)
+		function createBaseNotifications()
+			if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("NotificationHolder") then
+				return game:GetService("Players").LocalPlayer.PlayerGui.NotificationHolder
+			end
+			local ScreenGui = Instance.new("ScreenGui")
+			ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+			local ToggleNotif = Instance.new("Frame")
+			ToggleNotif.Name = "ToggleNotif"
+			ToggleNotif.ZIndex = 5
+			ToggleNotif.AnchorPoint = Vector2.new(1, 1)
+			ToggleNotif.Visible = false
+			ToggleNotif.Size = UDim2.new(0, 291, 0, 56)
+			ToggleNotif.Position = UDim2.new(1, 0, 1, 0)
+			ToggleNotif.BackgroundColor3 = Color3.fromRGB(48, 48, 48)
+			ToggleNotif.Parent = ScreenGui
+			local UiCorner = Instance.new("UICorner")
+			UiCorner.Name = "UiCorner"
+			UiCorner.Parent = ToggleNotif
+			local Dropshadow = Instance.new("UIStroke")
+			Dropshadow.Name = "Dropshadow"
+			Dropshadow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+			Dropshadow.Transparency = 0.8
+			Dropshadow.Thickness = 2
+			Dropshadow.Color = Color3.fromRGB(20, 20, 20)
+			Dropshadow.Parent = ToggleNotif
+			local SepVertical = Instance.new("Frame")
+			SepVertical.Name = "SepVertical"
+			SepVertical.Size = UDim2.new(0, 2, 0, 56)
+			SepVertical.BackgroundTransparency = 0.5
+			SepVertical.Position = UDim2.new(0.7423077, 0, 0, 0)
+			SepVertical.BorderSizePixel = 0
+			SepVertical.BackgroundColor3 = Color3.fromRGB(68, 68, 68)
+			SepVertical.Parent = ToggleNotif
+			local SepHorizontal = Instance.new("Frame")
+			SepHorizontal.Name = "SepHorizontal"
+			SepHorizontal.Size = UDim2.new(0, 72, 0, 2)
+			SepHorizontal.BackgroundTransparency = 0.5
+			SepHorizontal.Position = UDim2.new(0.75, 0, 0.4464286, 2)
+			SepHorizontal.BorderSizePixel = 0
+			SepHorizontal.BackgroundColor3 = Color3.fromRGB(68, 68, 68)
+			SepHorizontal.Parent = ToggleNotif
+			local Title = Instance.new("TextLabel")
+			Title.Name = "Title"
+			Title.Size = UDim2.new(0, 216, 0, 19)
+			Title.BackgroundTransparency = 1
+			Title.BorderSizePixel = 0
+			Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Title.FontSize = Enum.FontSize.Size14
+			Title.TextSize = 14
+			Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+			Title.Font = Enum.Font.SourceSans
+			Title.Parent = ToggleNotif
+			local Paragraph = Instance.new("TextLabel")
+			Paragraph.Name = "Paragraph"
+			Paragraph.Size = UDim2.new(0, 218, 0, 37)
+			Paragraph.BackgroundTransparency = 1
+			Paragraph.Position = UDim2.new(0, 0, 0.3392857, 0)
+			Paragraph.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Paragraph.FontSize = Enum.FontSize.Size14
+			Paragraph.TextSize = 14
+			Paragraph.TextColor3 = Color3.fromRGB(255, 255, 255)
+			Paragraph.Text = ""
+			Paragraph.TextYAlignment = Enum.TextYAlignment.Top
+			Paragraph.TextWrapped = true
+			Paragraph.Font = Enum.Font.SourceSans
+			Paragraph.TextWrap = true
+			Paragraph.TextXAlignment = Enum.TextXAlignment.Left
+			Paragraph.Parent = ToggleNotif
+			local UIPadding = Instance.new("UIPadding")
+			UIPadding.PaddingLeft = UDim.new(0, 10)
+			UIPadding.PaddingRight = UDim.new(0, 5)
+			UIPadding.Parent = Paragraph
+			local True = Instance.new("TextButton")
+			True.Name = "True"
+			True.Size = UDim2.new(0, 72, 0, 27)
+			True.BackgroundTransparency = 1
+			True.Position = UDim2.new(0.75, 0, 0, 0)
+			True.BorderSizePixel = 0
+			True.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			True.FontSize = Enum.FontSize.Size14
+			True.TextSize = 14
+			True.TextColor3 = Color3.fromRGB(255, 255, 255)
+			True.Text = "Yes"
+			True.Font = Enum.Font.SourceSans
+			True.Parent = ToggleNotif
+			local False = Instance.new("TextButton")
+			False.Name = "False"
+			False.Size = UDim2.new(0, 72, 0, 27)
+			False.BackgroundTransparency = 1
+			False.Position = UDim2.new(0.75, 0, 0.5178571, 0)
+			False.BorderSizePixel = 0
+			False.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			False.FontSize = Enum.FontSize.Size14
+			False.TextSize = 14
+			False.TextColor3 = Color3.fromRGB(255, 255, 255)
+			False.Text = "No"
+			False.Font = Enum.Font.SourceSans
+			False.Parent = ToggleNotif
+			local LocalScript = Instance.new("LocalScript")
+			LocalScript.Parent = ScreenGui
+			local DefaultNotif = Instance.new("Frame")
+			DefaultNotif.Name = "DefaultNotif"
+			DefaultNotif.ZIndex = 5
+			DefaultNotif.AnchorPoint = Vector2.new(1, 1)
+			DefaultNotif.Visible = false
+			DefaultNotif.Size = UDim2.new(0, 291, 0, 56)
+			DefaultNotif.Position = UDim2.new(1, 0, 0.9999999, 0)
+			DefaultNotif.BackgroundColor3 = Color3.fromRGB(48, 48, 48)
+			DefaultNotif.Parent = ScreenGui
+			local UiCorner1 = Instance.new("UICorner")
+			UiCorner1.Name = "UiCorner"
+			UiCorner1.Parent = DefaultNotif
+			local Dropshadow1 = Instance.new("UIStroke")
+			Dropshadow1.Name = "Dropshadow"
+			Dropshadow1.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+			Dropshadow1.Transparency = 0.8
+			Dropshadow1.Thickness = 2
+			Dropshadow1.Color = Color3.fromRGB(20, 20, 20)
+			Dropshadow1.Parent = DefaultNotif
+			local Title1 = Instance.new("TextLabel")
+			Title1.Name = "Title"
+			Title1.Size = UDim2.new(0, 291, 0, 19)
+			Title1.BackgroundTransparency = 1
+			Title1.BorderSizePixel = 0
+			Title1.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Title1.FontSize = Enum.FontSize.Size14
+			Title1.TextSize = 14
+			Title1.TextColor3 = Color3.fromRGB(255, 255, 255)
+			Title1.Font = Enum.Font.SourceSans
+			Title1.Parent = DefaultNotif
+			local Paragraph1 = Instance.new("TextLabel")
+			Paragraph1.Name = "Paragraph"
+			Paragraph1.Size = UDim2.new(0, 291, 0, 37)
+			Paragraph1.BackgroundTransparency = 1
+			Paragraph1.Position = UDim2.new(0, 0, 0.3392857, 0)
+			Paragraph1.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Paragraph1.FontSize = Enum.FontSize.Size14
+			Paragraph1.TextSize = 14
+			Paragraph1.TextColor3 = Color3.fromRGB(255, 255, 255)
+			Paragraph1.Text = ""
+			Paragraph1.TextYAlignment = Enum.TextYAlignment.Top
+			Paragraph1.TextWrapped = true
+			Paragraph1.Font = Enum.Font.SourceSans
+			Paragraph1.TextWrap = true
+			Paragraph1.TextXAlignment = Enum.TextXAlignment.Left
+			Paragraph1.Parent = DefaultNotif
+			local UIPadding1 = Instance.new("UIPadding")
+			UIPadding1.PaddingLeft = UDim.new(0, 10)
+			UIPadding1.PaddingRight = UDim.new(0, 5)
+			UIPadding1.Parent = Paragraph1
+			if syn then
+				syn.protect_gui(ScreenGui)
+			end
+			ScreenGui.Parent = game:GetService("Players").LocalPlayer.PlayerGui
+			return ScreenGui
+		end
+		notificationHolder = createBaseNotifications()
+		notifAmount = 0
+		removedPos = nil
+		function library:SelectNotify(args)
+			args = args or {}
+			args.TweenSpeed = args.TweenSpeed or 1
+			args.TweenInSpeed = args.TweenInSpeed or args.TweenSpeed
+			args.TweenOutSpeed = args.TweenOutSpeed or args.TweenSpeed
+			args.TweenVerticalSpeed = args.TweenVerticalSpeed or args.TweenSpeed
+			args.Title = args.Title or "Title"
+			args.Text = args.Text or "Text"
+			args.TrueText = args.TrueText or "Yes"
+			args.FalseText = args.FalseText or "No"
+			args.Duration = args.Duration or 5
+			args.Callback = args.Callback or function()
+				warn("No callback for notif")
+			end
+		
+		---- arg defining ^
+			notifAmount = notifAmount + 1
+			local track = notifAmount
+			local notifNum = notifAmount
+			local doesExist = true
+			local notif = notificationHolder.ToggleNotif:Clone()
+			local removed = false
+			notif.Parent = notificationHolder
+			notif.Visible = true
+			notif.Position = UDim2.new(1, 300, 1, - 5)
+			notif.Transparency = 0.05
+			notif.True.Text = args.TrueText
+			notif.False.Text = args.FalseText
+			task.spawn(function()
+				task.wait(args.Duration + args.TweenInSpeed)
+				doesExist = false
+			end)
+			notif.True.MouseButton1Click:Connect(function()
+				doesExist = false
+				removed = true
+				notifAmount = notifAmount - 1
+				removedPos = notif.Position.Y.Offset
+				pcall(args.Callback, true)
+			end)
+			notif.False.MouseButton1Click:Connect(function()
+				doesExist = false
+				removed = true
+				notifAmount = notifAmount - 1
+				removedPos = notif.Position.Y.Offset
+				pcall(args.Callback, false)
+			end)
+			notif.Paragraph.Text = args.Text
+			notif.Title.Text = args.Title
+			notif:TweenPosition(UDim2.new(1, - 5, 1, - 5), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, args.TweenInSpeed)
+			task.spawn(function()
+				local originalPos = notif.Position
+				while doesExist and task.wait() do
+					local pos = notif.Position
+					if notifAmount > track then
+						notif:TweenPosition(UDim2.new(1, - 5, 1, originalPos.Y.Offset - (65 * (notifAmount - notifNum))), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, args.TweenVerticalSpeed, true)
+						track = track + 1
+					end
+					if notifAmount < track then
+						if removedPos > pos.Y.Offset then
+							notif:TweenPosition(UDim2.new(1, - 5, 1, originalPos.Y.Offset - (65 * (notifAmount - notifNum))), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, args.TweenVerticalSpeed, true)
+						else
+							notifNum = notifNum - 1
+						end
+						track = track - 1
+					end
+				end
+				local pos = notif.Position
+				if removed == false then
+					notifAmount = notifAmount - 1
+					removedPos = notif.Position.Y.Offset
+				end
+				notif:TweenPosition(UDim2.new(1, 300, 1, pos.Y.Offset), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, args.TweenOutSpeed, true)
+				task.wait(args.TweenOutSpeed)
+				notif:Destroy()
+			end)
+		end
+		function library:Notify(args)
+			args = args or {}
+			args.TweenSpeed = args.TweenSpeed or 1
+			args.TweenInSpeed = args.TweenInSpeed or args.TweenSpeed
+			args.TweenOutSpeed = args.TweenOutSpeed or args.TweenSpeed
+			args.TweenVerticalSpeed = args.TweenVerticalSpeed or args.TweenSpeed
+			args.Title = args.Title or "Title"
+			args.Text = args.Text or "Text"
+			args.Duration = args.Duration or 5
+		
+		---- arg defining ^
+			notifAmount = notifAmount + 1
+			local track = notifAmount
+			local notifNum = notifAmount
+			local removed = false
+			local doesExist = true
+			local notif = notificationHolder.DefaultNotif:Clone()
+			notif.Parent = notificationHolder
+			notif.Visible = true
+			notif.Position = UDim2.new(1, 300, 1, - 5)
+			notif.Transparency = 0.05
+			notif.InputBegan:Connect(function(InputObject)
+				if InputObject.UserInputType == Enum.UserInputType.MouseButton1 then
+					task.spawn(function()
+						local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0)
+						game:GetService("TweenService"):Create(notif, tweenInfo, {
+							Transparency = 0.8
+						}):Play()
+					end)
+					doesExist = false
+					removed = true
+					notifAmount = notifAmount - 1
+					removedPos = notif.Position.Y.Offset
+				end
+			end)
+			task.spawn(function()
+				task.wait(args.Duration + args.TweenInSpeed)
+				doesExist = false
+			end)
+			notif.Paragraph.Text = args.Text
+			notif.Title.Text = args.Title
+			notif:TweenPosition(UDim2.new(1, - 5, 1, - 5), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, args.TweenInSpeed)
+			task.spawn(function()
+				local originalPos = notif.Position
+				while doesExist and task.wait() do
+					local pos = notif.Position
+					if notifAmount > track then
+						notif:TweenPosition(UDim2.new(1, - 5, 1, originalPos.Y.Offset - (65 * (notifAmount - notifNum))), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, args.TweenVerticalSpeed, true)
+						track = track + 1
+					end
+					if notifAmount < track then
+						if removedPos > pos.Y.Offset then
+							notif:TweenPosition(UDim2.new(1, - 5, 1, originalPos.Y.Offset - (65 * (notifAmount - notifNum))), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, args.TweenVerticalSpeed, true)
+						else
+							notifNum = notifNum - 1
+						end
+						track = track - 1
+					end
+				end
+				local pos = notif.Position
+				if removed == false then
+					notifAmount = notifAmount - 1
+					removedPos = notif.Position.Y.Offset
+				end
+				notif:TweenPosition(UDim2.new(1, 300, 1, pos.Y.Offset), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, args.TweenOutSpeed, true)
+				task.wait(args.TweenOutSpeed)
+				notif:Destroy()
+			end)
+		end
+		function library:CreateTab(dZ)
+			local d_ = dq("TextButton")
+			local e0 = dq("UICorner")
+			local e1 = dq("Frame")
+			local e2 = dq("UICorner")
+			local e3 = dq("UIGradient")
+			local e4 = dq("ScrollingFrame")
+			local e5 = dq("UIPadding")
+			local e6 = dq("UIListLayout")
+			d_.Name = "TabButton"
+			d_.Parent = dK
+			d_.BackgroundColor3 = dp(52, 62, 72)
+			d_.BorderSizePixel = 0
+			d_.Size = dn(0, 94, 0, 28)
+			d_.AutoButtonColor = false
+			d_.Font = Enum.Font.GothamSemibold
+			d_.Text = dZ
+			d_.TextColor3 = dp(255, 255, 255)
+			d_.TextSize = 14.000
+			e0.CornerRadius = dm(0, 6)
+			e0.Name = "TabButtonCorner"
+			e0.Parent = d_
+			e1.Name = "Glow"
+			e1.Parent = d_
+			e1.BackgroundColor3 = dp(255, 255, 255)
+			e1.BorderSizePixel = 0
+			e1.Position = dn(0, 0, 0.928571463, 0)
+			e1.Size = dn(0, 94, 0, 2)
+			e1.Transparency = 1
+			e2.CornerRadius = dm(0, 6)
+			e2.Name = "GlowCorner"
+			e2.Parent = e1
+			e3.Color = ColorSequence.new{
+				ColorSequenceKeypoint.new(0.00, dp(52, 62, 72)),
+				ColorSequenceKeypoint.new(0.50, dp(255, 255, 255)),
+				ColorSequenceKeypoint.new(1.00, dp(52, 62, 72))
+			}
+			e3.Name = "GlowGradient"
+			e3.Parent = e1
+			e4.Name = "Tab"
+			e4.Parent = dN
+			e4.Active = true
+			e4.BackgroundColor3 = dp(255, 255, 255)
+			e4.BackgroundTransparency = 1.000
+			e4.BorderSizePixel = 0
+			e4.Size = dn(0, 324, 0, 238)
+			e4.ScrollBarThickness = 0
+			e4.Visible = false
+			if library.currentTab == nil then
+				library.currentTab = {
+					e4,
+					d_
+				}
+				e1.Transparency = 0
+				e4.Visible = true
+			end
+			e5.Name = "TabPadding"
+			e5.Parent = e4
+			e5.PaddingTop = dm(0, 6)
+			e6.Name = "TabLayout"
+			e6.Parent = e4
+			e6.HorizontalAlignment = Enum.HorizontalAlignment.Center
+			e6.SortOrder = Enum.SortOrder.LayoutOrder
+			e6.Padding = dm(0, 5)
+			e6:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(
+	function()
+				e4.CanvasSize = dn(0, 0, 0, e6.AbsoluteContentSize.Y + 12)
+			end)
+			d_.MouseButton1Click:Connect(
+	function()
+				dv:SwitchTab({
+					e4,
+					d_
+				})
+			end)
+			local e7 = {}
+			function e7:NewSeparator()
+				local e8 = dq("Frame")
+				e8.Transparency = 1
+				e8.Size = dn(0, 0, 0, 0)
+				e8.BorderSizePixel = 0
+				e8.Parent = e4
+			end
+			function e7:NewButton(e9, ea)
+				local ea = ea or dr
+				local eb = dq("TextButton")
+				local ec = dq("UICorner")
+				eb.Name = "BtnModule"
+				eb.Parent = e4
+				eb.BackgroundColor3 = dp(52, 62, 72)
+				eb.BorderSizePixel = 0
+				eb.Size = dn(0, 312, 0, 28)
+				eb.AutoButtonColor = false
+				eb.Font = Enum.Font.GothamSemibold
+				eb.Text = "  " .. e9
+				eb.TextColor3 = dp(255, 255, 255)
+				eb.TextSize = 14.000
+				eb.TextXAlignment = Enum.TextXAlignment.Left
+				ec.CornerRadius = dm(0, 6)
+				ec.Name = "BtnModuleCorner"
+				ec.Parent = eb
+				eb.MouseButton1Click:Connect(ea)
+			end
+			function e7:NewToggle(e9, du, ed, ea)
+				local ea = ea or dr
+				local ed = ed or false
+				local ee = dq("TextButton")
+				local ef = dq("UICorner")
+				local eg = dq("Frame")
+				local eh = dq("UIGradient")
+				local ei = dq("UICorner")
+				local ej = dq("Frame")
+				local ek = dq("UICorner")
+				local el = dq("UIGradient")
+				library.flags[du or e9] = {
+					State = false,
+					Callback = ea,
+					SetState = function(self, be)
+						local be = be ~= nil and be or not library.flags:GetState(du)
+						library.flags[du].State = be
+						task.spawn(
+	            function()
+							library.flags[du].Callback(be)
+						end)
+						dv:Tween({
+							Transparency = be and 1 or 0
+						}, eg):Play()
+						dv:Tween({
+							Transparency = be and 0 or 1
+						}, ej):Play()
+					end
+				}
+				ee.Name = "ToggleModule"
+				ee.Parent = e4
+				ee.BackgroundColor3 = dp(52, 62, 72)
+				ee.BorderSizePixel = 0
+				ee.Size = dn(0, 312, 0, 28)
+				ee.AutoButtonColor = false
+				ee.Font = Enum.Font.GothamSemibold
+				ee.Text = "  " .. e9
+				ee.TextColor3 = dp(255, 255, 255)
+				ee.TextSize = 14.000
+				ee.TextXAlignment = Enum.TextXAlignment.Left
+				ef.CornerRadius = dm(0, 6)
+				ef.Name = "ToggleModuleCorner"
+				ef.Parent = ee
+				eg.Name = "OffStatus"
+				eg.Parent = ee
+				eg.BackgroundColor3 = dp(255, 255, 255)
+				eg.BorderSizePixel = 0
+				eg.Position = dn(0.878205061, 0, 0.178571433, 0)
+				eg.Size = dn(0, 34, 0, 18)
+				eh.Color = ColorSequence.new{
+					ColorSequenceKeypoint.new(0.00, dp(255, 83, 83)),
+					ColorSequenceKeypoint.new(0.15, dp(255, 83, 83)),
+					ColorSequenceKeypoint.new(0.62, dp(52, 62, 72)),
+					ColorSequenceKeypoint.new(1.00, dp(52, 62, 72))
+				}
+				eh.Rotation = 300
+				eh.Name = "OffGrad"
+				eh.Parent = eg
+				ei.CornerRadius = dm(0, 4)
+				ei.Name = "OffStatusCorner"
+				ei.Parent = eg
+				ej.Name = "OnStatus"
+				ej.Parent = ee
+				ej.BackgroundColor3 = dp(255, 255, 255)
+				ej.BackgroundTransparency = 1.000
+				ej.BorderSizePixel = 0
+				ej.Position = dn(0.878205121, 0, 0.178571433, 0)
+				ej.Size = dn(0, 34, 0, 18)
+				ej.Transparency = 1
+				ek.CornerRadius = dm(0, 4)
+				ek.Name = "OnStatusCorner"
+				ek.Parent = ej
+				el.Color = ColorSequence.new{
+					ColorSequenceKeypoint.new(0.00, dp(52, 62, 72)),
+					ColorSequenceKeypoint.new(0.38, dp(48, 57, 67)),
+					ColorSequenceKeypoint.new(1.00, dp(53, 255, 134))
+				}
+				el.Rotation = 300
+				el.Name = "OnGrad"
+				el.Parent = ej
+				ee.MouseButton1Click:Connect(
+	    function()
+					library.flags[du or e9]:SetState()
+				end)
+				if ed then
+					library.flags[du or e9]:SetState(ed)
+				end
+			end
+			function e7:NewBind(e9, em, ea)
+				local em = Enum.KeyCode[em]
+				local en = {
+					Return = true,
+					Space = true,
+					Tab = true,
+					Backquote = true,
+					CapsLock = true,
+					Escape = true,
+					Unknown = true
+				}
+				local eo = {
+					RightControl = "Right Ctrl",
+					LeftControl = "Left Ctrl",
+					LeftShift = "Left Shift",
+					RightShift = "Right Shift",
+					Semicolon = ";",
+					Quote = '"',
+					LeftBracket = "[",
+					RightBracket = "]",
+					Equals = "=",
+					Minus = "-",
+					RightAlt = "Right Alt",
+					LeftAlt = "Left Alt"
+				}
+				local ep = em
+				local eq = em and (eo[em.Name] or em.Name) or "None"
+				local er = dq("TextButton")
+				local es = dq("UICorner")
+				local et = dq("TextButton")
+				local eu = dq("UICorner")
+				er.Name = "KeybindModule"
+				er.Parent = e4
+				er.BackgroundColor3 = dp(52, 62, 72)
+				er.BorderSizePixel = 0
+				er.Size = dn(0, 312, 0, 28)
+				er.AutoButtonColor = false
+				er.Font = Enum.Font.GothamSemibold
+				er.Text = "  " .. e9
+				er.TextColor3 = dp(255, 255, 255)
+				er.TextSize = 14.000
+				er.TextXAlignment = Enum.TextXAlignment.Left
+				es.CornerRadius = dm(0, 6)
+				es.Name = "KeybindModuleCorner"
+				es.Parent = er
+				et.Name = "KeybindValue"
+				et.Parent = er
+				et.BackgroundColor3 = dp(58, 69, 80)
+				et.BorderSizePixel = 0
+				et.Position = dn(0.75, 0, 0.178571433, 0)
+				et.Size = dn(0, 74, 0, 18)
+				et.AutoButtonColor = false
+				et.Font = Enum.Font.Gotham
+				et.Text = eq
+				et.TextColor3 = dp(255, 255, 255)
+				et.TextSize = 12.000
+				eu.CornerRadius = dm(0, 4)
+				eu.Name = "KeybindValueCorner"
+				eu.Parent = et
+				b.UserInputService.InputBegan:Connect(
+	    function(aJ, aK)
+					if aK then
+						return
+					end
+					if aJ.UserInputType ~= Enum.UserInputType.Keyboard then
+						return
+					end
+					if aJ.KeyCode ~= ep then
+						return
+					end
+					ea(ep.Name)
+				end)
+				et.MouseButton1Click:Connect(
+	    function()
+					et.Text = "..."
+					wait()
+					local ev, ew = b.UserInputService.InputEnded:Wait()
+					local ex = tostring(ev.KeyCode.Name)
+					if ev.UserInputType ~= Enum.UserInputType.Keyboard then
+						et.Text = eq
+						return
+					end
+					if en[ex] then
+						et.Text = eq
+						return
+					end
+					wait()
+					ep = Enum.KeyCode[ex]
+					et.Text = eo[ex] or ex
+				end)
+			end
+			function e7:NewSlider(e9, du, em, ey, ez, eA, ea)
+				local em = em or ey
+				local ea = ea or dr
+				local eB = dq("TextButton")
+				local eC = dq("UICorner")
+				local eD = dq("Frame")
+				local eE = dq("UICorner")
+				local eF = dq("Frame")
+				local eG = dq("UICorner")
+				local eH = dq("TextBox")
+				local eI = dq("UICorner")
+				local eJ = dq("TextButton")
+				local eK = dq("TextButton")
+				library.flags[du] = {
+					State = em,
+					SetValue = function(self, be)
+						local eL = (ds.X - eD.AbsolutePosition.X) / eD.AbsoluteSize.X
+						if be then
+							eL = (be - ey) / (ez - ey)
+						end
+						eL = math.clamp(eL, 0, 1)
+						if eA then
+							be = be or tonumber(string.format("%.1f", tostring(ey + (ez - ey) * eL)))
+						else
+							be = be or math.floor(ey + (ez - ey) * eL)
+						end
+						library.flags[du].State = tonumber(be)
+						eH.Text = tostring(be)
+						eF.Size = dn(eL, 0, 1, 0)
+						ea(tonumber(be))
+					end
+				}
+				eB.Name = "SliderModule"
+				eB.Parent = e4
+				eB.BackgroundColor3 = dp(52, 62, 72)
+				eB.BorderSizePixel = 0
+				eB.Position = dn(0, 0, - 0.140425533, 0)
+				eB.Size = dn(0, 312, 0, 28)
+				eB.AutoButtonColor = false
+				eB.Font = Enum.Font.GothamSemibold
+				eB.Text = "  " .. e9
+				eB.TextColor3 = dp(255, 255, 255)
+				eB.TextSize = 14.000
+				eB.TextXAlignment = Enum.TextXAlignment.Left
+				eC.CornerRadius = dm(0, 6)
+				eC.Name = "SliderModuleCorner"
+				eC.Parent = eB
+				eD.Name = "SliderBar"
+				eD.Parent = eB
+				eD.BackgroundColor3 = dp(58, 69, 80)
+				eD.BorderSizePixel = 0
+				eD.Position = dn(0.442307681, 0, 0.392857134, 0)
+				eD.Size = dn(0, 108, 0, 6)
+				eE.CornerRadius = dm(0, 2)
+				eE.Name = "SliderBarCorner"
+				eE.Parent = eD
+				eF.Name = "SliderPart"
+				eF.Parent = eD
+				eF.BackgroundColor3 = dp(255, 255, 255)
+				eF.BorderSizePixel = 0
+				eF.Size = dn(0, 0, 0, 6)
+				eG.CornerRadius = dm(0, 2)
+				eG.Name = "SliderPartCorner"
+				eG.Parent = eF
+				eH.Name = "SliderValue"
+				eH.Parent = eB
+				eH.BackgroundColor3 = dp(58, 69, 80)
+				eH.BorderSizePixel = 0
+				eH.Position = dn(0.884615362, 0, 0.178571433, 0)
+				eH.Size = dn(0, 32, 0, 18)
+				eH.Font = Enum.Font.Gotham
+				eH.Text = em or ey
+				eH.TextColor3 = dp(255, 255, 255)
+				eH.TextSize = 12.000
+				eI.CornerRadius = dm(0, 4)
+				eI.Name = "SliderValueCorner"
+				eI.Parent = eH
+				eJ.Name = "AddSlider"
+				eJ.Parent = eB
+				eJ.BackgroundColor3 = dp(255, 255, 255)
+				eJ.BackgroundTransparency = 1.000
+				eJ.BorderSizePixel = 0
+				eJ.Position = dn(0.807692289, 0, 0.178571433, 0)
+				eJ.Size = dn(0, 18, 0, 18)
+				eJ.Font = Enum.Font.Gotham
+				eJ.Text = "+"
+				eJ.TextColor3 = dp(255, 255, 255)
+				eJ.TextSize = 18.000
+				eK.Name = "MinusSlider"
+				eK.Parent = eB
+				eK.BackgroundColor3 = dp(255, 255, 255)
+				eK.BackgroundTransparency = 1.000
+				eK.BorderSizePixel = 0
+				eK.Position = dn(0.365384609, 0, 0.178571433, 0)
+				eK.Size = dn(0, 18, 0, 18)
+				eK.Font = Enum.Font.Gotham
+				eK.Text = "-"
+				eK.TextColor3 = dp(255, 255, 255)
+				eK.TextSize = 18.000
+				eK.MouseButton1Click:Connect(
+	    function()
+					local eM = library.flags:GetState(du)
+					eM = math.clamp(eM - 1, ey, ez)
+					library.flags[du]:SetValue(eM)
+				end)
+				eJ.MouseButton1Click:Connect(
+	    function()
+					local eM = library.flags:GetState(du)
+					eM = math.clamp(eM + 1, ey, ez)
+					library.flags[du]:SetValue(eM)
+				end)
+				library.flags[du]:SetValue(em)
+				local dS, eN, eO = false, false, {
+					[""] = true,
+					["-"] = true
+				}
+				eD.InputBegan:Connect(
+	    function(dX)
+					if dX.UserInputType == Enum.UserInputType.MouseButton1 or dX.UserInputType == Enum.UserInputType.Touch then
+						library.flags[du]:SetValue()
+						dS = true
+					end
+				end)
+				b.UserInputService.InputEnded:Connect(
+	    function(dX)
+					if dS and dX.UserInputType == Enum.UserInputType.MouseButton1 or dX.UserInputType == Enum.UserInputType.Touch then
+						dS = false
+					end
+				end)
+				b.UserInputService.InputChanged:Connect(
+	    function(dX)
+					if dS == true then
+						library.flags[du]:SetValue()
+					end
+				end)
+				eH.Focused:Connect(
+	    function()
+					eN = true
+				end)
+				eH.FocusLost:Connect(
+	    function()
+					eN = false
+					if eH.Text == "" then
+						library.flags[du]:SetValue(em)
+					end
+				end)
+				eH:GetPropertyChangedSignal("Text"):Connect(
+	    function()
+					if not eN then
+						return
+					end
+					eH.Text = eH.Text:gsub("%D+", "")
+					local e9 = eH.Text
+					if not tonumber(e9) then
+						eH.Text = eH.Text:gsub("%D+", "")
+					elseif not eO[e9] then
+						if tonumber(e9) > ez then
+							e9 = ez
+							eH.Text = tostring(ez)
+						end
+						library.flags[du]:SetValue(tonumber(e9))
+					end
+				end)
+			end
+			function e7:NewDropdown(e9, du, eP, ea)
+				local ea = ea or dr
+				library.flags[du] = {
+					State = eP[1]
+				}
+				local eQ = dq("TextButton")
+				local eR = dq("UICorner")
+				local eS = dq("TextBox")
+				local eT = dq("TextButton")
+				local eU = dq("TextButton")
+				local eV = dq("UICorner")
+				local eW = dq("UIListLayout")
+				local eX = dq("UIPadding")
+				eQ.Name = "DropdownModule"
+				eQ.Parent = e4
+				eQ.BackgroundColor3 = dp(52, 62, 72)
+				eQ.BorderSizePixel = 0
+				eQ.Size = dn(0, 312, 0, 28)
+				eQ.AutoButtonColor = false
+				eQ.Font = Enum.Font.GothamSemibold
+				eQ.Text = ""
+				eQ.TextColor3 = dp(255, 255, 255)
+				eQ.TextSize = 14.000
+				eQ.TextXAlignment = Enum.TextXAlignment.Left
+				eR.CornerRadius = dm(0, 6)
+				eR.Name = "DropdownModuleCorner"
+				eR.Parent = eQ
+				eS.Name = "DropdownText"
+				eS.Parent = eQ
+				eS.BackgroundColor3 = dp(255, 255, 255)
+				eS.BackgroundTransparency = 1.000
+				eS.Position = dn(0.025641026, 0, 0, 0)
+				eS.Size = dn(0, 192, 0, 28)
+				eS.Font = Enum.Font.GothamSemibold
+				eS.PlaceholderText = e9
+				eS.PlaceholderColor3 = dp(255, 255, 255)
+				eS.TextColor3 = dp(255, 255, 255)
+				eS.TextSize = 14.000
+				eS.TextXAlignment = Enum.TextXAlignment.Left
+				eS.Text = ""
+				eT.Name = "OpenDropdown"
+				eT.Parent = eQ
+				eT.BackgroundColor3 = dp(255, 255, 255)
+				eT.BackgroundTransparency = 1.000
+				eT.BorderSizePixel = 0
+				eT.Position = dn(0.907051265, 0, 0.178571433, 0)
+				eT.Size = dn(0, 18, 0, 18)
+				eT.Font = Enum.Font.Gotham
+				eT.Text = "+"
+				eT.TextColor3 = dp(255, 255, 255)
+				eT.TextSize = 22.000
+				eU.Name = "DropdownBottom"
+				eU.Parent = e4
+				eU.BackgroundColor3 = dp(52, 62, 72)
+				eU.BorderSizePixel = 0
+				eU.ClipsDescendants = true
+				eU.Position = dn(0.0185185187, 0, 0.206896558, 0)
+				eU.Size = dn(0, 312, 0, 0)
+				eU.AutoButtonColor = false
+				eU.Font = Enum.Font.GothamSemibold
+				eU.Text = ""
+				eU.TextColor3 = dp(255, 255, 255)
+				eU.TextSize = 14.000
+				eU.TextXAlignment = Enum.TextXAlignment.Left
+				eU.Visible = false
+				eV.CornerRadius = dm(0, 6)
+				eV.Name = "DropdownBottomCorner"
+				eV.Parent = eU
+				eW.Name = "DropdownBottomLayout"
+				eW.Parent = eU
+				eW.HorizontalAlignment = Enum.HorizontalAlignment.Center
+				eW.SortOrder = Enum.SortOrder.LayoutOrder
+				eW.Padding = dm(0, 6)
+				eX.Name = "DropdownBottomPadding"
+				eX.Parent = eU
+				eX.PaddingTop = dm(0, 6)
+				local eY = false
+				eW:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(
+	            function()
+					if not eY then
+						return
+					end
+					dv:Tween({
+						Size = dn(0, 312, 0, eW.AbsoluteContentSize.Y + 12)
+					}, eU, 0.1):Play()
+				end)
+				local eZ = function()
+					local NewValue = eS.Text			
+					for _, Element in next, eU:GetChildren() do
+						if Element:IsA("TextButton") then
+							if string.find(Element.Name:lower(), NewValue:lower()) then
+								Element.Visible = true
+							else
+								Element.Visible = false
+							end
+						end
+					end
+				end
+				local e_ = function(e9)
+					local eP = eU:GetChildren()
+					for ai = 1, # eP do
+						local bd = eP[ai]
+						if e9 == "" then
+							eZ()
+						else
+							if bd:IsA("TextButton") then
+								if bd.Name:lower():sub(1, string.len(e9)) == e9:lower() then
+									bd.Visible = true
+								else
+									bd.Visible = false
+								end
+							end
+						end
+					end
+				end
+				local f0 = function()
+					eY = not eY
+					if eY then
+						eU.Visible = true
+						eZ()
+					else
+						task.spawn(
+	                    function()
+							task.wait(0.35)
+							eU.Visible = false
+						end)
+					end
+					eT.Text = eY and "-" or "+"
+					dv:Tween({
+						Size = dn(0, 312, 0, eY and eW.AbsoluteContentSize.Y + 12 or 0)
+					}, eU, 0.35):Play()
+				end
+				eT.MouseButton1Click:Connect(f0)
+				eS.Focused:Connect(
+	            function()
+					if eY then
+						return
+					end
+					f0()
+				end)
+				eS:GetPropertyChangedSignal("Text"):Connect(function() -- 改版
+					local NewValue = eS.Text			
+					for _, Element in next, eU:GetChildren() do
+						if Element:IsA("TextButton") then
+							if string.find(Element.Name:lower(), NewValue:lower()) then
+								Element.Visible = true
+							else
+								Element.Visible = false
+							end
+						end
+					end
+				end)
+				library.flags[du].SetOptions = function(self, eP)
+					library.flags[du]:ClearOptions()
+					for ai = 1, # eP do
+						library.flags[du]:AddOption(eP[ai])
+					end
+				end
+				library.flags[du].ClearOptions = function(self)
+					local f1 = eU:GetChildren()
+					for ai = 1, # f1 do
+						local dx = f1[ai]
+						if dx:IsA("TextButton") then
+							dx:Destroy()
+						end
+					end
+				end
+				library.flags[du].AddOption = function(self, bd)
+					local f2 = dq("TextButton")
+					local f3 = dq("UICorner")
+					f2.Name = bd
+					f2.Parent = eU
+					f2.BackgroundColor3 = dp(58, 69, 80)
+					f2.BorderSizePixel = 0
+					f2.Size = dn(0, 300, 0, 28)
+					f2.AutoButtonColor = false
+					f2.Font = Enum.Font.GothamSemibold
+					f2.Text = bd
+					f2.TextColor3 = dp(255, 255, 255)
+					f2.TextSize = 14.000
+					f3.CornerRadius = dm(0, 6)
+					f3.Name = "OptionCorner"
+					f3.Parent = f2
+					f2.MouseButton1Click:Connect(
+	                function()
+						eS.PlaceholderText = bd
+						eS.Text = ""
+						library.flags[du].State = bd
+						task.spawn(f0)
+						ea(bd)
+					end)
+				end
+				library.flags[du].RemoveOption = function(self, bd)
+					eU:WaitForChild(bd):Destroy()
+				end
+				library.flags[du]:SetOptions(eP)
+			end
+			function e7:NewBox(e9, du, ea)
+				local ea = ea or dr
+				local eB = dq("TextButton")
+				local eC = dq("UICorner")
+				local eH = dq("TextBox")
+				local eI = dq("UICorner")
+				eB.Name = "SliderModule"
+				eB.Parent = e4
+				eB.BackgroundColor3 = dp(52, 62, 72)
+				eB.BorderSizePixel = 0
+				eB.Position = dn(0, 0, - 0.140425533, 0)
+				eB.Size = dn(0, 312, 0, 28)
+				eB.AutoButtonColor = false
+				eB.Font = Enum.Font.GothamSemibold
+				eB.Text = "  " .. e9
+				eB.TextColor3 = dp(255, 255, 255)
+				eB.TextSize = 14.000
+				eB.TextXAlignment = Enum.TextXAlignment.Left
+				eC.CornerRadius = dm(0, 6)
+				eC.Name = "BoxButtonCorner"
+				eC.Parent = eB
+				eH.Name = "Box"
+				eH.Parent = eB
+				eH.BackgroundColor3 = dp(58, 69, 80)
+				eH.BorderSizePixel = 0
+				eH.Position = dn(0.774615362, 0, 0.178571433, 0)
+				eH.Size = dn(0, 65, 0, 18)
+				eH.Font = Enum.Font.Gotham
+				eH.Text = ""
+				eH.PlaceholderText = du
+				eH.TextColor3 = dp(255, 255, 255)
+				eH.TextSize = 12.000
+				eI.CornerRadius = dm(0, 4)
+				eI.Name = "BoxCorner"
+				eI.Parent = eH
+				eH.FocusLost:Connect(
+	            function(EnterPressed)
+					if not EnterPressed then
+						return
+					else
+						ea(eH.Text)
+						if getgenv().ClearTextBoxText then
+							wait(0.10)
+							eH.Text = ""
+						end
+					end
+				end)
+			end
+			return e7
+		end
+		setmetatable(getgenv().library, {
+			__newindex = function(self, i, v)
+				if i == 'Name' then
+					dG.Text = "   " .. v
+					return true
+				end
+				rawset(self, i, v)
+			end
+		})
+		
+		
 		--<< 游戏功能部分 >>
 		
 		--↓ 以下请勿修改
@@ -688,10 +1445,7 @@
 			HONG.LP.Character.Humanoid.HipHeight = _CONFIGS["悬浮高度"]
 			HONG.WKSPC.Gravity = _CONFIGS["重力"]
 			HONG.LP.CameraMaxZoomDistance = _CONFIGS["相机焦距"]
-			-- 修正为 CurrentCamera
-			if HONG.WKSPC.CurrentCamera then
-				HONG.WKSPC.CurrentCamera.FieldOfView = _CONFIGS["广角"]
-			end
+			HONG.WKSPC.Camera.FieldOfView = _CONFIGS["广角"]
 		end)
 	end)
 	
@@ -1020,8 +1774,7 @@
 			speed = 0
 			bg:Destroy()
 			bv:Destroy()
-			-- 修复 Character 拼写
-			HONG.LP.Character.Humanoid.PlatformStand = false
+			HONG.LP.Charactder.Humanoid.PlatformStand = false
 			HONG.LP.Character.Animate.Disabled = false
 			tpwalking = false
 		end
@@ -1468,7 +2221,7 @@
 				return
 		    end
 		    
-			local ltem
+			local Item
 			for i, v in next, HONG.WKSPC.Stores:children() do
 				if v.Name == "ShopItems" and v:FindFirstChild"Box" then
 					for j, k in next, v:children() do
@@ -1491,6 +2244,7 @@
 				newDragModel(ltem, HONG.WKSPC.Stores[name].Counter.CFrame + Vector3.new(0, .6, 0))
 				HONG:Teleport(ltem.Main.CFrame + Vector3.new(0, 1, 5))
 				task.wait(0.2)
+	            --print((ltem.Main.Position - HONG.WKSPC.Stores[name].Counter.Position).Magnitude)
 			until (ltem.Main.Position - HONG.WKSPC.Stores[name].Counter.Position).Magnitude < 5;
 			task.wait(0.4)
 			HONG:Teleport(HONG.WKSPC.Stores[name].Counter.CFrame + Vector3.new(0, 5, 5))
@@ -1804,6 +2558,12 @@
 		if item == "4/4x1 木楔 80$" then
 			BluePrintStore = "Wedge1_Thin"
 		end
+		if item == "4/4木楔 80$" then
+			BluePrintStore = "Wedge1"
+		end
+		if item == "4/4x1 木楔 80$" then
+			BluePrintStore = "Wedge1_Thin"
+		end
 		if item == "3/4木楔 80$" then
 			BluePrintStore = "Wedge2"
 		end
@@ -1813,13 +2573,13 @@
 		if item == "2/4木楔 80$" then
 			BluePrintStore = "Wedge3"
 		end
-		if item == "2/4x1木楔 80$" then
+		if item == "2/4x1 木楔 80$" then
 			BluePrintStore = "Wedge3_Thin"
 		end
 		if item == "1/4木楔 80$" then
 			BluePrintStore = "Wedge4"
 		end
-		if item == "1/4x1木楔 80$" then
+		if item == "1/4x1 木楔 80$" then
 			BluePrintStore = "Wedge4_Thin"
 		end
 		if item == "3/3木楔 80$" then
@@ -1831,31 +2591,31 @@
 		if item == "2/3木楔 80$" then
 			BluePrintStore = "Wedge6"
 		end
-		if item == "2/3x1木楔 80$" then
+		if item == "2/3x1 木楔 80$" then
 			BluePrintStore = "Wedge6_Thin"
 		end
 		if item == "1/3木楔 80$" then
 			BluePrintStore = "Wedge7"
 		end
-		if item == "1/3x1木楔 80$" then
+		if item == "1/3x1 木楔 80$" then
 			BluePrintStore = "Wedge7_Thin"
 		end
 		if item == "2/2木楔 80$" then
 			BluePrintStore = "Wedge8"
 		end
-		if item == "2/2x1木楔 80$" then
+		if item == "2/2x1 木楔 80$" then
 			BluePrintStore = "Wedge8_Thin"
 		end
 		if item == "1/2木楔 80$" then
 			BluePrintStore = "Wedge9"
 		end
-		if item == "1/2x1木楔 80$" then
+		if item == "1/2x1 木楔 80$" then
 			BluePrintStore = "Wedge9_Thin"
 		end
 		if item == "1/1木楔 80$" then
 			BluePrintStore = "Wedge10"
 		end
-		if item == "1/1x1木楔 80$" then
+		if item == "1/1x1 木楔 80$" then
 			BluePrintStore = "Wedge10_Thin"
 		end
 	end)
@@ -2317,17 +3077,26 @@
 		end
 		local bbb = {}
 		for i, v in next, axes do
+		 --   print("iv=", i,v)
+			local damage
+		--	print(tree)
 			if v.ToolName.Value == "EndTimesAxe" and tree == "LoneCave" then
+				damage = 10000000;
 				return v
 			elseif v.ToolName.Value == "OvergrownAxe" and tree == "GreenSwampy" then
+				damage = 7;
 				return v
 			elseif v.ToolName.Value == "OvergrownAxe" and tree == "GoldSwampy" then
+				damage = 5.35;
 				return v
 		    elseif v.ToolName.Value == "IceAxe" and tree == "Frost" then
+		        damage = 6;
 		        return v
 			elseif v.ToolName.Value == "FireAxe" and tree == "Volcano" then
+				damage = 6.35;
 				return v
 			elseif v.ToolName.Value == "CaveAxe" and tree == "CaveCrawler" then
+				damage = 7.2;
 				return v
 			else
 				table.insert(bbb, v)
@@ -2495,7 +3264,7 @@
 			select_tree = ("GoldSwampy")
 		end
 		if list == "冰木" then
-			select树 = ("Frost")
+			select_tree = ("Frost")
 		end
 		if list == "胡桃木" then
 			select_tree = ("Walnut")
@@ -2766,6 +3535,11 @@
 			end)
 		end)
 		
+	-- local UserInputService = game:GetService("UserInputService")
+		-- local delta = UserInputService:GetMouseDelta()
+		
+	
+	
 		repeat
 			task.wait()
 		until wood ~= nil and sawmill ~= nil;
@@ -2781,10 +3555,12 @@
 			if v.Name == "WoodSection" then
 				index = index + 1
 				local selection = Instance.new("SelectionBox")
+	                  -->selection.Color3=Color3.new(95,95,95)
 				selection.Parent = v
 				selection.Adornee = selection.Parent
 				if v:WaitForChild("ID") then
 					if v.ID.Value == index then
+	                     --    HONG:Teleport(v.CFrame + Vector3.new(0, 5, 5))
 						HONG.LP.Character:MoveTo(v.CFrame.p)
 						repeat
 							cutTree({
@@ -2793,8 +3569,10 @@
 								Tool = getAxe(v.Parent.TreeClass.Value);
 								Height = v.Size.y;
 							})         
+	                            -- HONG.RS.Heartbeat:wait()
 							task.wait()
 						until v:FindFirstChild("Tree Weld") == nil
+	                        --warn("砍完", index)
 						task.wait()
 						if v:FindFirstChild("SelectionBox") then
 							v:FindFirstChild("SelectionBox"):Destroy()
@@ -3073,6 +3851,8 @@
 	
 	
 	
+	
+	
 	Page4:NewButton("无眼球砍幻影", function(bool)
 		local wood = nil
 		local oldpos = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame;
@@ -3088,6 +3868,7 @@
 				end
 			end
 		end
+		
 		
 		if wood == nil then
 			return HONG:NOTIFY("错误!", "幻影木没有了", 4)
@@ -3372,9 +4153,9 @@
 	HONG.GS("Players").PlayerRemoving:Connect(function(player)  
 	    if getgenv()["玩家们"] ~= nil and #getgenv()["玩家们"] >= 1 then
 	        pcall(table.remove, getgenv()["玩家们"], table.find(player.Name))
-	        if library.flags and library.flags["player_tp"] and library.flags["player_tp"].RemoveOption then
-	        	pcall(function() library.flags["player_tp"]:RemoveOption(player.Name) end)
-	        end
+	        
+	        plr:refresh(getgenv()["玩家们"])
+	        library.flags["player_tp1"]:RemoveOption(player.Name)
 	    end
 	    HONG:NOTIFY("玩家离开", ("%s离开了服务器"):format(player.Name), 4);
 	end)
@@ -3384,9 +4165,7 @@
 	        if not table.find(getgenv()["玩家们"], tostring(player.Name)) then
 	            table.insert(getgenv()["玩家们"], player.Name);
 	        end        
-	        if library.flags and library.flags["player_tp"] and library.flags["player_tp"].AddOption then
-	        	pcall(function() library.flags["player_tp"]:AddOption(player.Name) end)
-	        end
+	        library.flags["player_tp"]:AddOption(player.Name)
 	    end
 	    HONG:NOTIFY("玩家加入", ("%s加入了服务器"):format(player.Name), 4);
 	end)
@@ -3636,7 +4415,6 @@
 	    makebase(CFrame.new(spos.X - 40, spos.Y, spos.Z))
 	    makebase(CFrame.new(spos.X, spos.Y, spos.Z + 40))
 	    makebase(CFrame.new(spos.X, spos.Y, spos.Z - 40))
-	--Corners--
 	    makebase(CFrame.new(spos.X + 40, spos.Y, spos.Z + 40))
 	    makebase(CFrame.new(spos.X + 40, spos.Y, spos.Z - 40))
 	    makebase(CFrame.new(spos.X - 40, spos.Y, spos.Z + 40))
@@ -3650,6 +4428,7 @@
 	    makebase(CFrame.new(spos.X + 80, spos.Y, spos.Z - 80))
 	    makebase(CFrame.new(spos.X - 80, spos.Y, spos.Z + 80))
 	    makebase(CFrame.new(spos.X - 80, spos.Y, spos.Z - 80))
+	--Corners--
 	    makebase(CFrame.new(spos.X + 40, spos.Y, spos.Z + 80))
 	    makebase(CFrame.new(spos.X - 40, spos.Y, spos.Z + 80))
 	    makebase(CFrame.new(spos.X + 80, spos.Y, spos.Z + 40))
@@ -3668,11 +4447,19 @@
 	Page7:NewSeparator();
 	
 	function cooperAxeDupe()
+	            -- get cooper
 	    local cooper = game.Players.LocalPlayer
+	    
+	    -- can relod functin
 	    local canRelod = function()
-	        local ohInstance1 = cooper
-	        return game:GetService("ReplicatedStorage").LoadSaveRequests.ClientMayLoad:InvokeServer(ohInstance1)
+	        -- This script was generated by coopers's RemoteSpy: https://github.com/Upbolt/Hydroxide
+	    
+	    local ohInstance1 = cooper
+	    
+	    return game:GetService("ReplicatedStorage").LoadSaveRequests.ClientMayLoad:InvokeServer(ohInstance1)
 	    end
+	    
+	    -- dup ax
 	    function dupAx()
 	        if cooper.CurrentSaveSlot.Value == -1 then
 	            return HONG:NOTIFY("错误","请加载存档",4)
@@ -3683,16 +4470,17 @@
 	            repeat
 	                task.wait()
 	            until canRelod()
-	            local ohNumber1 = cooper.CurrentSaveSlot.Value
-	            local ohInstance2 = cooper
+	            -- This script was generated by coopers's RemoteSpy: https://github.com/Upbolt/Hydroxide
+	    local ohNumber1 = cooper.CurrentSaveSlot.Value
+	    local ohInstance2 = cooper
 	    
-	            task.spawn(function()
-	                game:GetService("ReplicatedStorage").LoadSaveRequests.RequestLoad:InvokeServer(ohNumber1, ohInstance2)
-	            end)
-	            task.wait()
-	            cooper.Character.Head:Destroy()
-	            HONG:NOTIFY("复制斧头","复制中...",4)
-	            return true
+	    task.spawn(function()
+	        game:GetService("ReplicatedStorage").LoadSaveRequests.RequestLoad:InvokeServer(ohNumber1, ohInstance2)
+	    end)
+	        task.wait()
+	        cooper.Character.Head:Destroy()
+	        HONG:NOTIFY("复制斧头","复制中...",4)
+	        return true
 	        end
 	    end
 	    dupAx()
@@ -3985,26 +4773,23 @@
 	end
 
 end)("走马观花 X")  --> 脚本名字, 双引号里面的中文可以改
-
--- 兼容新版UI标题彩虹效果（Main.Header.Title）
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 
--- 通过全局 _CONFIGS 定位 UI 名称
-local uiName = (getgenv()._CONFIGS and getgenv()._CONFIGS.UI_NAME) or "走马观花 X"
-local screenGui = CoreGui:FindFirstChild(uiName)
-if not screenGui or not screenGui:FindFirstChild("Main") then return end
+-- 获取目标TextLabel
+local screenGui = CoreGui:FindFirstChild("走马观花 X")
+if not screenGui then return end
 
-local header = screenGui.Main:FindFirstChild("Header")
-local textLabel = header and header:FindFirstChild("Title")
-if not textLabel then
-    textLabel = screenGui.Main:FindFirstChild("TextLabel") or screenGui.Main:FindFirstChildWhichIsA("TextLabel", true)
-end
+local textLabel = screenGui.Main:FindFirstChild("TextLabel")
 if not textLabel then return end
 
-local hue, saturation, value = 0, 1, 1
-local speed = 0.35 -- 颜色变化速度
+-- 彩虹颜色参数
+local hue = 0
+local saturation = 1
+local value = 1
+local speed = 0.35-- 颜色变化速度（越大越快）
 
+-- 创建颜色渐变循环
 RunService.Heartbeat:Connect(function(deltaTime)
     hue = (hue + deltaTime * speed) % 1
     textLabel.TextColor3 = Color3.fromHSV(hue, saturation, value)
