@@ -218,7 +218,7 @@
 	--================================================================================--
 
 	local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/rbx520/Roblox/refs/heads/main/moUI", true))()
-	library:Init(_CONFIGS["UI_NAME"])
+	library:Init(_CONFIGS) -- <<<--- 已经在这里修复了错误
 
 	--================================================================================--
 	--==                            UI库代码结束                                     ==--
