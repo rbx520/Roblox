@@ -217,8 +217,9 @@
 	--==                           UI库代码开始 (第二部分)                             ==--
 	--================================================================================--
 
-	local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/rbx520/Roblox/refs/heads/main/moUI", true))()
-	library:Init(_CONFIGS)
+	-- <<<--- 正确的UI加载方式
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/rbx520/Roblox/refs/heads/main/moUI", true))()
+    local library = _G.library -- UI库会创建一个名为 "library" 的全局变量，我们在这里获取它
 
 	--================================================================================--
 	--==                            UI库代码结束                                     ==--
