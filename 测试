@@ -4551,14 +4551,25 @@
 	--                  ↓↓↓ 功能替换区：从这里开始 ↓↓↓                  --
 	-- ================================================================= --
 
-	-- 这是我们根据第二段代码创建的新函数
+	-- 添加一个全局变量来管理冷却计时
+	getgenv().lastAxeDupeTime = 0
+	local AXE_DUPE_COOLDOWN = 60 -- 冷却时间（秒）
+
+	-- 这是我们根据第二段代码创建的新函数，并加入了冷却和失败处理
 	function newAxeDupe()
-		-- 封装成一个 pcall 以防止任何潜在错误导致整个脚本崩溃
+		-- 步骤 1: 检查冷却时间
+		local currentTime = tick()
+		if currentTime - getgenv().lastAxeDupeTime < AXE_DUPE_COOLDOWN then
+			local timeLeft = math.ceil(AXE_DUPE_COOLDOWN - (currentTime - getgenv().lastAxeDupeTime))
+			HONG:NOTIFY("复制斧头", "功能冷却中，请等待 " .. timeLeft .. " 秒", 5)
+			return
+		end
+		
 		xpcall(function()
 			local player = HONG.LP
 			local ReplicatedStorage = HONG.RES
 
-			-- 步骤 1: 传送到指定地点
+			-- 步骤 2: 传送到指定地点
 			local TARGET_X, TARGET_Y, TARGET_Z = 283, -354, 47.5
 			local Y_OFFSET = 4
 			
@@ -4578,12 +4589,11 @@
 			hrp.AssemblyAngularVelocity = Vector3.zero
 			
 			local targetPos = Vector3.new(TARGET_X, TARGET_Y, TARGET_Z) + Vector3.new(0, Y_OFFSET, 0)
-			-- 使用脚本自身的传送函数，以确保一致性和稳定性
 			HONG:Teleport(CFrame.new(targetPos, targetPos + hrp.CFrame.LookVector))
 			HONG:NOTIFY("复制斧头", "已传送到指定位置...", 2)
-			task.wait(0.5) -- 等待传送稳定
+			task.wait(0.5)
 
-			-- 步骤 2: 加载存档 (TurboReload 逻辑)
+			-- 步骤 3: 加载存档 (TurboReload 逻辑)
 			local LSR = ReplicatedStorage:FindFirstChild("LoadSaveRequests")
 			if not LSR or not LSR:FindFirstChild("RequestLoad") then
 				HONG:NOTIFY("错误", "未找到加载存档的远程事件", 4)
@@ -4596,6 +4606,7 @@
 			local function valid(n) return type(n)=="number" and n>=1 and n<=6 and n%1==0 end
 
 			local function tryRequestLoad(slot)
+				-- 尝试多种方式调用远程函数
 				local ok, res = pcall(function() return LSR.RequestLoad:InvokeServer(slot) end)
 				if ok and res == true then return true end
 				
@@ -4618,51 +4629,68 @@
 				end
 			end
 
+			local loadSuccess = false
 			local function go(slot)
 				if not valid(slot) then return false end
 				local ok = tryRequestLoad(slot)
-				HONG:NOTIFY("复制斧头", ("尝试加载槽位 %d -> %s"):format(slot, ok and "成功" or "失败"), 3)
+				-- 不再在这里发通知，统一在外面处理
+				-- HONG:NOTIFY("复制斧头", ("尝试加载槽位 %d -> %s"):format(slot, ok and "成功" or "失败"), 3)
 				return ok
 			end
 			
 			HONG:NOTIFY("复制斧头", "正在尝试加载存档...", 2)
 			if target then
-				go(target)
+				loadSuccess = go(target)
 			else
 				for i=1,6 do
-					if go(i) then break end
+					if go(i) then
+						loadSuccess = true
+						break
+					end
 				end
 			end
+			
+			-- 步骤 4: 根据加载结果进行处理
+			if loadSuccess then
+				HONG:NOTIFY("复制斧头", "加载请求已发送！", 4)
+				-- 只有在成功发送加载请求后，才更新冷却计时器
+				getgenv().lastAxeDupeTime = tick()
+			else
+				HONG:NOTIFY("加载失败", "请等待存档加载60秒后", 5)
+			end
+
 		end, function(err)
-			-- 如果出错，使用脚本的错误处理机制
 			ifError("复制斧头功能出错: " .. tostring(err))
 			HONG:NOTIFY("错误", "复制斧头功能执行失败，请检查控制台", 5)
 		end)
 	end
 	
-	-- 这是旧的函数，我们现在可以注释掉或者直接删掉它
-	-- function cooperAxeDupe() ... end
-	
-	-- 将 "复制斧头" 按钮的事件连接到我们的新函数
 	Page7:NewButton("复制斧头", function() 
 		newAxeDupe()
 	end)
-	
-	-- ================================================================= --
-	--                  ↑↑↑ 功能替换区：到这里结束 ↑↑↑                  --
-	-- ================================================================= --
 	
 	getgenv().loopDupe = false;
 	
 	Page7:NewToggle("循环复制斧头", "loopdupeAxe", false, function(state)
 	    getgenv().loopDupe = state;
-	    while getgenv().loopDupe == true do
-			-- 循环功能也调用新函数
-	        newAxeDupe() 
-	        task.wait(5) -- 增加一个延迟，防止请求过于频繁
+	    -- 使用coroutine.wrap来安全地启动循环，防止UI卡死
+	    local loopThread
+	    if state then
+	        loopThread = coroutine.wrap(function()
+	            while getgenv().loopDupe do
+	                newAxeDupe()
+	                -- 在循环中，等待时间等于冷却时间+一点额外时间
+	                task.wait(AXE_DUPE_COOLDOWN + 2) 
+	            end
+	        end)
+	        loopThread()
 	    end
 	end)
-	
+
+	-- ================================================================= --
+	--                  ↑↑↑ 功能替换区：到这里结束 ↑↑↑                  --
+	-- ================================================================= --
+
 	Page7:NewSeparator();
 	
 	Page7:NewButton("复制基地  需要朋友", function()
